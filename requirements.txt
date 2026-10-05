@@ -1,0 +1,11 @@
+openai>=1.0.0
+selenium>=4.0.0
+webdriver-manager>=4.0.0
+pywinauto>=0.6.8
+PyAutoGUI>=0.9.54
+pywin32>=300
+Pillow>=9.0.0
+numpy>=1.20.0
+requests>=2.28.0
+bypy>=1.7.5
+onnxruntime>=1.17.0

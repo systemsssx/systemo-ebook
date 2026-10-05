@@ -1,0 +1,123 @@
+/* ============================================================
+   motion.css — 动效方案（替代 animations.js 配套的 4 个旧文件）
+   ------------------------------------------------------------
+   旧方案（performance.css / renderer-optimization.css / effects.css）
+   已整体删除，原因是：
+
+     1. 7 处 infinite 无限动画常驻运行，其中 .btn-convert 的 neonBreath
+        动画的是 box-shadow —— 该属性无法 GPU 合成，会导致软件空闲时
+        仍然每帧重绘。
+     2. performance.css 与 renderer-optimization.css 重复定义了
+        .nav-item / .btn-convert / .scroll-area / .animating 等 8 条规则，
+        后加载者覆盖前者，行为不可预测。
+     3. 含 iOS 专用属性、移动端断点、以及等于默认值的无效声明。
+
+   新方案的三条硬规则：
+     ① 只动 transform 和 opacity —— 这两个走 GPU 合成，不触发重排重绘
+     ② 没有任何 infinite 动画 —— 空闲时必须完全静止
+     ③ 所有时长/缓动走 theme.css 的令牌，不写魔法数字
+   ============================================================ */
+
+/* ---------- 页面切换 ---------- */
+/* index.html 自己管理 .active 状态，这里只负责视觉过渡 */
+.mo-page-in {
+    animation: moPageIn var(--dur) var(--ease-out) both;
+}
+@keyframes moPageIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.mo-page-out {
+    animation: moPageOut var(--dur-fast) var(--ease-in) both;
+}
+@keyframes moPageOut {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateY(-4px); }
+}
+
+/* ---------- 按压反馈 ---------- */
+/* 只动 transform，配合 AnimationEngine.elasticScale() 使用 */
+.mo-press {
+    transition: transform var(--dur-fast) var(--ease);
+}
+.mo-press:active {
+    transform: scale(0.97);
+}
+
+/* ---------- 内容出现 ---------- */
+/* 用于列表/卡片分批出现。只动 opacity + translateY，不加缩放（缩放最贵） */
+.mo-rise {
+    animation: moRise var(--dur) var(--ease-out) both;
+}
+@keyframes moRise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+.mo-rise-1 { animation-delay: 40ms; }
+.mo-rise-2 { animation-delay: 80ms; }
+.mo-rise-3 { animation-delay: 120ms; }
+.mo-rise-4 { animation-delay: 160ms; }
+
+/* ---------- 骨架屏 ---------- */
+/* 用 opacity 呼吸代替 background-position 扫光（后者每帧重绘） */
+.mo-skeleton {
+    background: var(--card2);
+    animation: moSkeleton 1.4s var(--ease) 3;
+}
+@keyframes moSkeleton {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+}
+
+/* ---------- 进度条 ---------- */
+/* width 动画会触发重排，改用 scaleX */
+.mo-progress {
+    transform-origin: left center;
+    transition: transform var(--dur-slow) var(--ease);
+}
+
+/* ---------- 覆盖层 / 弹窗 ---------- */
+.mo-overlay {
+    animation: moFade var(--dur-fast) var(--ease) both;
+}
+@keyframes moFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.mo-dialog {
+    animation: moDialog var(--dur) var(--ease-out) both;
+}
+@keyframes moDialog {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ---------- 悬停：只改颜色，不做位移/缩放 ---------- */
+.mo-hover-dim {
+    transition: opacity var(--dur-fast) var(--ease);
+}
+.mo-hover-dim:hover {
+    opacity: 0.82;
+}
+
+/* ============================================================
+   尊重系统设置：用户在 Windows 里关闭动画后，这里全部停掉
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+    }
+    .mo-page-in,
+    .mo-page-out,
+    .mo-rise,
+    .mo-dialog,
+    .mo-overlay {
+        animation: none !important;
+    }
+}

@@ -1,0 +1,37 @@
+# 依赖与构建产物（克隆者用不上，成品在 Releases）
+node_modules/
+dist-backend/
+pandoc-3.10.2/
+models/
+.npm-cache/
+
+# 运行期数据
+logs/
+export/
+download/
+sendqueue/
+_ln_tmp/
+*.log
+crash.log
+
+# 凭据 / 隐私（★ 绝不能进仓库）
+settings.json
+kindle_config.json
+wifi_urls.txt
+*_cookies.txt
+cookie*.json
+
+# 大二进制（成品在 Releases 里）
+systemo ebook.rar
+*.rar
+fonts/
+chromedriver.exe
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+__pycache__/
+*.pyc
+*.bak

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>苹果图书 · 完整操作指引</title>
+    <!-- ★ 加载主界面设计令牌，指引页与主程序同一套视觉语言 -->
+    <link rel="stylesheet" href="theme.css?v=0922220649" />
+    <!-- ★ 弹窗页 i18n；defer 保证在 DOM 解析前挂上 window.pageI18n（本页无自己的脚本） -->
+    <script src="i18n-popups.js" defer></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg);
+            color: var(--tx);
+            padding: 18px 22px 22px;
+            line-height: 1.65;
+            font-weight: var(--fw-body);
+            -webkit-font-smoothing: antialiased;
+        }
+        .header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 2px 0 12px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 16px;
+        }
+        .header .titles { flex: 1; min-width: 0; }
+        .lang-switch {
+            display: flex;
+            gap: 2px;
+            padding: 2px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .lang-switch > div {
+            font-size: var(--fs-label);
+            line-height: 1;
+            padding: 5px 8px;
+            border-radius: 6px;
+            color: var(--tx3);
+            cursor: pointer;
+            user-select: none;
+            transition: background .15s ease, color .15s ease;
+        }
+        .lang-switch > div:hover { color: var(--tx); }
+        .lang-switch > div.on {
+            background: var(--acc-bg);
+            border: 1px solid var(--acc-line);
+            color: var(--acc);
+            padding: 4px 7px;
+        }
+        .header h1 {
+            font-family: var(--font-title);
+            font-size: 17px;
+            font-weight: var(--fw-title);
+            color: var(--tx);
+        }
+        .header p { font-size: var(--fs-sm); color: var(--tx3); margin-top: 3px; }
+        .toc {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: var(--fs-sm);
+        }
+        .toc-title { font-weight: var(--fw-strong); color: var(--acc); margin-bottom: 6px; }
+        .toc-item {
+            display: inline-block;
+            padding: 3px 10px;
+            margin: 3px 4px 3px 0;
+            background: var(--acc-bg);
+            color: var(--acc);
+            border: 1px solid var(--acc-line);
+            border-radius: 7px;
+            text-decoration: none;
+            font-size: 11.5px;
+            transition: background var(--dur-fast) var(--ease);
+        }
+        .toc-item:hover { background: #143B37; }
+        .section {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            padding: 14px 16px 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--sh-card);
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            font-weight: var(--fw-strong);
+            color: var(--tx);
+            margin-bottom: 10px;
+        }
+        .section-num {
+            flex: 0 0 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            background: linear-gradient(140deg, #4FD1C5, #2AA79C);
+            color: #04211E;
+            border-radius: 50%;
+            font-size: var(--fs-body);
+            font-weight: 600;
+        }
+        .step-tips {
+            font-size: 12.5px;
+            color: var(--tx);
+            background: var(--field);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--acc);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 8px 0 10px;
+        }
+        .step-tips ol, .step-tips ul { padding-left: 18px; margin: 4px 0; }
+        .step-tips li { margin: 3px 0; }
+        .step-tips b { color: var(--acc); font-weight: var(--fw-strong); }
+        code {
+            background: var(--field);
+            color: var(--acc);
+            border: 1px solid var(--line);
+            padding: 0 5px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+        }
+        .tip {
+            background: var(--acc-bg);
+            border: 1px solid var(--acc-line);
+            border-left: 3px solid var(--acc);
+            padding: 8px 10px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            color: var(--tx2);
+            line-height: 1.65;
+            margin-top: 8px;
+        }
+        .warn {
+            background: var(--warnBg);
+            border: 1px solid #4A3A12;
+            border-left: 3px solid var(--warn);
+            padding: 8px 10px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            color: var(--tx2);
+            line-height: 1.65;
+            margin-top: 8px;
+        }
+        .warn b { color: var(--warn); }
+        .mobile-img {
+            display: block;
+            width: 220px;
+            max-width: 100%;
+            margin: 8px auto;
+            border-radius: 10px;
+            border: 1px solid var(--line2);
+            box-shadow: var(--sh-card);
+        }
+        .mobile-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .mobile-pair {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .mobile-pair .cap {
+            font-size: 11px;
+            color: var(--tx3);
+            text-align: center;
+        }
+        .footer {
+            text-align: center;
+            font-size: var(--fs-sm);
+            color: var(--tx3);
+            padding: 12px 0 4px;
+            border-top: 1px solid var(--line);
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="titles">
+            <h1 data-i18n="📖 苹果图书 · 上传到 iPhone / iPad 完整指引">📖 苹果图书 · 上传到 iPhone / iPad 完整指引</h1>
+            <p data-i18n="电脑端 EasyPub 上传 → 百度网盘 → 手机端图书 App 打开 · 4 步搞定">电脑端 EasyPub 上传 → 百度网盘 → 手机端图书 App 打开 · 4 步搞定</p>
+        </div>
+        <div class="lang-switch" id="pageLangSwitch">
+            <div data-lang="zh" class="on">中文</div>
+            <div data-lang="en">EN</div>
+        </div>
+    </div>
+
+    <div class="toc">
+        <div class="toc-title" data-i18n="📑 快速跳转">📑 快速跳转</div>
+        <a class="toc-item" href="#s1" data-i18n="1. 百度网盘授权">1. 百度网盘授权</a>
+        <a class="toc-item" href="#s2" data-i18n="2. 放入文件 + 上传">2. 放入文件 + 上传</a>
+        <a class="toc-item" href="#s3" data-i18n="3. 手机端网盘下载">3. 手机端网盘下载</a>
+        <a class="toc-item" href="#s4" data-i18n="4. 用图书 App 打开">4. 用图书 App 打开</a>
+    </div>
+
+    <!-- ===== 第一部分：电脑端（EasyPub 上传） ===== -->
+    <div class="section" id="s1">
+        <div class="section-title"><div class="section-num">1</div><span data-i18n="百度网盘授权（一次性）">百度网盘授权（一次性）</span></div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="点击 EasyPub「苹果图书」页右侧「<b>授权</b>」按钮">点击 EasyPub「苹果图书」页右侧「<b>授权</b>」按钮</li>
+                <li data-i18n="浏览器自动打开百度 OAuth 授权页">浏览器自动打开百度 OAuth 授权页</li>
+                <li data-i18n-html="登录百度账号 → 点击「<b>授权</b>」">登录百度账号 → 点击「<b>授权</b>」</li>
+                <li data-i18n-html="页面会显示一段<b>授权码</b>，复制它">页面会显示一段<b>授权码</b>，复制它</li>
+                <li data-i18n-html="回到授权小窗口 → 粘贴授权码 → 点击「<b>提交授权</b>」">回到授权小窗口 → 粘贴授权码 → 点击「<b>提交授权</b>」</li>
+            </ol>
+        </div>
+        <div class="tip" data-i18n="💡 授权码通常是一长串字符，复制时注意不要带空格或换行。">
+            💡 授权码通常是一长串字符，复制时注意不要带空格或换行。
+        </div>
+        <div class="warn" data-i18n="⚠️ 授权过程会启动 Chrome 浏览器，请确保本机已安装 Chrome 且 chromedriver.exe 版本匹配。">
+            ⚠️ 授权过程会启动 Chrome 浏览器，请确保本机已安装 Chrome 且 chromedriver.exe 版本匹配。
+        </div>
+    </div>
+
+    <div class="section" id="s2">
+        <div class="section-title"><div class="section-num">2</div><span data-i18n="放入文件 + 上传到百度网盘">放入文件 + 上传到百度网盘</span></div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="把 epub / txt / pdf 等图书文件<b>拖入左侧放置框</b>（或点击放置框选择）">把 epub / txt / pdf 等图书文件<b>拖入左侧放置框</b>（或点击放置框选择）</li>
+                <li data-i18n-html="文件会自动复制到 <code>EasyPub 同目录的 download/</code>">文件会自动复制到 <code>EasyPub 同目录的 download\</code></li>
+                <li data-i18n-html="点击右侧「<b>上传</b>」按钮 → 程序调用 <code>upload_folder_cmd.py</code>，用 <code>bypy syncup</code> 增量同步">点击右侧「<b>上传</b>」按钮 → 程序调用 <code>upload_folder_cmd.py</code>，用 <code>bypy syncup</code> 增量同步</li>
+                <li data-i18n-html="网盘目标路径：<code>/我的应用数据/epub_download_backup</code>">网盘目标路径：<code>/我的应用数据/epub_download_backup</code></li>
+                <li data-i18n="上传完成后按钮短暂显示「✓ 完成」">上传完成后按钮短暂显示「✓ 完成」</li>
+            </ol>
+        </div>
+        <div class="tip" data-i18n="💡 bypy 是增量同步，重复上传不会重复占用空间。每次只放一个文件，需要上传多本时依次操作即可。">
+            💡 bypy 是增量同步，重复上传不会重复占用空间。每次只放一个文件，需要上传多本时依次操作即可。
+        </div>
+    </div>
+
+    <!-- ===== 第二部分：手机端（百度网盘 → 苹果图书） ===== -->
+    <div class="section" id="s3">
+        <div class="section-title"><div class="section-num">3</div><span data-i18n="手机端：在百度网盘里找到文件">手机端：在百度网盘里找到文件</span></div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="iPhone / iPad 打开「<b>百度网盘</b>」App，登录<b>同一个</b>百度账号">iPhone / iPad 打开「<b>百度网盘</b>」App，登录<b>同一个</b>百度账号</li>
+                <li data-i18n-html="底部导航点「<b>文件</b>」→ 看到「<b>我的应用数据</b>」分类">底部导航点「<b>文件</b>」→ 看到「<b>我的应用数据</b>」分类</li>
+                <li data-i18n-html="点进「<b>我的应用数据</b>」→ 找到 <code>epub_download_backup</code> 文件夹（这就是 EasyPub 上传的目标）">点进「<b>我的应用数据</b>」→ 找到 <code>epub_download_backup</code> 文件夹（这就是 EasyPub 上传的目标）</li>
+                <li data-i18n="在文件夹里点开你想要的那本 epub → 系统会调用默认阅读器预览">在文件夹里点开你想要的那本 epub → 系统会调用默认阅读器预览</li>
+            </ol>
+        </div>
+        <div class="mobile-row">
+            <div class="mobile-pair">
+                <img class="mobile-img" src="kindle-help-imgs/mobile-1-netdisk-home.png" alt="百度网盘首页">
+                <div class="cap" data-i18n="图 1：网盘首页（点底部「文件」）">图 1：网盘首页（点底部「文件」）</div>
+            </div>
+            <div class="mobile-pair">
+                <img class="mobile-img" src="kindle-help-imgs/mobile-2-my-app-data.png" alt="我的应用数据">
+                <div class="cap" data-i18n="图 2：我的应用数据 → epub_download_backup">图 2：我的应用数据 → epub_download_backup</div>
+            </div>
+            <div class="mobile-pair">
+                <img class="mobile-img" src="kindle-help-imgs/mobile-3-book-reading.png" alt="阅读预览">
+                <div class="cap" data-i18n="图 3：点开 epub 文件预览">图 3：点开 epub 文件预览</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="s4">
+        <div class="section-title"><div class="section-num">4</div><span data-i18n="导出到「图书」App（系统自带 Books）">导出到「图书」App（系统自带 Books）</span></div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="文件在百度网盘预览界面打开后 → 点顶部的「<b>更多</b>」（···）按钮">文件在百度网盘预览界面打开后 → 点顶部的「<b>更多</b>」（···）按钮</li>
+                <li data-i18n-html="在弹出的分享菜单里 → 找到「<b>用图书打开</b>」（Books 图标，蓝白橙色书）">在弹出的分享菜单里 → 找到「<b>用图书打开</b>」（Books 图标，蓝白橙色书）</li>
+                <li data-i18n="点击后 → epub 自动添加到 iPhone / iPad 自带的「图书」App">点击后 → epub 自动添加到 iPhone / iPad 自带的「图书」App</li>
+                <li data-i18n-html="打开系统「<b>图书</b>」App → 底部「<b>图书馆</b>」就能看到这本书">打开系统「<b>图书</b>」App → 底部「<b>图书馆</b>」就能看到这本书</li>
+            </ol>
+        </div>
+        <div class="mobile-row">
+            <div class="mobile-pair">
+                <img class="mobile-img" src="kindle-help-imgs/mobile-4-share-sheet.png" alt="分享菜单选图书">
+                <div class="cap" data-i18n="图 4：点「更多」→ 选「用图书打开」">图 4：点「更多」→ 选「用图书打开」</div>
+            </div>
+        </div>
+        <div class="warn" data-i18n-html="⚠️ 如果分享菜单里<b>没有「图书」图标</b>：说明系统没把 Books 注册为接收 App。<br>解决：iPhone 设置 → 「图书」→ 打开「<b>在共享表单中显示</b>」开关 → 回网盘重新分享即可。">
+            ⚠️ 如果分享菜单里<b>没有「图书」图标</b>：说明系统没把 Books 注册为接收 App。<br>
+            解决：iPhone 设置 → 「图书」→ 打开「<b>在共享表单中显示</b>」开关 → 回网盘重新分享即可。
+        </div>
+        <div class="tip" data-i18n="💡 epub 一旦导入「图书」App，会自动同步到所有登录同一 Apple ID 的设备（iPhone / iPad / Mac）。">
+            💡 epub 一旦导入「图书」App，会自动同步到所有登录同一 Apple ID 的设备（iPhone / iPad / Mac）。
+        </div>
+    </div>
+
+    <div class="footer" data-i18n="✅ 整个流程：EasyPub 上传 → 百度网盘同步 → 手机点 epub → 选「图书」打开 → 在 iPhone 看书">
+        ✅ 整个流程：EasyPub 上传 → 百度网盘同步 → 手机点 epub → 选「图书」打开 → 在 iPhone 看书
+    </div>
+</body>
+</html>

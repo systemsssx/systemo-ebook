@@ -1,0 +1,96 @@
+{
+  "name": "easypub-new",
+  "version": "1.0.0",
+  "description": "EasyPub - 智能电子书制作工具",
+  "main": "main.js",
+  "author": "EasyPub",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:portable": "electron-builder --win portable --x64",
+    "bump": "node bump-version.js",
+    "snap": "python ../tools/snapshot.py",
+    "snap:list": "python ../tools/snapshot.py --list"
+  },
+  "build": {
+    "appId": "com.easypub.new",
+    "productName": "EasyPub",
+    "directories": {
+      "output": "E:/build/EasyPub"
+    },
+    "win": {
+      "target": {
+        "target": "dir",
+        "arch": [
+          "x64"
+        ]
+      },
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.bin",
+      "!*.log",
+      "!*.map",
+      "!epub_style.css",
+      "!dist-backend/**",
+      "!build-backend/**",
+      "!pandoc-3.10.2/**",
+      "!models/**",
+      "!__pycache__/**",
+      "!*.spec",
+      "!_*.txt",
+      "!crash.log",
+      "!wifi_urls.txt",
+      "!cookies.txt",
+      "!linovelib-cookies.txt",
+      "!_ln_tmp/**",
+      "!settings.json",
+      "!kindle_config.json",
+      "!export/**",
+      "!sendqueue/**",
+      "!download/**",
+      "!logs/**",
+      "!.covers/**"
+    ],
+    "asarUnpack": [
+      "**/*.py",
+      "novelmeta/**"
+    ],
+    "extraResources": [
+      {
+        "from": "requirements.txt",
+        "to": "requirements.txt"
+      },
+      {
+        "from": "chromedriver.exe",
+        "to": "chromedriver.exe"
+      },
+      {
+        "from": "使用前必看说明.txt",
+        "to": "使用前必看说明.txt"
+      },
+      {
+        "from": "pandoc-3.10.2",
+        "to": "pandoc-3.10.2"
+      },
+      {
+        "from": "dist-backend/easypub-backend",
+        "to": "backend"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^27.3.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "@readium/css": "^2.0.5",
+    "foliate-js": "^1.0.1"
+  }
+}

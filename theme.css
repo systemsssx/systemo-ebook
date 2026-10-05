@@ -1,0 +1,131 @@
+/* ============================================================
+   theme.css — systemoebook 设计令牌
+   ------------------------------------------------------------
+   颜色 / 字体 / 字号 / 圆角 全部集中在这里，改一处全局生效。
+   本文件必须最先加载（在 motion.css 和各页面内联样式之前）。
+   ============================================================ */
+
+/* ---------- 字体 ----------
+   三个都是 SIL OFL 授权，可随包分发。
+   Latin 走 Inter，中文黑体走 Noto Sans SC，标题宋体走 Noto Serif SC。
+   PingFang SC 保留在回落链里：Mac 用户会命中系统原生苹方（合法，无需随包）。 */
+@font-face {
+    font-family: 'Inter';
+    src: url('fonts/Inter-VF.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('fonts/NotoSansSC-VF.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Noto Serif SC';
+    src: url('fonts/NotoSerifSC-VF.ttf') format('truetype');
+    font-weight: 200 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    /* ----- 字体族 -----
+       黑 + 宋：正文/标签/按钮走思源黑体，标题走思源宋体。
+       黑体字重刻意压得很低（380~470），走的是 Noto Sans SC 可变字体的
+       细档 —— 微软雅黑只有 Regular/Bold 两档，根本做不出这个效果。 */
+    --font-ui:    'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-title: 'Inter', 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+    --font-mono:  'SF Mono', 'Cascadia Mono', Consolas, monospace;
+
+    /* ----- 字号 ----- */
+    --fs-h1:    20px;
+    --fs-h2:    15px;
+    --fs-h3:    12.5px;
+    --fs-body:  12px;
+    --fs-sm:    11px;
+    --fs-label: 10px;
+    --fs-num:   23px;
+
+    /* ----- 字重（黑体刻意调细） ----- */
+    --fw-body:  380;    /* 正文 —— 细 */
+    --fw-ui:    420;    /* 界面标签 / 小标题 */
+    --fw-strong:460;    /* 需要强调的地方 */
+    --fw-title: 620;    /* 宋体标题，保持分量 */
+
+    /* ----- 底色层次 ----- */
+    --bg:      #0B0D10;  /* 应用底 */
+    --panel:   #0D1014;  /* 二级面板 / 目录栏 */
+    --side:    #090B0E;  /* 侧栏 */
+    --card:    #161A20;  /* 卡片 */
+    --card2:   #1B2028;  /* 卡片内嵌块 */
+    --field:   #101317;  /* 输入框 */
+
+    /* ----- 描边 ----- */
+    --line:    #232A33;
+    --line2:   #2C343E;
+
+    /* ----- 文字 ----- */
+    --tx:      #E9EBEF;  /* 主文字 */
+    --tx2:     #8D97A6;  /* 次要文字 */
+    --tx3:     #5A6472;  /* 弱化文字 */
+    --tx4:     #454E5A;  /* placeholder */
+
+    /* ----- 强调色 ----- */
+    --acc:     #4FD1C5;
+    --acc-d:   #2AA79C;
+    --acc-bg:  #0F2E2B;
+    --acc-line:#1B4744;
+
+    /* ----- 语义色 ----- */
+    --ok:      #34D399;
+    --warn:    #F0B429;
+    --warnBg:  #2E2410;
+    --danger:  #F87171;
+    --dangerBg:#2E1517;
+
+    /* ----- 圆角 ----- */
+    --r-sm: 8px;
+    --r:    12px;
+    --r-lg: 16px;
+
+    /* ----- 动效（见 motion.css） ----- */
+    --dur-fast: 140ms;
+    --dur:      200ms;
+    --dur-slow: 300ms;
+    --ease:     cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in:  cubic-bezier(0.4, 0, 1, 1);
+
+    /* ----- 阴影 ----- */
+    --sh-card:  0 1px 2px rgba(0,0,0,.3), 0 8px 22px -12px rgba(0,0,0,.6);
+    --sh-cover: 0 16px 40px rgba(0,0,0,.6);
+    --sh-glow:  0 10px 26px rgba(79,209,197,.28);
+}
+
+/* ---------- 基础应用 ---------- */
+body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--tx);
+}
+
+/* 章节数用 Georgia 衬线数字（老式数字，字数高低错落，当装饰元素用）。
+   正文里的章节计数元素：勾选"预览章节"后的「共 N 章」等。 */
+#detectChapterCount,
+#totalChapterCount,
+#deletedChapterCount {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.15em;
+    font-weight: 600;
+    letter-spacing: 0;
+    padding: 0 1px;
+}
+
+/* 标题用宋体，给界面一点编排感；正文和标签保持黑体的清晰度 */
+h1, .h1, .page-title, .section-title {
+    font-family: var(--font-title);
+    font-weight: 650;
+}

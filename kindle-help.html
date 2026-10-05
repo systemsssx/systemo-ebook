@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kindle 传书 · 完整操作指引</title>
+    <!-- ★ 加载主界面设计令牌，指引页与主程序同一套视觉语言 -->
+    <link rel="stylesheet" href="theme.css?v=0922220649" />
+    <!-- ★ 弹窗页 i18n；defer 保证在 DOM 解析前挂上 window.pageI18n（本页无自己的脚本） -->
+    <script src="i18n-popups.js" defer></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-ui);
+            background: var(--bg);
+            color: var(--tx);
+            padding: 18px 22px 22px;
+            line-height: 1.65;
+            font-weight: var(--fw-body);
+            -webkit-font-smoothing: antialiased;
+        }
+        .header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 2px 0 12px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 16px;
+        }
+        .header .titles { flex: 1; min-width: 0; }
+        .lang-switch {
+            display: flex;
+            gap: 2px;
+            padding: 2px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .lang-switch > div {
+            font-size: var(--fs-label);
+            line-height: 1;
+            padding: 5px 8px;
+            border-radius: 6px;
+            color: var(--tx3);
+            cursor: pointer;
+            user-select: none;
+        }
+        .lang-switch > div:hover { color: var(--tx); }
+        .lang-switch > div.on {
+            background: var(--acc-bg);
+            border: 1px solid var(--acc-line);
+            color: var(--acc);
+            padding: 4px 7px;
+        }
+        .header h1 {
+            font-family: var(--font-title);
+            font-size: 17px;
+            font-weight: var(--fw-title);
+        }
+        .header p { font-size: var(--fs-sm); color: var(--tx3); margin-top: 3px; }
+        .warn-banner {
+            background: var(--warnBg);
+            border: 1px solid #4A3A12;
+            border-radius: var(--r);
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--tx2);
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+        .warn-banner b { color: var(--warn); }
+        .toc {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: var(--fs-sm);
+        }
+        .toc-title { font-weight: var(--fw-strong); color: var(--warn); margin-bottom: 6px; }
+        .toc-item {
+            display: inline-block;
+            padding: 3px 10px;
+            margin: 3px 4px 3px 0;
+            background: var(--acc-bg);
+            color: var(--acc);
+            border: 1px solid var(--acc-line);
+            border-radius: 7px;
+            text-decoration: none;
+            font-size: 11.5px;
+            transition: background var(--dur-fast) var(--ease);
+        }
+        .toc-item:hover { background: #143B37; }
+        .step {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            padding: 14px 16px 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--sh-card);
+        }
+        .step-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .step-num {
+            flex: 0 0 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            background: linear-gradient(140deg, #F0B429, #D99A16);
+            color: #2A1D02;
+            border-radius: 50%;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .step-title { font-size: 14px; font-weight: var(--fw-strong); color: var(--tx); }
+        .step-tips {
+            font-size: 12.5px;
+            color: var(--tx);
+            background: var(--warnBg);
+            border: 1px solid #4A3A12;
+            border-left: 3px solid var(--warn);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 8px 0 10px;
+        }
+        .step-tips b { color: var(--warn); font-weight: var(--fw-strong); }
+        .step-tips ol, .step-tips ul { padding-left: 18px; margin: 4px 0; }
+        .step-tips li { margin: 3px 0; }
+        /* 三种语义色的 step-tips（替代原内联浅色） */
+        .step-tips.ok { background: var(--acc-bg); border-color: var(--acc-line); border-left-color: var(--ok); }
+        .step-tips.ok b { color: var(--ok); }
+        .step-tips.warn-tip { background: var(--warnBg); border-color: #4A3A12; border-left-color: var(--warn); }
+        .step-tips.warn-tip b { color: var(--warn); }
+        .step-tips.danger {
+            background: var(--dangerBg);
+            border-color: #4A2224;
+            border-left-color: var(--danger);
+        }
+        .step-tips.danger b { color: var(--danger); }
+        .step-img {
+            display: block;
+            max-width: 100%;
+            margin: 0 auto;
+            border-radius: 8px;
+            border: 1px solid var(--line2);
+            box-shadow: var(--sh-card);
+        }
+        .branch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .branch-card {
+            background: var(--card2);
+            border: 1px solid var(--line2);
+            border-radius: var(--r);
+            padding: 10px 12px;
+        }
+        .branch-tag {
+            display: inline-block;
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 5px;
+            margin-bottom: 6px;
+        }
+        .branch-a .branch-tag { background: var(--acc-bg); color: var(--acc); border: 1px solid var(--acc-line); }
+        .branch-b .branch-tag { background: var(--acc-bg); color: var(--acc); border: 1px solid var(--acc-line); }
+        .branch-card .step-img { margin-top: 6px; }
+        .footer {
+            text-align: center;
+            font-size: var(--fs-sm);
+            color: var(--tx3);
+            padding: 12px 0 4px;
+            border-top: 1px solid var(--line);
+            margin-top: 6px;
+        }
+        .dim { color: var(--tx3); }
+        details { margin-top: 10px; }
+        summary {
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--warn);
+            padding: 4px 0;
+            user-select: none;
+        }
+        summary:hover { color: #FFC94D; }
+        .details-list {
+            padding: 6px 0 2px 12px;
+            font-size: 11.5px;
+            color: var(--tx2);
+            line-height: 1.75;
+        }
+        .details-list b { color: var(--tx); }
+        code {
+            background: var(--field);
+            color: var(--warn);
+            border: 1px solid var(--line);
+            padding: 0 5px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="titles">
+            <h1 data-i18n="📖 Kindle 账号注册指引">📖 Kindle 账号注册指引</h1>
+            <p data-i18n="从注册 / 登录 Amazon 账号到 Kindle 收到图书 · 6 步搞定">从注册 / 登录 Amazon 账号到 Kindle 收到图书 · 6 步搞定</p>
+        </div>
+        <div class="lang-switch" id="pageLangSwitch">
+            <div data-lang="zh" class="on">中文</div>
+            <div data-lang="en">EN</div>
+        </div>
+    </div>
+
+    <div class="warn-banner" data-i18n-html="⚠ 重要：只有 <code>amazon.com</code> 外区账号支持 Kindle 邮箱推送，<code>amazon.cn</code> 已停用。">
+        <b>⚠ 重要：</b>请用 <code>amazon.com</code> 外区账号（<code>amazon.cn</code> 的 Kindle 服务已停用）。注册 / 登录一次即可，之后由程序走 Amazon 官方「Send to Kindle」通道传书。
+    </div>
+
+    <div class="toc">
+        <div class="toc-title" data-i18n="📑 快速跳转">📑 快速跳转</div>
+        <a class="toc-item" href="#s1" data-i18n="1. 打开 amazon.com">1. 打开 amazon.com</a>
+        <a class="toc-item" href="#s2" data-i18n="2. 切到中文">2. 切到中文</a>
+        <a class="toc-item" href="#s3" data-i18n="3. 输入邮箱">3. 输入邮箱</a>
+        <a class="toc-item" href="#s4" data-i18n="4. 注册">4. 注册</a>
+        <a class="toc-item" href="#s5" data-i18n="5. 手机验证 → Not now">5. 手机验证 → Not now</a>
+    </div>
+
+    <div class="step" id="s1">
+        <div class="step-head">
+            <div class="step-num">1</div>
+            <div class="step-title" data-i18n="打开 amazon.com（外区）">打开 amazon.com（外区）</div>
+        </div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="在浏览器地址栏输入 <b>amazon.com</b>（不是 amazon.cn）">在浏览器地址栏输入 <b>amazon.com</b>（不是 amazon.cn）</li>
+                <li data-i18n="首次访问会看到浏览器自带的中文翻译弹窗（如图）">首次访问会看到浏览器自带的中文翻译弹窗（如图）</li>
+                <li data-i18n-html="<b>注意：</b>这是浏览器的翻译功能，<b>不是</b>亚马逊自己切语言——所以<b>不要点浏览器弹窗的「中文」</b>，那个翻译效果差"><b>注意：</b>这是浏览器的翻译功能，<b>不是</b>亚马逊自己切语言——所以<b>不要点浏览器弹窗的「中文」</b>，那个翻译效果差</li>
+            </ol>
+        </div>
+        <img class="step-img" src="kindle-help-imgs/step-415.png" alt="amazon.com 中文首页翻译弹窗">
+    </div>
+
+    <div class="step" id="s2">
+        <div class="step-head">
+            <div class="step-num">2</div>
+            <div class="step-title" data-i18n="把亚马逊网站切到中文">把亚马逊网站切到中文</div>
+        </div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="看页面<b>顶部搜索框的左边</b>，有一个「<b>🇺🇸 EN</b>」国旗下拉按钮">看页面<b>顶部搜索框的左边</b>，有一个「<b>🇺🇸 EN</b>」国旗下拉按钮</li>
+                <li data-i18n="点击它 → 弹出语言列表">点击它 → 弹出语言列表</li>
+                <li data-i18n-html="选择「<b>中文 (简体)</b>」或「<b>中文 (繁體)</b>」">选择「<b>中文 (简体)</b>」或「<b>中文 (繁體)</b>」</li>
+                <li data-i18n="页面会自动刷新成中文版本（亚马逊官方翻译，比浏览器翻译好得多）">页面会自动刷新成中文版本（亚马逊官方翻译，比浏览器翻译好得多）</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="step" id="s3">
+        <div class="step-head">
+            <div class="step-num">3</div>
+            <div class="step-title" data-i18n="输入邮箱地址（统一入口）">输入邮箱地址（统一入口）</div>
+        </div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="点页面顶部右上角「<b>Hello, sign in</b>」 → 在下拉里点「<b>Start here</b>」（注册）">点页面顶部右上角「<b>Hello, sign in</b>」 → 在下拉里点「<b>Start here</b>」（注册）</li>
+                <li data-i18n-html="进入登录页后，在「<b>输入手机号或邮箱</b>」框里填你的邮箱（如 <code>xxx@qq.com</code>）">进入登录页后，在「<b>输入手机号或邮箱</b>」框里填你的邮箱（如 <code>xxx@qq.com</code>）</li>
+                <li data-i18n-html="点黄色「<b>继续</b>」按钮">点黄色「<b>继续</b>」按钮</li>
+                <li data-i18n-html="系统会提示「<b>看起来您是亚马逊的新用户</b>」 → 走第 4 步注册">系统会提示「<b>看起来您是亚马逊的新用户</b>」 → 走第 4 步注册</li>
+            </ol>
+        </div>
+        <img class="step-img" src="kindle-help-imgs/login-623.png" alt="登录页输入邮箱">
+    </div>
+
+    <div class="step" id="s4">
+        <div class="step-head">
+            <div class="step-num">4</div>
+            <div class="step-title" data-i18n="注册（没有账号）">注册（没有账号）</div>
+        </div>
+        <div class="branch">
+            <div class="branch-card branch-a">
+                <span class="branch-tag" data-i18n="没账号走这条">没账号走这条</span>
+                <div style="font-size:12px; line-height:1.6;" data-i18n-html="系统显示「<b>看起来您是亚马逊的新用户</b>」 → 点黄色「<b>继续创建账户</b>」 → 填姓名（中文名即可）+ 密码（≥6 位）+ 再次输入密码 → 点「<b>继续</b>」 → 亚马逊给邮箱发验证信 → 点链接激活">
+                    系统显示「<b>看起来您是亚马逊的新用户</b>」 → 点黄色「<b>继续创建账户</b>」 → 填姓名（中文名即可）+ 密码（≥6 位）+ 再次输入密码 → 点「<b>继续</b>」 → 亚马逊给邮箱发验证信 → 点链接激活
+                </div>
+                <img class="step-img" src="kindle-help-imgs/step-424.png" alt="新用户提示">
+                <img class="step-img" src="kindle-help-imgs/step-428.png" alt="创建账户表单" style="margin-top:8px;">
+            </div>
+        </div>
+    </div>
+
+    <div class="step" id="s5">
+        <div class="step-head">
+            <div class="step-num">5</div>
+            <div class="step-title" data-i18n="手机号验证 → 直接点「Not now」">手机号验证 → 直接点「Not now」</div>
+        </div>
+        <div class="step-tips">
+            <ol>
+                <li data-i18n-html="注册成功后，亚马逊可能弹「<b>Keep hackers out</b>」页面，要你添加手机号做二次验证">注册成功后，亚马逊可能弹「<b>Keep hackers out</b>」页面，要你添加手机号做二次验证</li>
+                <li data-i18n-html="<b>这一步是可选的</b>，我们只是用 Kindle 推送功能，不需要手机号验证"><b>这一步是可选的</b>，我们只是用 Kindle 推送功能，不需要手机号验证</li>
+                <li data-i18n-html="直接点页面下方的蓝色「<b>Not now</b>」链接跳过">直接点页面下方的蓝色「<b>Not now</b>」链接跳过</li>
+                <li data-i18n="跳过之后会进入 Amazon 首页，注册完成">跳过之后会进入 Amazon 首页，注册完成</li>
+            </ol>
+        </div>
+        <img class="step-img" src="kindle-help-imgs/login-634.png" alt="手机号验证 Not now">
+    </div>
+
+    <div class="step-tips ok" style="margin-top:16px;">
+        <b>✅ 注册完成后，剩下的交给程序：</b><br>
+        1. 关掉本窗口 → 回「传输」页，通道选 <b>Send to Kindle</b>；<br>
+        2. 点通道里的「<b>Kindle 授权</b>」→ 填这个 Amazon 账号的邮箱和密码 → 登录一次（这一步会自动打开 Amazon 官方页面，程序只负责把账号导进去、把书传上去）；<br>
+        3. 之后在书库勾选要传的书 → 「批量传输」→ 点「<b>发送</b>」，书就会进你的 <b>Kindle 云端</b>，通常 <b>1 分钟</b>内出现在 Kindle 设备 / App 里。
+    </div>
+
+    <div class="footer" data-i18n="✅ 注册完成后，回到程序点「Kindle 授权」登录一次即可，不用再配任何邮箱。">
+        ✅ 注册完成后，回到程序点「Kindle 授权」登录一次即可，不用再配任何邮箱。
+    </div>
+</body>
+</html>

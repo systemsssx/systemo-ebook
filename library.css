@@ -1,0 +1,489 @@
+/* ============================================================
+   library.css — 书库板块
+   ------------------------------------------------------------
+   依赖 theme.css 的令牌（颜色/字号/圆角/动效）。
+   加载顺序在 dark.css 之后，只负责书库自己的布局。
+   ============================================================ */
+
+/* 让书库页撑满内容区，并在 .content 的内边距之外再留一点呼吸 */
+/* 注意：.content 是 flex 列，且上面还有 .subtabs 这个兄弟节点。
+   所以这里必须用 flex:1 + min-height:0（标准的"占满剩余空间"写法），
+   不能用 height:100% —— 那会让它按父容器总高算，跟 subtabs 一起溢出。 */
+#page-library {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 6px 10px 0;
+}
+#page-library.active { display: flex; }
+
+/* ---------- 顶部工具条 ---------- */
+.lib-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    margin-bottom: 24px;
+}
+.lib-search {
+    flex: 1;
+    max-width: 340px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 0 14px;
+    box-shadow: inset 0 -6px 14px rgba(0, 0, 0, .22);
+}
+.lib-search svg { width: 15px; height: 15px; stroke: var(--tx3); flex-shrink: 0; }
+.lib-search input {
+    flex: 1; min-width: 0;
+    border: 0; outline: 0; background: transparent;
+    color: var(--tx); font-family: var(--font-ui); font-size: 12.5px;
+}
+.lib-search input::placeholder { color: var(--tx4); }
+
+.lib-seg {
+    display: flex;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 3px;
+    gap: 3px;
+}
+.lib-seg div {
+    padding: 6px 13px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    color: var(--tx3);
+    cursor: pointer;
+    font-weight: 500;
+}
+.lib-seg div.on { background: var(--card2); color: var(--tx); }
+
+.lib-tools { margin-left: auto; display: flex; align-items: center; gap: 9px; }
+.lib-count { font-size: 11.5px; color: var(--tx3); margin-right: 3px; }
+.lib-count b { color: var(--acc); font-family: Georgia, 'Times New Roman', serif; font-size: 1.2em; }
+
+.lib-btn {
+    background: var(--card2);
+    border: 1px solid var(--line2);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--tx2);
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-weight: 500;
+    transition: color var(--dur-fast) var(--ease),
+                border-color var(--dur-fast) var(--ease);
+}
+.lib-btn:hover { color: var(--acc); border-color: var(--acc-line); }
+.lib-btn.on { background: var(--acc-bg); border-color: var(--acc-line); color: var(--acc); }
+/* 「导入书籍」是书库里的主要动作，给一点强调色 */
+.lib-btn.prim { color: var(--acc); border-color: var(--acc-line); background: var(--acc-bg); }
+.lib-btn.prim:hover { background: var(--acc-line); color: #04211E; }
+
+/* ---------- 书架网格 ---------- */
+.lib-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+    position: relative;   /* 给双击阅读的 toast 定位 */
+}
+.lib-scroll::-webkit-scrollbar { width: 9px; }
+.lib-scroll::-webkit-scrollbar-track { background: transparent; }
+.lib-scroll::-webkit-scrollbar-thumb {
+    background: var(--line2); border-radius: 5px;
+    border: 2px solid transparent; background-clip: content-box;
+}
+
+.lib-grid {
+    display: grid;
+    /* 放宽到 168px 起 → 1280 宽下是 5 列而不是 6 列，卡片更大、间距更松 */
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 26px 22px;
+    padding-bottom: 10px;
+}
+
+.lib-card { cursor: pointer; }
+.lib-cover {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    border-radius: 11px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 11px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .48);
+    transition: transform var(--dur-fast) var(--ease),
+                box-shadow var(--dur-fast) var(--ease);
+    background-size: cover;
+    background-position: center;
+}
+.lib-card:hover .lib-cover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .6);
+}
+/* 悬停时提示「单击阅读 · 右键详情」——交互已改为单击进阅读器（2026-09-23） */
+.lib-card:hover .lib-cover::before {
+    content: "单击阅读 · 右键详情";
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(11, 13, 16, .82);
+    border: 1px solid var(--acc-line);
+    color: var(--acc);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: .3px;
+    white-space: nowrap;
+    pointer-events: none;
+    backdrop-filter: blur(3px);
+}
+/* 双击阅读失败时的气泡提示 */
+.lib-toast {
+    position: sticky;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    width: fit-content;
+    max-width: 82%;
+    margin: 0 auto;
+    padding: 9px 16px;
+    border-radius: 10px;
+    background: var(--dangerBg);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-size: 12px;
+    box-shadow: var(--sh-card);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    z-index: 30;
+}
+.lib-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.lib-toast:empty { display: none; }
+.lib-cover::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, .74));
+}
+.lib-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lib-cover .ct {
+    position: relative;
+    font-family: var(--font-title);
+    font-size: 12.5px; font-weight: 620;
+    color: #F4EFE6; letter-spacing: .06em;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, .7);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.lib-cover .ca {
+    position: relative;
+    font-size: 9px; color: #C9BFAA; margin-top: 3px;
+    letter-spacing: .08em;
+}
+
+.lib-fmt {
+    position: absolute; top: 9px; right: 9px; z-index: 2;
+    font-size: 8.5px; font-weight: 600;
+    padding: 3px 7px; border-radius: 6px;
+    background: rgba(9, 11, 14, .74);
+    color: var(--acc);
+    backdrop-filter: blur(3px);
+}
+.lib-fmt.txt { color: var(--warn); }
+
+.lib-chk {
+    position: absolute; top: 9px; left: 9px; z-index: 2;
+    width: 20px; height: 20px; border-radius: 6px;
+    background: rgba(9, 11, 14, .7);
+    border: 1.5px solid rgba(255, 255, 255, .45);
+    display: none;
+    align-items: center; justify-content: center;
+    font-size: 11px; color: transparent;
+    backdrop-filter: blur(3px);
+}
+.multiselect .lib-chk { display: flex; }
+.lib-card.sel .lib-chk {
+    background: var(--acc); border-color: var(--acc);
+    color: #04211E; font-weight: 700;
+}
+.lib-card.sel .lib-cover { box-shadow: 0 0 0 2px var(--acc), 0 10px 26px rgba(79, 209, 197, .22); }
+
+.lib-meta { margin-top: 11px; padding: 0 3px; }
+.lib-meta .n {
+    font-size: 13px; font-weight: 500; color: var(--tx);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lib-meta .s {
+    font-size: 10.5px; color: var(--tx3); margin-top: 6px;
+    display: flex; gap: 10px;
+}
+
+/* ---------- 空状态 ---------- */
+.lib-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; gap: 8px; color: var(--tx3);
+}
+.lib-empty .ie-icon { font-size: 38px; opacity: .3; }
+.lib-empty .ie-t { font-size: 14px; color: var(--tx2); }
+.lib-empty .ie-s { font-size: 11.5px; }
+
+/* ---------- 批量操作条 ---------- */
+.lib-bulk {
+    flex-shrink: 0;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #182027, #12171D);
+    border: 1px solid var(--acc-line);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .5);
+}
+.lib-bulk.show { display: flex; }
+.lb-cnt { font-size: 12.5px; color: var(--tx2); }
+.lb-cnt b { color: var(--acc); font-family: Georgia, serif; font-size: 1.35em; }
+.lb-sep { width: 1px; height: 20px; background: var(--line2); }
+
+.lb-b {
+    background: var(--card2);
+    border: 1px solid var(--line2);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 12px; color: var(--tx);
+    cursor: pointer; font-family: var(--font-ui); font-weight: 500;
+}
+.lb-b:hover:not(:disabled) { border-color: var(--acc-line); color: var(--acc); }
+.lb-b:disabled { opacity: .38; cursor: default; }
+.lb-b.danger { background: var(--danger-bg); border-color: #4A2225; color: var(--danger); }
+.lb-b.prim {
+    background: linear-gradient(135deg, #4FD1C5, #2AA79C);
+    border: none; color: #04211E; font-weight: 600;
+}
+
+/* ============================================================
+   单本详情弹窗
+   ============================================================ */
+.lib-modal { position: fixed; inset: 0; z-index: 300; display: flex;
+             align-items: center; justify-content: center; }
+.lm-scrim { position: absolute; inset: 0; background: rgba(6, 8, 11, .68);
+            backdrop-filter: blur(3px); }
+.lm-card {
+    position: relative;
+    width: 780px; max-width: 92vw;
+    max-height: 88vh;
+    background: var(--card);
+    border: 1px solid var(--line2);
+    border-radius: 18px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, .72);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    /* 注意用 forwards 而不是 both：
+       both 会在动画开始前就套用 from 状态（opacity:0），
+       万一动画没跑（无头渲染、系统关动画），卡片就永远不可见了。 */
+    animation: lmIn var(--dur) var(--ease-out) forwards;
+}
+@keyframes lmIn {
+    from { opacity: 0; transform: translateY(10px) scale(.985); }
+    to   { opacity: 1; transform: none; }
+}
+
+.lm-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 17px 22px 14px;
+    border-bottom: 1px solid var(--line);
+}
+.lm-title { font-family: var(--font-title); font-size: 15px; font-weight: 620; }
+.lm-sub { font-size: 9.5px; color: var(--tx3); letter-spacing: .14em; }
+.lm-x {
+    margin-left: auto; width: 26px; height: 26px;
+    border-radius: 8px; background: var(--card2); border: 1px solid var(--line2);
+    color: var(--tx3); display: flex; align-items: center; justify-content: center;
+    font-size: 12px; cursor: pointer;
+}
+.lm-x:hover { color: var(--tx); }
+
+.lm-body { display: flex; gap: 22px; padding: 20px 22px; overflow-y: auto; }
+.lm-left { width: 190px; flex-shrink: 0; }
+.lm-cover {
+    width: 100%; aspect-ratio: 3 / 4; border-radius: 11px;
+    overflow: hidden; background: var(--card2);
+    background-size: cover; background-position: center;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .6);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--tx4); font-size: 11px;
+}
+.lm-cover img { width: 100%; height: 100%; object-fit: cover; }
+.lm-btn {
+    width: 100%; margin-top: 11px;
+    background: var(--card2); border: 1px solid var(--line2);
+    border-radius: 10px; padding: 10px;
+    font-size: 11.5px; color: var(--tx); cursor: pointer;
+    font-family: var(--font-ui); font-weight: 500;
+}
+.lm-btn:hover { color: var(--acc); border-color: var(--acc-line); }
+
+.lm-kv {
+    display: flex; justify-content: space-between;
+    font-size: 10.5px; color: var(--tx3); margin-top: 10px;
+}
+.lm-kv b { color: var(--tx2); font-weight: 500; }
+.lm-kv b.num { font-family: Georgia, serif; font-size: 13px; color: var(--acc); font-weight: 600; }
+
+.lm-right { flex: 1; min-width: 0; }
+.lm-fld { margin-bottom: 14px; }
+.lml {
+    font-size: 9.5px; color: var(--tx3);
+    letter-spacing: .14em; font-weight: 500; margin-bottom: 6px;
+}
+.lm-right input,
+.lm-right textarea {
+    width: 100%;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--tx);
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    padding: 11px 13px;
+    outline: none;
+    resize: vertical;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03),
+                inset 0 -6px 12px rgba(0, 0, 0, .22);
+}
+.lm-right input:focus,
+.lm-right textarea:focus {
+    border-color: var(--acc);
+    box-shadow: 0 0 0 3px rgba(79, 209, 197, .12);
+}
+
+.lm-foot {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 22px 17px;
+    border-top: 1px solid var(--line);
+    background: #14181E;
+}
+.lm-note { font-size: 10.5px; color: var(--tx3); margin-left: 12px; }
+.lm-b {
+    margin-left: auto;
+    border: 1px solid var(--line2);
+    background: var(--card2);
+    color: var(--tx);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 12px; cursor: pointer; font-family: var(--font-ui); font-weight: 500;
+}
+.lm-b.ghost { background: transparent; border-color: transparent; color: var(--tx3); margin-left: 0; }
+.lm-b.danger { background: var(--danger-bg); border-color: #4A2225; color: var(--danger); margin-left: 0; }
+.lm-b.prim {
+    background: linear-gradient(135deg, #4FD1C5, #2AA79C);
+    border: none; color: #04211E; font-weight: 600;
+    box-shadow: 0 8px 20px rgba(79, 209, 197, .24);
+}
+.lm-b:disabled { opacity: .45; cursor: default; }
+
+/* 选中态提示 */
+.lib-card.sel .lib-meta .n { color: var(--acc); }
+
+/* ============================================================
+   批量传输弹窗（三通道自选）
+   ============================================================ */
+.send-card { width: 460px; }
+
+.send-body { padding: 18px 22px 22px; }
+
+.send-note {
+    font-size: 12px;
+    color: var(--tx3);
+    margin-bottom: 14px;
+}
+.send-note b {
+    color: var(--acc);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.35em;
+    font-weight: 600;
+}
+
+.send-opt {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease),
+                background-color var(--dur-fast) var(--ease);
+}
+.send-opt:last-child { margin-bottom: 0; }
+.send-opt:hover {
+    background: var(--card2);
+    border-color: var(--acc-line);
+}
+.send-opt:hover .so-go { color: var(--acc); transform: translateX(2px); }
+
+.so-ico {
+    width: 38px; height: 38px; flex-shrink: 0;
+    border-radius: 11px;
+    background: var(--card2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+}
+.send-opt:hover .so-ico { background: var(--acc-bg); }
+
+.so-txt { flex: 1; min-width: 0; }
+.so-t {
+    font-size: 13.5px;
+    color: var(--tx);
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+.so-s {
+    font-size: 11px;
+    color: var(--tx3);
+}
+.so-go {
+    font-size: 15px;
+    color: var(--tx4);
+    transition: color var(--dur-fast) var(--ease),
+                transform var(--dur-fast) var(--ease);
+}
+
+/* 通道页上的"本次 N 本"徽标 */
+.batch-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: var(--acc-bg);
+    border: 1px solid var(--acc-line);
+    border-radius: 10px;
+    font-size: 11.5px;
+    color: var(--acc);
+}
+.batch-badge b {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.3em;
+    font-weight: 600;
+}
