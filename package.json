@@ -5,7 +5,7 @@
   "main": "main.js",
   "author": "EasyPub",
   "scripts": {
-    "start": "electron .",
+    "start": "set ELECTRON_RUN_AS_NODE=&& electron .",
     "build": "electron-builder",
     "build:portable": "electron-builder --win portable --x64",
     "bump": "node bump-version.js",
@@ -56,11 +56,13 @@
       "!sendqueue/**",
       "!download/**",
       "!logs/**",
-      "!.covers/**"
+      "!.covers/**",
+      "!_backup/**"
     ],
     "asarUnpack": [
       "**/*.py",
-      "novelmeta/**"
+      "novelmeta/**",
+      "opencc/**"
     ],
     "extraResources": [
       {

@@ -258,25 +258,45 @@ def _strip_tags(text: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
-_COVER_SIZE_PREFIXES = ("s_", "m_", "b_", "t_")
+_COVER_SIZE_PREFIXES = ("t9_", "t7_", "b_", "m_", "s_", "t_")
 
 
 def cover_variants(url: str) -> list[str]:
     """Return the same cover at descending sizes, best first.
 
-    WeRead's image CDN encodes the size in the file name prefix; measured on
-    `.../cover/68/480068/s_480068.jpg`: `s_`=70x100, `m_`=84x120, `b_`=140x200.
-    Unknown/other URLs are returned untouched so the caller can still try them.
+    ★★ 2026-10-09 实测补档（用户：「这个封面好拉跨，不能知道了平台后去官方平台爬吗」）★★
+      微信读书 CDN 把尺寸编在文件名前缀里。**同一张图 480068 逐档实测**：
+
+          s_ = 70x100 (6.3KB)      m_ = 84x120 (8.7KB)     b_ = 140x200 (17KB)
+          t7_ = 285x411 (41KB)     t9_ = 428x616 (72KB)   ← ★ 原来只试到 b_
+          t_ / 不带前缀 = HTTP 404（这台 host 上没有）
+
+      → 现在按 **t9_ → t7_ → b_ → m_ → 原样** 试（download_cover 取第一个真图片），
+        微读来源的封面从 140x200(17KB) 直接变成 428x616(72KB)，像素多了约 6 倍。
+
+    ⚠️ 这个前缀**只对微读那台 CDN 有效**，别的平台别照搬（都实测过，2026-10-09）：
+      · 番茄（`*-novel-sign.byteimg.com`）：URL 带 `~tplv-resize:225:300.image` + **签名**，
+        改尺寸模板 / 去掉模板 / 换 host 一律 **403**；官方书页里也只有同一张 225x300
+        → 番茄封面**拿不到更大的**，只能靠 Real-ESRGAN 超分。
+      · 起点（`bookcover.yuewen.com/qdbimg/…/180`）：宽度尾巴换成 300/600/900 **全部**
+        返回同一张 180x240 → 也换不到大图。
+      · `cdn.weread.qq.com/weread/cover/…`（另一种微读 URL）：换前缀**返回同一张图**
+        （服务器忽略前缀）→ 无害也没收益。
+      · 不是"带尺寸前缀"的 URL 原样返回，调用方照样能试。
     """
     if not url:
         return []
     head, sep, name = url.rpartition("/")
     if not sep:
         return [url]
-    out: list[str] = []
-    for prefix in ("b_", "m_"):
-        if name[:2] in _COVER_SIZE_PREFIXES:
-            out.append(f"{head}/{prefix}{name[2:]}")
+    base = None
+    for prefix in _COVER_SIZE_PREFIXES:      # 长前缀排在前面，免得 t9_ 被 t_ 截错
+        if name.startswith(prefix):
+            base = name[len(prefix):]
+            break
+    if not base:
+        return [url]                          # 不是"尺寸前缀 + 文件名"的形态 → 不动它
+    out: list[str] = [f"{head}/{prefix}{base}" for prefix in ("t9_", "t7_", "b_", "m_")]
     out.append(url)
     deduped: list[str] = []
     for item in out:

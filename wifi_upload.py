@@ -540,6 +540,7 @@ def main():
 
     print("🚀 正在启动浏览器...")
     driver = None
+    success = False
     try:
         driver = create_driver()
         print(f"🌐 正在访问: {url}")
@@ -572,6 +573,8 @@ def main():
             except:
                 pass
             print("✅ 浏览器进程已清理。")
+    # 异常或上传失败必须返回非零退出码，防止主进程误报成功。
+    return 0 if success else 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

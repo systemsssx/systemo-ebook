@@ -1453,9 +1453,6 @@ def negotiate_base(vols: list, auto_cookie: bool = False) -> list:
 
 def do_download(novel_id: str, out_dir: str, vols=None, limit_chapters=0,
                 workers=6, as_json=False, auto_cookie=False) -> dict:
-    # ★★★★ 阉割版（2026-10-02）：**下载执行已移除**（保留签名，避免别处 import 出错）★★★★
-    #   本副本只保留 --info（查书号 / 列分卷 / 卷封面）。
-    return {"success": False, "notAvailable": True, "error": "该部分暂不开放使用"}
     """auto_cookie=True：cf_clearance 失效时自动用 Selenium 续期（见 _ensure_cookie）。
 
     ★ 被动触发只认**无 Cookie 的结果特征**：「（內容加載失敗！請刷新或更換瀏覽器）」标记
@@ -1785,15 +1782,9 @@ def main(argv=None) -> int:
                 for i, v in enumerate(info["volumes"], 1):
                     log(f"  {i:2d}. {v['name']}   {v['url']}")
             return 0
-        # ★★★★ 阉割版（2026-10-02）：**下载执行已移除** ★★★★
-        #   本副本只保留 --info（查书号 / 列分卷 / 卷封面）；--get 一律拒绝。
-        log("⛔ 该部分暂不开放使用（阉割版不含下载执行）")
-        res = {"success": False, "notAvailable": True, "error": "该部分暂不开放使用"}
-        if a.json:
-            log("@@RESULT " + json.dumps(res, ensure_ascii=False))
-        else:
-            print(json.dumps(res, ensure_ascii=False))
-        return 3
+        res = do_download(nid, out_dir, vols=set(a.vol) if a.vol else None,
+                          limit_chapters=a.limit_chapters, workers=a.workers, as_json=a.json,
+                          auto_cookie=a.auto_cookie)
     except Exception as exc:
         res = {"success": False, "error": f"{type(exc).__name__}: {exc}"}
     if a.json:

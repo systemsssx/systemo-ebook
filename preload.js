@@ -81,6 +81,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // ====== 下载小说（v2 增量，不动现有 API） ======
     // ★ 2026-10-01：第二参数 opts.pickLightNovel=true → 命中轻小说时不直接下，
     //   主进程回传 {needPick:true, novelId, title, author}，界面弹【轻小说】选卷窗。
+    // ★ 2026-10-10（用户：「先走 uu，如果 uu 有就弹出弹窗提示是否要下载精校源」）：
+    //   opts.askJingxiao=true    → 先用**精校源（UU看書）只探测**；有这本书就回传
+    //                              {needJingxiao:true, title, chapters, source}，界面弹选源窗。
+    //   opts.ordinaryFirst=true  → 用户选了**普通源** → 笔趣阁·爬虫源排最前（其余源仍兜底）。
+    //   ★ 源的身份：精校源 = UU看書（干净、慢、要挂 VPN）；普通源 = 笔趣阁·爬虫源（快）。
     downloadNovel: (bookName, opts) => ipcRenderer.invoke('download-novel', bookName, opts || {}),
     // ★ 2026-09-30 修：这一行原来**被写在下面的 applebooks 对象内部**（缩进看着像同级，
     //   但花括号里就是子孙）→ `window.electronAPI.onDownloadLog` 实际是 undefined：
@@ -118,8 +123,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
         // ★ 主窗口侧也订阅 WiFi 传书日志/结果 —— 原来只发给 wifi 小窗口，
         //   所以「发送」页 WiFi 通道点完之后一个字都看不到。
         onLog: (callback) => ipcRenderer.on('wifi-upload-log', (event, data) => callback(data)),
-        onUploadDone: (callback) => ipcRenderer.on('wifi-upload-done', (event, data) => callback(data)),
-        onPageClosed: (callback) => ipcRenderer.on('wifi-page-closed', () => callback()),
+        onUploadDone: (callback) => {
+            const handler = (event, data) => callback(data);
+            ipcRenderer.on('wifi-upload-done', handler);
+            return () => ipcRenderer.removeListener('wifi-upload-done', handler);
+        },
+        onPageClosed: (callback) => {
+            const handler = () => callback();
+            ipcRenderer.on('wifi-page-closed', handler);
+            return () => ipcRenderer.removeListener('wifi-page-closed', handler);
+        },
         // ★ 2026-09-30：WiFi 弹窗需要（原 wifi-page 窗口的 wifiAPI 搬过来）
         startUpload: (url) => ipcRenderer.invoke('wifi-upload', url),
         stopUpload: () => ipcRenderer.invoke('wifi-stop'),
@@ -133,6 +146,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
                 callback();
             };
             ipcRenderer.on('wifi-page-closed', handler);
+            return () => ipcRenderer.removeListener('wifi-page-closed', handler);
         }
     },
 

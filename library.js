@@ -44,11 +44,9 @@
         return (d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
     }
 
-    // 没封面时按书名生成一个稳定的渐变色，避免整片灰
+    // 缺封面时复用制作页的内置插画，保持风格一致。
     function placeholder(title) {
-        var h = 0, s = title || '?';
-        for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
-        return 'linear-gradient(165deg, hsl(' + h + ',34%,34%), hsl(' + ((h + 28) % 360) + ',40%,13%))';
+        return "linear-gradient(180deg,#08142311,#081423b8),url('assets/moonlit-cover-v2.png') center/cover";
     }
 
     function esc(s) {
@@ -169,17 +167,18 @@
                 : 'background:' + placeholder(b.title);
             var selCls = S.sel[b.path] ? ' sel' : '';
             return '' +
-                '<div class="lib-card' + selCls + '" data-path="' + esc(b.path) + '">' +
-                  '<div class="lib-cover" style="' + cover + '">' +
+                '<div class="lib-card' + selCls + '" role="button" tabindex="0" aria-label="' + esc(b.title || b.file || '') + '" data-path="' + esc(b.path) + '">' +
+                  '<div class="lib-cover' + (b.cover ? '' : ' is-placeholder') + '" style="' + esc(cover) + '">' +
                     '<div class="lib-chk">✓</div>' +
 
                     (b.cover ? '' : '<div class="ct">' + esc(b.title) + '</div>' +
                                     '<div class="ca">' + esc(b.author || '') + '</div>') +
                   '</div>' +
                   '<div class="lib-meta">' +
-                    '<div class="n">' + esc(b.title) + '</div>' +
+                    '<div class="n" title="' + esc(b.title) + '">' + esc(b.title) + '</div>' +
+                    '<div class="lib-author">' + esc(b.author || T('未知作者')) + '</div>' +
                     '<div class="s"><span>' + fmtSize(b.size) + '</span>' +
-                    '<span>' + (b.author ? esc(b.author) : fmtTime(b.mtime)) + '</span></div>' +
+                    '<span>' + esc(String(b.type || (String(b.path).split('.').pop()) || '').toUpperCase()) + '</span></div>' +
                   '</div>' +
                 '</div>';
         }).join('');
@@ -188,6 +187,9 @@
         //   以前是反的（单击开详情、双击才阅读），用户明确要求换过来。
         //   多选模式下单击仍然是勾选（否则没法多选），右键详情不受影响。
         Array.prototype.forEach.call(grid.querySelectorAll('.lib-card'), function (el) {
+            el.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+            });
             el.addEventListener('click', function () {
                 var path = el.dataset.path;
                 if (S.multi) { toggleSel(path); return; }
@@ -501,6 +503,7 @@
         //   上面两个遮罩的点击关闭同样已删。
 
         // 进入书库页时加载
+        document.addEventListener('languagechange', render);
         var page = $('page-library');
         if (page) {
             new MutationObserver(function () {

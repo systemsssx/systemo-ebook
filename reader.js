@@ -173,8 +173,33 @@ function buildCSS() {
         // ★ 章标题：Book 生成的书把章名写成 <p style="text-align:center;color:gold">，
         //   行内样式已被 cleanInlineStyle 抹掉，这里用「居中 + 金色 + 下压间距」把它
         //   恢复成标题的样子，并把 .chapter/.title/.heading 这类常见章名 class 一并纳入
-        'p.chapter, p.title, p.chap, p.heading, p.chapter-title, p.chapterTitle, p.ct, div.chapter, div.title, div.heading, section > h1, section > h2 {',
+        'p.chapter, p.title, p.chap, p.heading, p.chapter-title, p.chapterTitle, p.ct, div.chapter, div.title, div.heading {',
         '  text-align: center !important;',
+        '  color: ' + t.title + ' !important;',
+        '  font-weight: 600 !important;',
+        '  font-size: 1.34em !important;',
+        '  line-height: 1.7 !important;',
+        '  letter-spacing: .06em !important;',
+        '  margin: 1.1em 0 1.5em !important;',
+        '  text-indent: 0 !important;',
+        '  border: 0 !important;',
+        '}',
+        // ★★ 2026-10-09（用户：「为啥转换成 epub 标题还是居中，是不是格式写的有问题，还是你的 txt 有问题」）★★
+        //   诊断结论（三条都实测过，别再来回猜）：
+        //     · TXT 没问题：章节标题被生成器正确识别成 <h1>，还按空格断行；
+        //     · **导出的 EPUB 也是左对齐**：pandoc 结构
+        //         <section class="level1"><h1 style="text-align:left !important; …">第2章<br/>冬日重现</h1>
+        //       左对齐 + 金色 #b8956a + 满宽金线，正是用户 2026-09-30 要的
+        //       （原话见 epub_generator.py 的 h1_style 与《完整版开发交接.md》：
+        //        「标题不要改成居中了，改成左对齐，并且在章节标题的空格那里换行」）；
+        //     · **是阅读器自己把它掰回居中的**：下面这条老规则把 `section > h1, section > h2`
+        //       也纳入了"章标题 = 居中"，而 cleanInlineStyle() 会先把书里的行内样式抹掉
+        //       → 于是阅读器里看到的标题永远是居中的，跟导出文件不一致。
+        //       （轻小说那套 EPUB 的章标题是 <h2> 直接挂在 <body> 下，不命中 `section >`，
+        //         所以只有"网文 TXT→EPUB"这条路的书看着是居中 —— 现象对得上。）
+        //   ⇒ 修法：`section > h1/h2` **不再替书决定对齐**，只统一颜色/字号/间距（对齐交给书自己的样式）。
+        //      与下面 hr 那条「宽度/对齐交给书里自己的样式」（2026-09-30）同一原则。
+        'section > h1, section > h2 {',
         '  color: ' + t.title + ' !important;',
         '  font-weight: 600 !important;',
         '  font-size: 1.34em !important;',

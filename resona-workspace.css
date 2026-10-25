@@ -1,0 +1,1445 @@
+/*
+ * 页面布局入口：统一管理五页的尺寸、表面和视觉层级。
+ * 弹窗皮肤保留在 resona-studio.css，动效逻辑在 resona-effects.js。
+ * 现有基础样式使用 !important，此处保持相同优先级以明确覆盖。
+ */
+
+html body.resona-main {
+    --desk-ink: #e3e5e9;
+    --desk-muted: #9aa9be;
+    --desk-accent: #d4c09c;
+    --desk-rule: #c0d1e51e;
+}
+
+/* 公共框架：共用连续背景，降低导航和标题装饰的视觉权重。 */
+
+html body.resona-main .mainbar {
+    height: 36px !important;
+    background: transparent !important;
+    border-bottom-color: #c0d1e510 !important;
+}
+
+/* 简洁模式保留同色系底图，隐藏场景装饰，避免近纯色背景上残留光环和碎片。 */
+html body.resona-main[data-background-mode="simple"] .world-art {
+    background: #101b2c url("./assets/moonlit-simple-background.png") center/cover no-repeat !important;
+}
+
+html body.resona-main[data-background-mode="simple"] .world-shade {
+    background: linear-gradient(90deg,#0b14221a,transparent) !important;
+}
+
+html body.resona-main[data-background-mode="simple"] :is(.world-light,.world-halo,.fragments) {
+    display: none !important;
+}
+
+/* 原生按钮提供键盘切换，细线轨道与方形滑块沿用现有直角风格。 */
+html body.resona-main .mainbar-right .background-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+    padding: 0 0 0 14px;
+    border: 0;
+    border-left: 1px solid var(--desk-rule);
+    border-radius: 0;
+    background: transparent;
+    color: #a9b8ce;
+    font: 400 10px/1.6 var(--font-ui);
+    letter-spacing: 0;
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+}
+
+html body.resona-main .background-switch-track {
+    position: relative;
+    display: block;
+    width: 22px;
+    height: 12px;
+    border: 1px solid #acbfd344;
+    box-sizing: border-box;
+}
+
+html body.resona-main .background-switch-track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 6px;
+    height: 6px;
+    background: #8b9cb4;
+}
+
+html body.resona-main .background-switch[aria-checked="true"] .background-switch-track {
+    border-color: #d4c09c88;
+}
+
+html body.resona-main .background-switch[aria-checked="true"] .background-switch-track::after {
+    transform: translateX(10px);
+    background: var(--desk-accent);
+}
+
+html body.resona-main .mainbar-right .background-switch:hover {
+    color: #e4d7be;
+}
+
+html body.resona-main .background-switch:focus-visible {
+    outline: 1px solid var(--desk-accent);
+    outline-offset: 3px;
+}
+
+html body.resona-main .sidebar {
+    background: #0a1422b3 !important;
+    border-right: 1px solid #c0d1e516 !important;
+}
+
+html body.resona-main .sidebar .nav-item {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+}
+
+html body.resona-main .sidebar .nav-item::before {
+    background: linear-gradient(90deg,#dac8a510,transparent) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main .nav-en {
+    opacity: .45 !important;
+}
+
+/* 仅隐藏装饰编号；保留章节序号、数量与输入值。 */
+
+html body.resona-main :is(.folio,.section-index,.choice-num,.channel-number),
+html body.resona-main #page-books .make-step .num,
+html body.resona-main .studio-flow li>span {
+    display: none !important;
+}
+
+html body.resona-main .view:is(#page-books,#page-download,#page-auto,#page-applebooks,#page-library) {
+    padding: 24px clamp(24px,3vw,48px) 18px !important;
+}
+
+html body.resona-main .view-head {
+    margin-bottom: 24px !important;
+    padding-bottom: 0 !important;
+    border: 0 !important;
+    align-items: center !important;
+}
+
+html body.resona-main .view-head::after {
+    display: none !important;
+}
+
+html body.resona-main .view-title-wrap {
+    align-items: center !important;
+    gap: 11px !important;
+}
+
+html body.resona-main .view-title {
+    font-size: 21px !important;
+    line-height: 1.65 !important;
+}
+
+html body.resona-main .folio {
+    padding: 0 !important;
+    font-size: 9px !important;
+    text-shadow: none !important;
+}
+
+html body.resona-main .view-sub {
+    font-size: 11px !important;
+    margin-top: 6px !important;
+    line-height: 1.8 !important;
+}
+
+html body.resona-main .head-stamp {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+    color: var(--desk-muted) !important;
+    font-size: 9px !important;
+}
+
+html body.resona-main .head-stamp::before {
+    display: none !important;
+}
+
+/* 制作页：连续编辑区与右侧封面。 */
+
+html body.resona-main #page-books .make-steps {
+    display: flex !important;
+    gap: 30px !important;
+    margin: 0 0 26px !important;
+    padding: 0 0 12px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--desk-rule) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-books .make-step {
+    height: 26px !important;
+    padding: 0 !important;
+    gap: 8px !important;
+    border: 0 !important;
+    background: transparent !important;
+    font-size: 10px !important;
+}
+
+html body.resona-main #page-books .make-step.current {
+    color: #e8d7b9 !important;
+}
+
+html body.resona-main #page-books .make-step.current::after {
+    bottom: -13px !important;
+    height: 1px !important;
+    background: var(--desk-accent) !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-books .make-layout {
+    grid-template-columns: minmax(0,1fr) 236px !important;
+    gap: clamp(30px,4vw,64px) !important;
+    align-items: stretch !important;
+}
+
+html body.resona-main #page-books .editor-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 28px !important;
+    padding: 0 4px 18px 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+html body.resona-main #page-books .editor-stack>.editor-section {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+html body.resona-main #page-books .editor-section::before,
+html body.resona-main #page-books .editor-section::after {
+    display: none !important;
+}
+
+html body.resona-main #page-books .editor-section>.section-head {
+    height: 22px !important;
+    min-height: 22px !important;
+    padding: 0 !important;
+    margin: 0 0 14px !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+html body.resona-main #page-books .section-head .section-name {
+    font-size: 12px !important;
+    gap: 10px !important;
+    color: #d8dcdF !important;
+}
+
+html body.resona-main #page-books .section-index {
+    font-size: 8px !important;
+    text-shadow: none !important;
+    opacity: .75 !important;
+}
+
+html body.resona-main #page-books .section-meta {
+    font-size: 8px !important;
+    opacity: .65 !important;
+}
+
+html body.resona-main #page-books #dropZone {
+    min-height: 76px !important;
+    padding: 14px 0 !important;
+    gap: 18px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--desk-rule) !important;
+    background: transparent !important;
+}
+
+html body.resona-main #page-books #dropZone .txt-mark {
+    width: 48px !important;
+    flex-basis: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    border: 1px solid #c0d1e52c !important;
+    background: #cedcf005 !important;
+}
+
+html body.resona-main #page-books #dropZone .source-copy .fname {
+    font: 500 12px/1.8 var(--font-ui) !important;
+    color: #d5dce6 !important;
+}
+
+html body.resona-main #page-books #dropZone .source-copy .fsub {
+    font-size: 10px !important;
+}
+
+html body.resona-main #page-books #card-name .fields {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    padding: 0 !important;
+    gap: 30px !important;
+}
+
+html body.resona-main #page-books #card-name .field {
+    grid-template-rows: auto 40px auto !important;
+    gap: 8px !important;
+}
+
+html body.resona-main #page-books #card-name .concept-label {
+    font: 500 11px/1.8 var(--font-ui) !important;
+    color: #aebbd0 !important;
+    letter-spacing: 0 !important;
+}
+
+html body.resona-main #page-books #card-name .inputbox {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #b6c9e14d !important;
+    background: linear-gradient(0deg,#d1e0f206,transparent) !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-books #card-name .inputbox:focus-within {
+    border-bottom-color: var(--desk-accent) !important;
+}
+
+html body.resona-main #page-books #card-name .inputbox input {
+    padding: 0 2px !important;
+}
+
+html body.resona-main #page-books #card-name .ai-search {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 3px 0 10px !important;
+    font-size: 10px !important;
+    color: var(--desk-accent) !important;
+}
+
+html body.resona-main #page-books #card-name .field-hint {
+    font-size: 10px !important;
+    min-height: 18px !important;
+    color: #8f9fb6 !important;
+}
+
+html body.resona-main #page-books #card-chapters {
+    flex: 1 0 268px !important;
+}
+
+html body.resona-main #page-books #card-chapters .chapter-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+html body.resona-main #page-books .chapter-summary {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: baseline !important;
+    gap: 9px !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
+html body.resona-main #page-books .chapter-total {
+    font: 450 23px/1.3 var(--font-ui) !important;
+    letter-spacing: 0 !important;
+    color: #d8dedf !important;
+    text-shadow: none !important;
+}
+
+html body.resona-main #page-books .chapter-caption {
+    font: 400 10px/1.8 var(--font-ui) !important;
+    margin: 0 !important;
+}
+
+html body.resona-main #page-books #diagnosisBar {
+    margin: 0 0 0 auto !important;
+    font-size: 10px !important;
+}
+
+html body.resona-main #page-books .chapter-top {
+    display: none !important;
+}
+
+html body.resona-main #page-books #chapterPreviewList {
+    min-height: 72px !important;
+    max-height: 180px !important;
+    flex: 0 1 auto !important;
+    padding: 16px 0 !important;
+    border: 0 !important;
+    border-top: 1px solid var(--desk-rule) !important;
+    border-bottom: 1px solid var(--desk-rule) !important;
+    background: transparent !important;
+}
+
+html body.resona-main #page-books .chapter-settings {
+    display: grid !important;
+    grid-template-columns: max-content 104px minmax(0,1fr) !important;
+    align-items: center !important;
+    gap: 16px 12px !important;
+    padding-top: 16px !important;
+}
+
+html body.resona-main #page-books .chapter-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    align-items: center;
+}
+
+html body.resona-main #page-books .chapter-actions button,
+html body.resona-main #page-books #btnPreviewChapters {
+    height: 27px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 10px !important;
+    color: #b7c3d4 !important;
+    transform: none !important;
+}
+
+html body.resona-main #page-books #btnPreviewChapters {
+    color: var(--desk-accent) !important;
+}
+
+html body.resona-main #page-books .chapter-actions button:hover {
+    color: #ecddc3 !important;
+}
+
+html body.resona-main #page-books .number-field {
+    width: 104px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+}
+
+html body.resona-main #page-books #splitHint {
+    margin-top: 9px !important;
+    font-size: 10px !important;
+    color: #889ab1 !important;
+}
+
+/* 封面区：图片作为视觉重点，说明和操作保持轻量。 */
+
+html body.resona-main #page-books #card-cover {
+    padding: 0 0 14px 28px !important;
+    border-left-color: var(--desk-rule) !important;
+}
+
+html body.resona-main #page-books #card-cover .proof-head {
+    margin-bottom: 24px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+}
+
+html body.resona-main #page-books #card-cover .proof-head>span {
+    display: none !important;
+}
+
+html body.resona-main #page-books #coverBox {
+    width: 178px !important;
+}
+
+/* 相框与深蓝内衬独立于图片，不改变上传的封面素材。 */
+
+html body.resona-main #page-books .cover-art#coverBox {
+    border: 1px solid #c7b28b88 !important;
+    background: #0c1828 !important;
+    box-shadow: 0 0 0 3px #0b1525,0 0 0 4px #b49e7329,5px 8px 20px #03081166 !important;
+}
+
+html body.resona-main #page-books #coverBox::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 5px !important;
+    border: 1px solid #c7b28b38 !important;
+    pointer-events: none !important;
+    z-index: 4 !important;
+}
+
+html body.resona-main #page-books #coverBox #coverPlaceholder,
+html body.resona-main #page-books #coverBox #coverPreview {
+    inset: 8px !important;
+    width: calc(100% - 16px) !important;
+    height: calc(100% - 16px) !important;
+}
+
+html body.resona-main #page-books #card-cover .cover-caption {
+    margin-top: 22px !important;
+    gap: 6px !important;
+    padding: 0 !important;
+}
+
+html body.resona-main #page-books #card-cover .cover-caption strong {
+    font-size: 14px !important;
+    letter-spacing: .3px !important;
+}
+
+html body.resona-main #page-books #card-cover .cover-meta {
+    margin-top: 24px !important;
+    padding: 16px 0 10px !important;
+    gap: 10px !important;
+}
+
+html body.resona-main #page-books #card-cover .cover-buttons {
+    margin-top: 12px !important;
+}
+
+html body.resona-main #page-books #card-cover .cover-buttons button {
+    border: 0 !important;
+    border-bottom: 1px solid #c0d1e530 !important;
+    padding: 0 !important;
+    text-align: left !important;
+}
+
+html body.resona-main #page-books #card-cover .cover-buttons #btnClearCover {
+    text-align: right !important;
+    border: 0 !important;
+}
+
+html body.resona-main #page-books .make-footer {
+    margin-top: 16px !important;
+    padding: 12px 0 0 !important;
+    height: auto !important;
+    min-height: 48px !important;
+    border: 0 !important;
+    border-top: 1px solid var(--desk-rule) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-books .make-footer .out-path,
+html body.resona-main #page-books .make-footer .out-path code,
+html body.resona-main #page-books .make-footer .out-path button {
+    font-size: 10px !important;
+}
+
+/* 下载与一键页：统一输入区和主操作，插画作为辅助。 */
+
+html body.resona-main :is(#page-download,#page-auto) .studio-stage {
+    grid-template-columns: minmax(0,1.6fr) minmax(170px,.65fr) !important;
+    gap: clamp(36px,5vw,78px) !important;
+    padding: 24px 0 32px !important;
+    max-width: 1060px !important;
+}
+
+html body.resona-main .studio-compose .tool-label {
+    font-size: 9px !important;
+    letter-spacing: 1.7px !important;
+}
+
+html body.resona-main .studio-compose .tool-heading {
+    font-size: 25px !important;
+    margin: 20px 0 13px !important;
+    line-height: 1.65 !important;
+}
+
+html body.resona-main .studio-compose .tool-intro {
+    margin-bottom: 30px !important;
+}
+
+html body.resona-main .studio-compose .tool-form {
+    gap: 0 !important;
+    padding: 0 0 8px !important;
+    border-bottom: 1px solid #b6c9e14d !important;
+}
+
+html body.resona-main .studio-compose .tool-form:focus-within {
+    border-bottom-color: var(--desk-accent) !important;
+}
+
+html body.resona-main .studio-compose .tool-form input {
+    height: 44px !important;
+    border: 0 !important;
+    padding: 0 12px 0 0 !important;
+    background: transparent !important;
+}
+
+html body.resona-main .studio-compose .tool-form input:focus {
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main .studio-compose .tool-submit {
+    height: 40px !important;
+    width: 110px !important;
+    align-self: center !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main .studio-compose .tool-status {
+    margin-top: 14px !important;
+    padding: 0 !important;
+    min-height: 24px !important;
+    border: 0 !important;
+    background: transparent !important;
+    font-size: 10px !important;
+}
+
+html body.resona-main .studio-compose .tool-hints {
+    margin-top: 24px !important;
+    font-size: 11px !important;
+}
+
+html body.resona-main .studio-compose .studio-guidance {
+    font-size: 10px !important;
+}
+
+html body.resona-main #page-auto #autoTxtBtn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    align-self: flex-start !important;
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 32px !important;
+    margin: 22px 0 0 !important;
+    padding: 5px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #c0d1e540 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #c8d0de !important;
+    font: 500 11px/1.8 var(--font-ui) !important;
+    letter-spacing: .1px !important;
+    white-space: normal !important;
+    text-align: left !important;
+    transform: none !important;
+    translate: none !important;
+    scale: 1 !important;
+}
+
+html body.resona-main #page-auto #autoTxtBtn:hover:not(:disabled),
+html body.resona-main #page-auto #autoTxtBtn:focus-visible {
+    border-bottom-color: var(--desk-accent) !important;
+    color: #ecddc3 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-auto #autoTxtBtn::after {
+    display: none !important;
+}
+
+html body.resona-main .studio-artifact {
+    border: 0 !important;
+    padding: 0 !important;
+    gap: 20px !important;
+}
+
+html body.resona-main .studio-book {
+    width: 182px !important;
+    transform: rotateY(-9deg) rotateZ(1deg) !important;
+    transition: transform .5s cubic-bezier(.2,.8,.2,1) !important;
+}
+
+@media (hover:hover) and (prefers-reduced-motion:no-preference) {
+    html body.resona-main:not(.effect-paused) .studio-artifact:hover .studio-book {
+        transform: translateY(-7px) rotateY(-2deg) rotateZ(0deg) !important;
+    }
+}
+
+html body.resona-main.effect-paused .studio-book {
+    transition: none !important;
+}
+
+html body.resona-main .artifact-caption {
+    display: none !important;
+}
+
+html body.resona-main .book-lettering span,html body.resona-main .book-lettering small {
+    display: none !important;
+}
+
+html body.resona-main .book-lettering {
+    top: 30px !important;
+}
+
+html body.resona-main .book-lettering strong {
+    font-size: 18px !important;
+    line-height: 1.9 !important;
+    letter-spacing: 2px !important;
+}
+
+html body.resona-main .artifact-foot {
+    font-size: 9px !important;
+    opacity: .65 !important;
+}
+
+html body.resona-main .studio-flow {
+    margin: 0 !important;
+    border-top-color: var(--desk-rule) !important;
+}
+
+html body.resona-main .studio-flow li {
+    border: 0 !important;
+    padding: 16px 0 !important;
+    gap: 9px !important;
+}
+
+html body.resona-main .studio-flow li strong {
+    font-size: 10px !important;
+}
+
+html body.resona-main .studio-flow li span {
+    font-size: 8px !important;
+}
+
+/* 传输页：目的地标签、可滚动信息区与独立发送区。 */
+
+html body.resona-main #page-applebooks .transfer-channels {
+    min-height: 74px !important;
+    margin-bottom: 30px !important;
+    border-bottom-color: var(--desk-rule) !important;
+}
+
+html body.resona-main #page-applebooks .channel {
+    padding: 0 20px 16px 0 !important;
+    border: 0 !important;
+    gap: 10px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-applebooks .channel.selected {
+    background: transparent !important;
+    box-shadow: inset 0 -1px var(--desk-accent) !important;
+}
+
+html body.resona-main #page-applebooks .channel-number,
+html body.resona-main #page-applebooks .channel-arrow {
+    display: none !important;
+}
+
+html body.resona-main #page-applebooks .channel-icon {
+    width: 26px !important;
+    height: 26px !important;
+}
+
+html body.resona-main #page-applebooks .channel-state {
+    font-size: 10px !important;
+    margin-left: auto !important;
+}
+
+html body.resona-main #page-applebooks .channel-copy .d {
+    font-size: 10px !important;
+    margin-top: 5px !important;
+}
+
+html body.resona-main #page-applebooks .transfer-columns {
+    gap: 40px !important;
+    grid-template-columns: minmax(0,1.25fr) minmax(260px,.8fr) !important;
+    grid-template-rows: minmax(0,1fr) !important;
+    padding-bottom: 0 !important;
+    overflow: hidden !important;
+}
+
+html body.resona-main #page-applebooks .transfer-side {
+    display: grid !important;
+    grid-template-rows: minmax(0,1fr) auto !important;
+    align-content: stretch !important;
+    padding-left: 28px !important;
+    border-left-color: var(--desk-rule) !important;
+    gap: 22px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+html body.resona-main #page-applebooks .channel-info {
+    min-height: 0 !important;
+    padding: 0 8px 14px 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none !important;
+}
+
+html body.resona-main #page-applebooks .channel-info::-webkit-scrollbar {
+    display: none !important;
+}
+
+html body.resona-main #page-applebooks .concept-send-card {
+    min-height: 0 !important;
+    padding: 16px 0 0 !important;
+    border: 0 !important;
+    border-top: 1px solid var(--desk-rule) !important;
+    overflow: visible !important;
+}
+
+html body.resona-main #page-applebooks .panel-title {
+    border-bottom-color: var(--desk-rule) !important;
+    padding-bottom: 14px !important;
+}
+
+html body.resona-main #page-applebooks .queue-empty {
+    background: transparent !important;
+}
+
+html body.resona-main #page-applebooks .empty-mark {
+    border: 0 !important;
+    background: transparent !important;
+    color: #b9ab91 !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 23px !important;
+}
+
+html body.resona-main #page-applebooks .queue-empty>div:first-of-type {
+    font-size: 16px !important;
+    margin-top: 14px !important;
+}
+
+html body.resona-main #page-applebooks .queue-empty>div:last-of-type {
+    font-size: 11px !important;
+    max-width: 290px !important;
+}
+
+html body.resona-main #page-applebooks .queue-foot {
+    border-top: 1px solid var(--desk-rule) !important;
+    padding-top: 16px !important;
+}
+
+html body.resona-main #page-applebooks .queue-foot .note {
+    font-size: 10px !important;
+}
+
+html body.resona-main #page-applebooks .channel-actions button,
+html body.resona-main #page-applebooks #txAddLocal {
+    height: 30px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #c0d1e530 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 10px !important;
+}
+
+html body.resona-main #page-applebooks .info-row {
+    border-bottom-color: #c0d1e511 !important;
+    padding: 11px 0 !important;
+    align-items: baseline !important;
+}
+
+html body.resona-main #page-applebooks .info-row .k {
+    flex: 0 0 auto !important;
+}
+
+html body.resona-main #page-applebooks .info-row .v {
+    min-width: 0 !important;
+    max-width: 68% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+}
+
+html body.resona-main #page-applebooks .tx-status {
+    font-size: 10px !important;
+    padding: 12px 0 4px !important;
+    margin: 18px 0 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    align-items: flex-start !important;
+    border-top-color: var(--desk-rule) !important;
+}
+
+html body.resona-main #page-applebooks .tx-status .ts-t {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+}
+
+html body.resona-main #page-applebooks .tx-status .ts-i {
+    margin-top: 2px !important;
+}
+
+html body.resona-main #page-applebooks .send-button {
+    height: 42px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-applebooks .send-note {
+    font-size: 10px !important;
+    margin: 10px 0 0 !important;
+    line-height: 1.8 !important;
+}
+
+/* 我的书库：固定封面尺寸、从左上排列，避免单本居中拉伸。 */
+
+html body.resona-main #page-library>.view-head {
+    align-items: flex-end !important;
+    padding-bottom: 20px !important;
+    margin-bottom: 18px !important;
+    border-bottom: 1px solid var(--desk-rule) !important;
+}
+
+html body.resona-main #page-library .library-tabs {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    gap: 26px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+}
+
+html body.resona-main #page-library .library-tabs button {
+    padding: 0 0 9px !important;
+    margin: 0 !important;
+    height: 30px !important;
+    font: 500 11px/1.8 var(--font-ui) !important;
+    border: 0 !important;
+    border-bottom: 1px solid transparent !important;
+    color: #94a3b9 !important;
+}
+
+html body.resona-main #page-library .library-tabs button.active {
+    color: #e4d7be !important;
+    border-bottom-color: var(--desk-accent) !important;
+}
+
+html body.resona-main #page-library .library-toolbar {
+    gap: 18px !important;
+    align-items: center !important;
+    padding: 0 0 18px !important;
+    margin: 0 !important;
+}
+
+html body.resona-main #page-library .library-search {
+    flex: 1 1 220px !important;
+    max-width: 300px !important;
+    min-width: 150px !important;
+    height: 34px !important;
+    padding: 0 0 0 2px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #c0d1e533 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-library .library-search:focus-within {
+    border-bottom-color: var(--desk-accent) !important;
+}
+
+html body.resona-main #page-library .library-search input {
+    font: 400 11px/1.8 var(--font-ui) !important;
+}
+
+html body.resona-main #page-library #libCount {
+    margin: 0 auto 0 0 !important;
+    white-space: nowrap !important;
+    font: 400 10px/1.8 var(--font-ui) !important;
+    color: #91a1b8 !important;
+}
+
+html body.resona-main #page-library #libCount b {
+    font: 500 11px/1.8 var(--font-ui) !important;
+    color: #c2cddd !important;
+}
+
+html body.resona-main #page-library .library-toolbar button {
+    flex: 0 0 auto !important;
+    height: 30px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font: 400 10px/1.8 var(--font-ui) !important;
+    color: #aebdd1 !important;
+}
+
+html body.resona-main #page-library .library-toolbar button:hover,
+html body.resona-main #page-library #libMultiBtn.on {
+    color: #e4d7be !important;
+    border-bottom-color: #d4c09c77 !important;
+}
+
+html body.resona-main #page-library #libImport {
+    color: var(--desk-accent) !important;
+}
+
+html body.resona-main #page-library .library-content {
+    display: block !important;
+    align-items: normal !important;
+    justify-content: normal !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    padding: 18px 8px 24px 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #a9bcd033 transparent !important;
+}
+
+html body.resona-main #page-library :is(#libScroll,#libTop)[style*="display:none"],
+html body.resona-main #page-library :is(#libScroll,#libTop)[style*="display: none"] {
+    display: none !important;
+}
+
+html body.resona-main #page-library #libGrid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill,144px) !important;
+    justify-content: start !important;
+    align-content: start !important;
+    align-items: start !important;
+    gap: 32px 30px !important;
+    width: 100% !important;
+    padding: 0 0 24px !important;
+}
+
+html body.resona-main #page-library .lib-card {
+    width: 144px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: 0;
+}
+
+html body.resona-main #page-library .lib-cover {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 2/3 !important;
+    border: 1px solid #c8d5e426 !important;
+    background-position: center !important;
+    background-size: cover !important;
+    box-shadow: 4px 6px 14px #03081166 !important;
+    padding: 12px !important;
+    transition: transform .25s ease,border-color .25s ease !important;
+}
+
+html body.resona-main #page-library .lib-cover::after {
+    background: linear-gradient(90deg,#0005,transparent 6%,#ffffff08 8%,transparent 11%) !important;
+    pointer-events: none !important;
+}
+
+html body.resona-main #page-library .lib-card:hover .lib-cover,
+html body.resona-main #page-library .lib-card:focus-visible .lib-cover {
+    transform: translateY(-4px) !important;
+    border-color: #d6c09d88 !important;
+}
+
+html body.resona-main #page-library .lib-card:hover .lib-cover::before {
+    display: none !important;
+}
+
+html body.resona-main #page-library .lib-card:focus-visible {
+    outline: 1px solid #d6c09d88;
+    outline-offset: 7px;
+}
+
+html body.resona-main #page-library .lib-card.sel .lib-cover {
+    border-color: var(--desk-accent) !important;
+    box-shadow: 0 0 0 1px #d4c09c66 !important;
+}
+
+html body.resona-main #page-library .lib-chk {
+    width: 18px !important;
+    height: 18px !important;
+    left: 7px !important;
+    top: 7px !important;
+    backdrop-filter: none !important;
+}
+
+html body.resona-main #page-library .lib-card.sel .lib-chk {
+    background: #d4c09c !important;
+    border-color: #d4c09c !important;
+    color: #172335 !important;
+}
+
+html body.resona-main #page-library .lib-cover .ct {
+    z-index: 1;
+    font: 500 13px/1.8 var(--font-reading) !important;
+    letter-spacing: .3px !important;
+}
+
+html body.resona-main #page-library .lib-cover .ca {
+    z-index: 1;
+    font: 400 9px/1.8 var(--font-ui) !important;
+}
+
+html body.resona-main #page-library .lib-meta {
+    padding: 0 !important;
+    margin-top: 13px !important;
+}
+
+html body.resona-main #page-library .lib-meta .n {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font: 500 12px/1.8 var(--font-reading) !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+    overflow-wrap: anywhere !important;
+    color: #e0e2e6 !important;
+}
+
+html body.resona-main #page-library .lib-author {
+    margin-top: 5px;
+    font: 400 10px/1.8 var(--font-ui);
+    color: #abb8cb;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+html body.resona-main #page-library .lib-meta .s {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+    font: 400 9px/1.8 var(--font-ui) !important;
+    color: #7f91aa !important;
+}
+
+html body.resona-main #page-library #libEmpty {
+    min-height: 220px !important;
+    height: 100% !important;
+    padding: 28px !important;
+    text-align: center !important;
+}
+
+html body.resona-main #page-library .lib-bulk {
+    display: none !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 44px !important;
+    flex-wrap: wrap !important;
+    gap: 8px 18px !important;
+    margin-top: 8px !important;
+    padding: 12px 0 0 !important;
+    border: 0 !important;
+    border-top: 1px solid var(--desk-rule) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body.resona-main #page-library .lib-bulk.show {
+    display: flex !important;
+}
+
+html body.resona-main #page-library:has(#libSegRec.active) .lib-bulk {
+    display: none !important;
+}
+
+html body.resona-main #page-library .lib-bulk .lb-cnt {
+    font: 400 10px/1.8 var(--font-ui) !important;
+}
+
+html body.resona-main #page-library .lib-bulk .lb-cnt b {
+    font: 550 12px/1.8 var(--font-ui) !important;
+    color: #d4c09c !important;
+}
+
+html body.resona-main #page-library .lib-bulk button {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    height: 28px !important;
+    font: 400 10px/1.8 var(--font-ui) !important;
+}
+
+html body.resona-main #page-library .lib-bulk #libSelectAll {
+    color: var(--desk-accent) !important;
+}
+
+html body.resona-main #page-library .lib-bulk #libDel {
+    color: #c69595 !important;
+}
+
+/* 精选推荐：封面比例统一，列宽自适应并铺满可用区域。 */
+
+html body.resona-main #page-library #recPanel {
+    min-height: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+html body.resona-main #page-library #recPanel>.lib-scroll {
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 0 6px 24px 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+}
+
+html body.resona-main #page-library #recGrid {
+    grid-template-columns: repeat(auto-fill,minmax(128px,1fr)) !important;
+    justify-content: stretch !important;
+    align-content: start !important;
+    gap: 30px 24px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    padding: 20px 0 0 !important;
+}
+
+html body.resona-main #page-library .rec-card-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+}
+
+html body.resona-main #page-library .rec-thumb {
+    padding-top: 150% !important;
+    border: 1px solid #c8d5e426 !important;
+    box-shadow: 4px 6px 14px #03081166 !important;
+}
+
+html body.resona-main #page-library .rec-name {
+    margin-top: 13px !important;
+    font: 500 12px/1.8 var(--font-reading) !important;
+}
+
+html body.resona-main #page-library .rec-author {
+    margin-top: 5px !important;
+    font: 400 10px/1.8 var(--font-ui) !important;
+    color: #abb8cb !important;
+    opacity: 1 !important;
+}
+
+html body.resona-main #page-library .rec-tabs {
+    gap: 18px !important;
+    padding: 10px 0 !important;
+    border-bottom: 1px solid var(--desk-rule) !important;
+}
+
+html body.resona-main #page-library :is(.rec-tab,.rec-board) {
+    padding: 5px 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #9eafc5 !important;
+    font: 400 10px/1.8 var(--font-ui) !important;
+}
+
+html body.resona-main #page-library :is(.rec-tab,.rec-board).active {
+    color: var(--desk-accent) !important;
+}
+
+/* 封面骨架：未加载 / 加载失败 / 无封面时统一露骨架，不出现破图图标与 alt 文字。 */
+
+html body.resona-main #page-library .rec-thumb {
+    background: linear-gradient(100deg, rgba(200,213,228,.09) 30%, rgba(200,213,228,.19) 50%, rgba(200,213,228,.09) 70%) !important;
+    background-size: 200% 100% !important;
+}
+
+html body.resona-main #page-library .rec-thumb.is-loading {
+    animation: recShimmer 1.5s linear infinite !important;
+}
+
+html body.resona-main #page-library .rec-thumb.is-error,
+html body.resona-main #page-library .rec-thumb.is-empty {
+    animation: none !important;
+}
+
+html body.resona-main #page-library .rec-thumb img {
+    opacity: 0;
+    transition: opacity .32s ease;
+}
+
+html body.resona-main #page-library .rec-thumb.is-loaded img {
+    opacity: 1;
+}
+
+html body.resona-main #page-library #recGrid.rec-loading .rec-thumb img {
+    opacity: 0 !important;
+}
+
+/* 轻小说页码：旧概念稿把 .rec-pager 绝对定位到 .main 底部（被内容盖住、点不到），
+   新工作台里改回正常文档流，右对齐成一条小页码行。 */
+
+html body.resona-main #page-library #recPager {
+    position: static !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    margin: 0 0 12px !important;
+    padding: 0 2px !important;
+    min-height: 16px !important;
+}
+
+html body.resona-main #page-library #recPager .rec-pg {
+    min-width: 22px !important;
+    padding: 3px 6px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #9eafc5 !important;
+    font: 400 10px/1.8 var(--font-ui) !important;
+    opacity: 1 !important;
+}
+
+html body.resona-main #page-library #recPager .rec-pg:hover {
+    color: #d4c09c !important;
+}
+
+html body.resona-main #page-library #recPager .rec-pg.active {
+    color: var(--desk-accent) !important;
+    font-weight: 600 !important;
+}
+
+html body.resona-main #page-library #recPager .rec-pg[disabled] {
+    opacity: .3 !important;
+    cursor: default !important;
+}
+
+/* 窄窗口适配：保持阅读顺序，内容超高时滚动，不挤压控件。 */
+
+@media (max-width:1200px) {
+    html body.resona-main .view:is(#page-books,#page-download,#page-auto,#page-applebooks,#page-library) {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+
+    html body.resona-main #page-books .make-layout {
+        grid-template-columns: minmax(0,1fr) 200px !important;
+        gap: 28px !important;
+    }
+
+    html body.resona-main #page-books #card-cover {
+        padding-left: 22px !important;
+    }
+
+    html body.resona-main #page-books #coverBox {
+        width: 152px !important;
+    }
+
+    html body.resona-main #page-books #card-name .fields {
+        gap: 22px !important;
+    }
+
+    html body.resona-main #page-applebooks .transfer-columns {
+        gap: 26px !important;
+        grid-template-columns: minmax(0,1fr) 270px !important;
+    }
+
+    html body.resona-main #page-applebooks .transfer-side {
+        padding-left: 22px !important;
+    }
+
+    html body.resona-main #page-applebooks .channel {
+        padding-right: 12px !important;
+    }
+
+    html body.resona-main #page-library #libGrid {
+        grid-template-columns: repeat(auto-fill,128px) !important;
+        gap: 28px 24px !important;
+    }
+
+    html body.resona-main #page-library .lib-card {
+        width: 128px !important;
+    }
+
+    html body.resona-main #page-library #recGrid {
+        grid-template-columns: repeat(auto-fill,minmax(112px,1fr)) !important;
+        gap: 28px 20px !important;
+    }
+
+    html body.resona-main #page-library .library-toolbar {
+        gap: 14px !important;
+    }
+}
+
+@media (max-width:1000px) {
+    html body.resona-main #page-books #card-name .fields {
+        grid-template-columns: minmax(0,1fr) !important;
+        gap: 20px !important;
+    }
+
+    html body.resona-main #page-books .make-steps {
+        gap: 18px !important;
+    }
+
+    html body.resona-main #page-books .chapter-settings .setting-note {
+        grid-column: 1 / -1;
+    }
+
+    html body.resona-main #page-applebooks .channel {
+        flex-wrap: wrap !important;
+    }
+}
+
+@media (max-height:760px) {
+    html body.resona-main .view:is(#page-books,#page-download,#page-auto,#page-applebooks,#page-library) {
+        padding-top: 18px !important;
+    }
+
+    html body.resona-main .view-head {
+        margin-bottom: 18px !important;
+    }
+
+    html body.resona-main .view-title {
+        font-size: 20px !important;
+    }
+
+    html body.resona-main #page-books .make-steps {
+        margin-bottom: 20px !important;
+    }
+
+    html body.resona-main #page-books .editor-stack {
+        gap: 24px !important;
+    }
+
+    html body.resona-main #page-books #coverBox {
+        width: 146px !important;
+    }
+
+    html body.resona-main .studio-compose .tool-heading {
+        font-size: 22px !important;
+    }
+
+    html body.resona-main .studio-book {
+        width: 158px !important;
+    }
+
+    html body.resona-main .studio-stage {
+        min-height: 360px !important;
+    }
+}
+
+@media (prefers-reduced-motion:reduce) {
+    html body.resona-main .studio-book {
+        transform: none !important;
+        transition: none !important;
+    }
+
+    html body.resona-main #page-library .lib-cover {
+        transition: none !important;
+    }
+
+    html body.resona-main #page-library .lib-card:hover .lib-cover,
+  html body.resona-main #page-library .lib-card:focus-visible .lib-cover {
+        transform: none !important;
+    }
+}

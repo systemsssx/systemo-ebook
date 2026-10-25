@@ -3144,3 +3144,9 @@ select.param-select:focus {
     cursor: pointer;
 }
 .ac-cancel:hover { color: var(--tx2); background: rgba(255, 255, 255, .04); }
+
+/* ★★★ 2026-10-10：精校源询问弹窗（#jxModal）—— 复用上面 .ac-* 全套视觉
+   （.ac-modal/.ac-card/.ac-title/.ac-sub/.ac-btn/.ac-tx/.ac-cancel），
+   只补两条文案样式：书名那行加粗、警告那行用主题的 --warn（不新造颜色/字号）。 */
+#jxModal .jx-book { color: var(--tx); font-weight: var(--fw-strong); }
+#jxModal .jx-warn { color: var(--warn); }

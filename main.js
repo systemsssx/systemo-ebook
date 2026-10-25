@@ -1711,21 +1711,10 @@ async function runLinovelib(payload = {}, event = null) {
 }
 
 ipcMain.handle('linovelib-info', async (event, payload) => runLinovelib({ ...(payload || {}), mode: 'info' }, event));
-// ★★★★ 阉割版（2026-10-02，用户要求）★★★★
-//   **保留完整 UI，删掉下载执行。**
-//   界面一行都不删：推荐、轻小说「查询/选卷」、搜作者/搜封面、制作、书库、上传……全部照常。
-//   只有"真正会下载"的 IPC 在这里被拦死 —— 统一返回 notAvailable，
-//   渲染层拿到这个标志就弹「因相关法律法规规定，该部分暂不开放使用」。
-//   （查询分卷走的是 linovelib-info，**不在**拦截名单里。）
-function linovelibBlocked(ipc) {
-    try { logUpload('LN-BLOCKED', JSON.stringify({ ipc: ipc })); } catch (e) {}
-    return { success: false, ok: false, notAvailable: true, error: '该部分暂不开放使用' };
-}
-
-ipcMain.handle('linovelib-get', async () => linovelibBlocked('linovelib-get'));
+ipcMain.handle('linovelib-get', async (event, payload) => runLinovelib({ ...(payload || {}), mode: 'get' }, event));
 // ★ 2026-10-01：新增「只续 Cookie」通道 —— 走 refresh_cookie.py（linovelib.py --refresh-cookie），
 //   给界面上的「刷新 Cookie」按钮用（不需要书号，约 10 秒，会弹一次 Edge）。
-ipcMain.handle('linovelib-refresh-cookie', async () => linovelibBlocked('linovelib-refresh-cookie'));
+ipcMain.handle('linovelib-refresh-cookie', async (event, payload) => runLinovelib({ ...(payload || {}), mode: 'refresh' }, event));
 
 // ================================================================
 // ★★★ 2026-10-02（用户定稿）：**从你自己的浏览器本地读 cookie** ★★★
@@ -1786,7 +1775,7 @@ async function runGrabBrowserCookie(payload = {}, event = null) {
         return { ok: false, error: e.message || '读浏览器 cookie 失败' };
     }
 }
-ipcMain.handle('linovelib-grab-browser-cookie', async () => linovelibBlocked('linovelib-grab-browser-cookie'));
+ipcMain.handle('linovelib-grab-browser-cookie', async (event, payload) => runGrabBrowserCookie(payload || {}, event));
 
 // ================================================================================
 // ★★★ 2026-10-02（最终方案）★★★ **用应用自己的 Electron 窗口登录，让 Chromium 自己解密 cookie**
@@ -1901,7 +1890,7 @@ async function runLoginWindow(payload = {}, event = null) {
         _lnLoginWin = null;
     }
 }
-ipcMain.handle('linovelib-open-login-window', async () => linovelibBlocked('linovelib-open-login-window'));
+ipcMain.handle('linovelib-open-login-window', async (event, payload) => runLoginWindow(payload || {}, event));
 
 // ★★★ 2026-10-02（用户要求）：「现在把下载也设一个取消键，点取消可以杀掉进程」★★★
 //   杀掉 `_lnActiveChild`（**精确到句柄**，不是按命令行匹配 —— 那个坑今天踩过：
@@ -2595,10 +2584,14 @@ ipcMain.handle('convert-txt-to-epub', async (event, txtPath, options) => {
 });
 
 // ================================================================
-// ★★★ 下载小说：2026-09-29 换成 novel_dl.py（2 书源纯 HTTP 聚合） ★★★
+// ★★★ 下载小说：2026-09-29 换成 novel_dl.py（多书源纯 HTTP 聚合） ★★★
 //   旧实现是 Selenium 浏览器自动化 + pyautogui 固定坐标点击 + DeepSeek 判来源，
 //   又慢又脆还要 API key，已整体替换。
-//   源顺序（命中即停）：笔尖中文 → 悠久小说网
+//   ★★ 2026-10-09（用户拍板）：源顺序（命中即停）＝
+//        ① 笔趣阁·爬虫源（xbiquzw.net，xbiquzw.py；**只认搜索首条完美匹配**）
+//        ② 久久小说网（TXT 直链）
+//        ③ 轻小说源（哔哩轻小说，网文源全灭之后的兜底，见下面 pickLightNovel 那段）
+//      SoNovel 那两个源（笔尖中文 / 悠久小说网）已删。
 // ================================================================
 
 const PYTHON_PATH = findPython();
@@ -2611,8 +2604,17 @@ function callNovelDownloader(bookName, opts = {}) {
     // ★ 2026-10-01（用户：「我搜无职转生他怎么不给我跳选搜索结果和选卷，直接就开始下了」）：
     //   `pickLightNovel=true` 时给 novel_dl.py 加 `--ln-picker` —— 命中轻小说**不直接下**，
     //   只把书号交回来，由渲染层弹【轻小说】选卷窗（候选列表 + 分卷勾选）。
-    //   仍然只在"三个网文源全失败"之后才查轻小说，网文速度不受影响。
+    //   仍然只在"网文源全失败"之后才查轻小说，网文速度不受影响。
     const pickLightNovel = !!opts.pickLightNovel;
+    // ★★★ 2026-10-10（用户：「先走 uu，如果 uu 有就弹出弹窗提示是否要下载精校源」）★★★
+    //   askJingxiao     → 给 novel_dl.py 加 `--ask-jx`：先用 UU看書 **只探测**（搜到就回
+    //                     {"needJingxiao":true}，不下正文）→ 界面弹「要不要改用精校源」。
+    //   ordinaryFirst   → 用户选了**普通源** → 加 `--ordinary-first`：笔趣阁·爬虫源排最前。
+    //   ★ 源的身份（用户 2026-10-10 当面纠正）：**精校源 = UU看書**（干净但慢、会重试、要挂 VPN）；
+    //     **普通源 = 笔趣阁·爬虫源**（纯 HTTP，一分钟级别）。
+    //   两者都只影响"这一次下载"，界面在弹窗之后就重新发起一次调用。
+    const askJingxiao = !!opts.askJingxiao;
+    const ordinaryFirst = !!opts.ordinaryFirst;
     return new Promise((resolve) => {
         // ★★★ 打包后 .py 文件在 app.asar.unpacked/ 目录下
         // 用 process.resourcesPath（指向 resources/） + 'app.asar.unpacked'
@@ -2691,6 +2693,9 @@ function callNovelDownloader(bookName, opts = {}) {
         if (SETTINGS.linovelibAutoCookie !== false) { args.push('--auto-cookie'); }
         if (SETTINGS.linovelibBase) { args.push('--ln-base', String(SETTINGS.linovelibBase)); }
         if (pickLightNovel) { args.push('--ln-picker'); }
+        // ★ 2026-10-10：精校源那条交互（先探测 → 界面问 → 再按选择下载）
+        if (askJingxiao) { args.push('--ask-jx'); }
+        if (ordinaryFirst) { args.push('--ordinary-first'); }
 
         const python = execFile(PYTHON_PATH, args,
             {
@@ -2715,6 +2720,7 @@ function callNovelDownloader(bookName, opts = {}) {
                 let pyErrorMessage = null;  // ★ Python 通过 _emit_error 输出的 JSON 错误消息
                 let pyFailedChapters = 0;   // ★ 2026-09-30：轻小说源"有 N 章没抓到"（站点限流）
                 let needPick = null;        // ★ 2026-10-01：轻小说命中，请界面弹选卷窗
+                let needJx = null;          // ★ 2026-10-10：精校源（UU看書）有这本书 → 界面问"要不要下精校源"
                 try {
                     if (stdout) {
                         const lines = stdout.split(/\r?\n/);
@@ -2730,6 +2736,11 @@ function callNovelDownloader(bookName, opts = {}) {
                                 // ★ 2026-10-01：轻小说命中且开了 --ln-picker → 交给界面弹选卷窗
                                 if (obj && obj.needPick === true && obj.novelId) {
                                     needPick = obj;
+                                    break;
+                                }
+                                // ★ 2026-10-10：UU看書 探测命中 → 交界面弹「要不要改用精校源」
+                                if (obj && obj.needJingxiao === true) {
+                                    needJx = obj;
                                     break;
                                 }
                                 if (obj && obj.notFound === true) {
@@ -2752,6 +2763,21 @@ function callNovelDownloader(bookName, opts = {}) {
                     }
                 } catch (e) {
                     // ignore
+                }
+                if (needJx) {
+                    console.log(`🔀 精校源（UU看書）有《${needJx.title}》（${needJx.chapters} 章）→ 交给界面问要不要下精校源`);
+                    resolve({
+                        success: false,
+                        needJingxiao: true,
+                        title: needJx.title || '',
+                        chapters: needJx.chapters || 0,
+                        source: needJx.source || 'UU看書(uukanshu.cc)',
+                        // ★ 和 needPick 一样：回填界面输入框要用**书名**
+                        query: needJx.query || needJx.title || '',
+                        filePath: null,
+                        fileName: null
+                    });
+                    return;
                 }
                 if (needPick) {
                     console.log(`🎯 命中轻小说：${needPick.title}（书号 ${needPick.novelId}）→ 交给界面选卷`);
@@ -2892,9 +2918,11 @@ function callNovelDownloader(bookName, opts = {}) {
 }
 
 ipcMain.handle('download-novel', async (event, bookName, opts) => {
-    // ★★★★ 阉割版（2026-10-02）：下载执行已移除 —— 界面保留，点了弹法规提示 ★★★★
-    console.log('⛔ [阉割版] 下载小说请求被拦截（该部分暂不开放使用）:', bookName);
-    return linovelibBlocked('download-novel');
+    if (!bookName || !bookName.trim()) {
+        return { success: false, error: '书名不能为空' };
+    }
+    console.log('📥 下载小说请求:', bookName, opts || {});
+    return await callNovelDownloader(bookName.trim(), opts || {});
 });
 
 // ================================================================
@@ -3510,7 +3538,7 @@ ipcMain.handle('applebooks-start-auth', async (event) => {
             return { success: false, error: '找不到 chromedriver.exe' };
         }
         const args = [
-            '-X', 'utf8',
+            '-X', 'utf8', '-u',
             script,
             '--chromedriver-path', chromedriverPath
         ];
@@ -3520,7 +3548,7 @@ ipcMain.handle('applebooks-start-auth', async (event) => {
             const stale = path.join(__dirname, 'auth_code.txt');
             if (fs.existsSync(stale)) fs.unlinkSync(stale);
         } catch (e) {}
-        currentAuthProcess = execFile(PYTHON_PATH, args,
+        const authBrowser = execFile(PYTHON_PATH, args,
             {
                 maxBuffer: 1024 * 1024 * 50,
                 encoding: 'utf-8',
@@ -3530,19 +3558,23 @@ ipcMain.handle('applebooks-start-auth', async (event) => {
                 }
             },
             (error, stdout, stderr) => {
+                if (currentAuthProcess !== authBrowser) return;
                 if (stdout) safeSend('applebooks-auth-log', stdout);
                 if (stderr) safeSend('applebooks-auth-log', '[stderr] ' + stderr);
                 safeSend('applebooks-auth-done', {
-                    success: !error,
-                    error: error ? error.message : null
+                    browserClosed: true,
+                    error: error ? '浏览器启动或运行失败，请检查 Chrome 与 ChromeDriver 版本。' : null
                 });
-                currentAuthProcess = null;
+                if (currentAuthProcess === authBrowser) currentAuthProcess = null;
             }
         );
-        currentAuthProcess.stdout.on('data', (data) => {
+        currentAuthProcess = authBrowser;
+        logUpload('AUTH-BROWSER', '启动百度授权浏览器');
+        authBrowser.stdout.on('data', (data) => {
             safeSend('applebooks-auth-log', data.toString('utf-8'));
+            logUpload('AUTH-BROWSER-LOG', data.toString('utf-8').slice(0, 500));
         });
-        currentAuthProcess.stderr.on('data', (data) => {
+        authBrowser.stderr.on('data', (data) => {
             safeSend('applebooks-auth-log', '[stderr] ' + data.toString('utf-8'));
         });
         return { success: true, message: '授权流程已启动，请在浏览器中完成登录并复制授权码' };
@@ -3745,6 +3777,9 @@ ipcMain.handle('wifi-open-page', async () => {
 });
 // 2. 启动 wifi_upload.py 上传
 ipcMain.handle('wifi-upload', async (event, url, files) => {
+    if (currentWifiProcess && currentWifiProcess.exitCode === null && !currentWifiProcess.killed) {
+        return { success: false, error: 'WiFi 传输正在进行，请勿重复启动' };
+    }
     if (!url || !url.trim()) {
         return { success: false, error: '网址不能为空' };
     }
@@ -3786,10 +3821,10 @@ ipcMain.handle('wifi-upload', async (event, url, files) => {
             logUpload('ABORT', 'WiFi 统一暂存失败 → ' + staged.error);
             return { success: false, error: staged.error };
         }
-        const wifiArgs = ['-X', 'utf8', script,
+        const wifiArgs = ['-X', 'utf8', '-u', script,
                           '--download-dir', staged.dir,
                           '--delay', String(Number(SETTINGS.wifiDelay) || 0),
-                          // ★ 2026-10-05：网址直接用参数传（不再只靠 stdin 交互）
+                          // ★ 2026-10-05：网址直接用参数传（不再只靠 stdin 交互），避免卡在 input() 提示行
                           '--url', fullUrl];
         {
             // ★ 书库批量传输：把勾选（且已暂存）的文件写成临时 JSON，脚本读它
@@ -3815,6 +3850,7 @@ ipcMain.handle('wifi-upload', async (event, url, files) => {
                 if (wifiDone) return;          // 已被超时分支处理过
                 wifiDone = true;
                 clearTimeout(wifiTimer);
+                if (currentWifiProcess === python) currentWifiProcess = null;
                 if (stdout) safeSend('wifi-upload-log', stdout);
                 if (stderr) safeSend('wifi-upload-log', '[stderr] ' + stderr);
                 safeSend('wifi-upload-done', {
@@ -3825,6 +3861,7 @@ ipcMain.handle('wifi-upload', async (event, url, files) => {
         );
         currentWifiProcess = python;
         // ★ 实时回传 stdout/stderr
+        // ★ 2026-10-05：WiFi 脚本的每一行也进应用日志（以前只进弹窗，出问题查不到）
         const _wifiLogLine = (s) => { try { logUpload('WIFI-LOG', String(s).trim().slice(0, 400)); } catch (e) {} };
         python.stdout.on('data', (data) => {
             safeSend('wifi-upload-log', data.toString('utf-8'));

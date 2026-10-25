@@ -265,20 +265,8 @@ def open_browser():
         #   「Authorization process error」。旧注释以为 creation_flags 就能
         #   「不读输出」，其实子进程的 stdout/stderr 仍是 PIPE、仍会被解码。
         #   修法：把这两个流指向 DEVNULL —— 没有任何字节需要解码，就不会崩。
-        class _QuietService(Service):
-            def start(self):
-                self.creation_flags = 0x08000000  # CREATE_NO_WINDOW
-                self.start_error_message = (
-                    'chromedriver 启动失败。请确认 chromedriver.exe 与 Chrome 版本匹配：' + str(CHROME_DRIVER_PATH)
-                )
-                self._terminate = None
-                super(Service, self).start()
-                self.process.stdout = open(os.devnull, 'rb')
-                self.process.stderr = open(os.devnull, 'wb')
-                # 让 Selenium 的收尾逻辑认为不需要再 terminate
-                self._terminate = None
-
-        service = _QuietService(CHROME_DRIVER_PATH)
+        # 使用 Selenium 公共日志接口，避免覆盖私有启动逻辑。
+        service = Service(executable_path=CHROME_DRIVER_PATH, log_output=subprocess.DEVNULL)
         service.creation_flags = 0x08000000  # CREATE_NO_WINDOW
         # 创建 driver 时不 capture stdout（避免读 chromedriver 输出触发解码错误）
         driver = webdriver.Chrome(service=service, options=chrome_options)

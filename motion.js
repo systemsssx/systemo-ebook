@@ -30,6 +30,7 @@
         this.useGPU = true;
         this._scaleTimers = new WeakMap();
         this._pageTimers = new WeakMap();
+        this._pageAnimations = new WeakMap();
     }
 
     /* ---------- 页面切换 ----------
@@ -46,7 +47,7 @@
             oldPage.style.display = 'none';
         }
 
-        if (!this.enabled) {
+        if (!this.enabled || document.hidden) {
             this._clearPage(newPage);
             newPage.style.display = 'flex';
             newPage.style.opacity = '1';
@@ -57,16 +58,20 @@
         this._clearPage(newPage);
         newPage.style.display = 'flex';
         newPage.style.opacity = '';
-        // 强制回流，保证动画从头播放（元素刚从 display:none 出来）
-        void newPage.offsetWidth;
-        newPage.classList.add('mo-page-in');
-
-        var prev = this._pageTimers.get(newPage);
-        if (prev) clearTimeout(prev);
-        this._pageTimers.set(newPage, setTimeout(function () {
-            newPage.classList.remove('mo-page-in');
-            self._clearPage(newPage);
-        }, duration + 60));
+        // Native finite timeline; no forced layout or duplicate CSS entrance.
+        var previousAnimation = this._pageAnimations.get(newPage);
+        if (previousAnimation) previousAnimation.cancel();
+        if (newPage.animate) {
+            var animation = newPage.animate([
+                { opacity: 0, translate: '0 7px' },
+                { opacity: 1, translate: '0 0' }
+            ], { duration: Math.min(duration, 280), easing: 'cubic-bezier(.2,.8,.2,1)' });
+            this._pageAnimations.set(newPage, animation);
+            var finish = function () {
+                if (self._pageAnimations.get(newPage) === animation) self._pageAnimations.delete(newPage);
+            };
+            animation.finished.then(finish, finish);
+        }
     };
 
     /* ---------- 按压回弹 ----------
@@ -107,4 +112,16 @@
     };
 
     window.AnimationEngine = new AnimationEngine();
+    if (window.matchMedia) {
+        var motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+        motionPreference.addEventListener('change', function (event) {
+            window.AnimationEngine.enabled = !event.matches;
+            if (event.matches) {
+                document.querySelectorAll('.page').forEach(function (page) {
+                    var animation = window.AnimationEngine._pageAnimations.get(page);
+                    if (animation) animation.cancel();
+                });
+            }
+        });
+    }
 })();

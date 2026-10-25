@@ -1,21 +1,19 @@
 <!DOCTYPE html>
+
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="systemoebook · 电子书制作">systemoebook · 电子书制作</title>
-
-    <!-- ★★★ 主题令牌 + 动效（theme.css 必须最先加载） ★★★ -->
-    <link rel="stylesheet" href="theme.css?v=1005150628" />
-    <link rel="stylesheet" href="glass.css?v=1005150628" />
-    <link rel="stylesheet" href="motion.css?v=1005150628" />
-
-    <!-- ★ 必须同步加载，不能加 defer：
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-i18n="systemoebook · 电子书制作">systemoebook · 电子书制作</title>
+<!-- ★★★ 主题令牌 + 动效（theme.css 必须最先加载） ★★★ -->
+<link href="theme.css?v=1025232203" rel="stylesheet"/>
+<link href="glass.css?v=1025232203" rel="stylesheet"/>
+<link href="motion.css?v=1025232203" rel="stylesheet"/>
+<!-- ★ 必须同步加载，不能加 defer：
          index.html 的内联脚本在解析到 L1773 时就要读 window.AnimationEngine，
          用 defer 会取到 undefined（旧版 animations.js 就是这么失效的）。 -->
-    <script src="motion.js?v=1005150628"></script>
-
-    <style>
+<script src="motion.js?v=1025232203"></script>
+<style>
         /* ===== 全局重置 ===== */
         * {
             margin: 0;
@@ -1101,7 +1099,7 @@
 .rec-author{margin-top:3px;font-size:11px;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ★★★ 2026-09-30（用户要求「切到轻小说推荐页先等封面加载，至少上面 10 张」）：
    封面就绪门 —— 前 10 张没到位之前，缩略图走"骨架微光"、图先透明，
-   避免列表先出来一片空框、再一张张慢慢弹的观感。超时 8 秒兜底，绝不把页面卡死。 */
+   避免列表先出来一片空框、再一张张慢慢弹的观感。超时 5 秒兜底，绝不把页面卡死。 */
 .rec-grid.rec-loading .rec-thumb{
     background:linear-gradient(100deg,rgba(128,128,128,.13) 30%,rgba(128,128,128,.27) 50%,rgba(128,128,128,.13) 70%);
     background-size:200% 100%;
@@ -1227,370 +1225,273 @@
   flex:0 0 auto;background:var(--card2,#1a1d22)}
 </style>
 </head>
-<body>
-
-    <!-- ===== 粒子背景 ===== -->
-    <div class="particle-container">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    <div class="window">
-        <!-- ★ 窗口控制：无标题栏后补的极简三键，absolute 定位不占布局 -->
-        <div class="win-ctrl">
-            <button id="btnMinimize" title="最小化" aria-label="最小化">
-                <svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg>
-            </button>
-            <button id="btnMaximize" title="最大化" aria-label="最大化">
-                <svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="1"/></svg>
-            </button>
-            <button id="btnClose" class="close" title="关闭" aria-label="关闭">
-                <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg>
-            </button>
-        </div>
-
-        <!-- 顶栏 -->
-
-
-        <!-- 主体 -->
-        <div class="main-body">
-            <!-- 侧边栏 -->
-                        <nav class="sidebar" id="sidebarNav">
-                <!-- 品牌 -->
-                <div class="sb-brand">
-                    <div class="sb-mark">S</div>
-                    <div>
-                        <div class="sb-name">systemo<span>ebook</span></div>
-                        <div class="sb-tag">LOCAL TOOLKIT</div>
-                    </div>
-                </div>
-                <div class="nav-item" data-page="page-download">
-                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
-                    <span class="label" data-i18n="nav.download">下载</span>
-                    <span class="en">DL</span>
-                    <span class="indicator"></span>
-                </div>
-                <div class="nav-item active" data-page="page-books">
-                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
-                    <span class="label" data-i18n="nav.make">制作</span>
-                    <span class="en">MAKE</span>
-                    <span class="indicator"></span>
-                </div>
-                <div class="nav-item" data-page="page-applebooks">
-                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></span>
-                    <span class="label" data-i18n="nav.send">传输</span>
-                    <span class="en">SEND</span>
-                    <span class="indicator"></span>
-                </div>
-                <div class="nav-item" data-page="page-library">
-                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></span>
-                    <span class="label" data-i18n="nav.library">书库</span>
-                    <span class="badge">128</span>
-                    <span class="indicator"></span>
-                </div>
-                <div class="nav-item" data-page="page-auto">
-                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z"/></svg></span>
-                    <span class="label" data-i18n="nav.auto">一键</span>
-                    <span class="en">AUTO</span>
-                    <span class="indicator"></span>
-                </div>
-                <div class="nav-grp">SYSTEM</div>
-                <div class="nav-item" data-page="page-help" id="navHelp">
-                    <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1-1.3 1.8v.5"/><path d="M12 17h.01"/></svg></span>
-                    <span class="label" data-i18n="nav.help">帮助</span>
-                    <span class="en">HELP</span>
-                    <span class="indicator"></span>
-                </div>
-                <!-- ★ 2026-09-29：侧边栏「API」授权项已删除
+<body class="resona-main"><div aria-hidden="true" class="world"><div class="world-art"></div><div class="world-shade"></div><div class="world-light"></div><div class="world-halo halo-a"></div><div class="world-halo halo-b"></div><canvas class="ambient-particles" id="field"></canvas><div class="fragments"><i class="shard shard-a"></i><i class="shard shard-b"></i><i class="shard shard-c"></i><i class="shard shard-d"></i><i class="glint glint-a"></i><i class="glint glint-b"></i><i class="glint glint-c"></i></div></div>
+<!-- ===== 粒子背景 ===== -->
+<div class="particle-container">
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+</div>
+<div class="window app"><header class="titlebar"><div class="titlebrand"><i aria-hidden="true" class="titlemark"></i><span>systemo ebook</span><span>·</span><span>EPUB Maker</span></div><div class="win-ctrl window-tools">
+<button aria-label="最小化" id="btnMinimize" title="最小化">
+<svg viewBox="0 0 12 12"><path d="M2 6h8"></path></svg>
+</button>
+<button aria-label="最大化" id="btnMaximize" title="最大化">
+<svg viewBox="0 0 12 12"><rect height="7" rx="1" width="7" x="2.5" y="2.5"></rect></svg>
+</button>
+<button aria-label="关闭" class="close" id="btnClose" title="关闭">
+<svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"></path></svg>
+</button>
+</div></header>
+<!-- ★ 窗口控制：无标题栏后补的极简三键，absolute 定位不占布局 -->
+<!-- 顶栏 -->
+<!-- 主体 -->
+<div class="main-body shell">
+<!-- 侧边栏 -->
+<nav class="sidebar" id="sidebarNav">
+<!-- 品牌 -->
+<div class="brand"><span aria-hidden="true" class="brand-symbol">S</span><div><div class="brand-name">systemo<span>ebook</span></div><div class="brand-sub">LOCAL BOOK STUDIO</div></div></div><div class="nav-caption">工作区</div>
+<div class="nav-item" data-page="page-download">
+<span class="icon nav-icon"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg></span>
+<span class="label nav-label" data-i18n="nav.download">下载</span>
+<span class="en nav-en">DL</span>
+<span class="indicator"></span>
+</div>
+<div class="nav-item active" data-page="page-books">
+<span class="icon nav-icon"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></span>
+<span class="label nav-label" data-i18n="nav.make">制作</span>
+<span class="en nav-en">MAKE</span>
+<span class="indicator"></span>
+</div>
+<div class="nav-item" data-page="page-applebooks">
+<span class="icon nav-icon"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg></span>
+<span class="label nav-label" data-i18n="nav.send">传输</span>
+<span class="en nav-en">SEND</span>
+<span class="indicator"></span>
+</div>
+<div class="nav-item" data-page="page-library">
+<span class="icon nav-icon"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"></path></svg></span>
+<span class="label nav-label" data-i18n="nav.library">书库</span>
+<span class="badge nav-en">LIBRARY</span>
+<span class="indicator"></span>
+</div>
+<div class="nav-item" data-page="page-auto">
+<span class="icon nav-icon"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewBox="0 0 24 24"><path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z"></path></svg></span>
+<span class="label nav-label" data-i18n="nav.auto">一键</span>
+<span class="en nav-en">AUTO</span>
+<span class="indicator"></span>
+</div>
+<div class="nav-caption">系统</div>
+<div class="nav-item" data-page="page-help" id="navHelp">
+<span class="icon nav-icon"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1-1.3 1.8v.5"></path><path d="M12 17h.01"></path></svg></span>
+<span class="label nav-label" data-i18n="nav.help">帮助</span>
+<span class="en nav-en">HELP</span>
+<span class="indicator"></span>
+</div>
+<!-- ★ 2026-09-29：侧边栏「API」授权项已删除
                      （DeepSeek 全套下线；搜作者/搜封面改由 novelmeta 直连，不需要 key） -->
-                <div class="sb-foot">
-                    <div class="lang-switch" id="langSwitch">
-                        <div data-lang="zh" class="on" data-i18n="中文">中文</div>
-                        <div data-lang="en">EN</div>
-                    </div>
-                </div>
-
-                <!-- 旧的子页面导航：保留给现有 JS 定位用，视觉上隐藏。
+<div class="sidebar-spacer"></div><div class="privacy-note"><strong>TXT → EPUB</strong><span>制作过程在本机完成，不上传源文件。</span></div><div class="sb-foot locale"><span>语言</span>
+<div class="lang-switch locale-buttons" id="langSwitch">
+<div class="on" data-i18n="中文" data-lang="zh">中文</div>
+<div data-lang="en">EN</div>
+</div>
+</div>
+<!-- 旧的子页面导航：保留给现有 JS 定位用，视觉上隐藏。
                      子标签点击时会 .click() 这些元素来切页。 -->
-                <div class="nav-hidden">
-                </div>
-            </nav>
-
-            <!-- ===== 内容区域 ===== -->
-            <div class="content">
-                <!-- 页面1: 书籍信息 -->
-<div class="page active" id="page-books">
-                    <div class="make-head">
-                        <div class="mh-title"><span data-i18n="制作新书">制作新书</span> <em>CREATE</em></div>
-                        <div class="mh-sub" data-i18n="TXT 转 EPUB · 全流程本地完成，不上传任何文件">TXT 转 EPUB · 全流程本地完成，不上传任何文件</div>
-                    </div>
-
-                    <!-- 进度指示器（设计稿样式：完成的步骤打勾） -->
-                    <div class="make-steps" id="makeSteps">
-                        <div class="ms" data-step="info"><i>1</i><span data-i18n="书籍信息">书籍信息</span></div>
-                        <div class="ms" data-step="name"><i>2</i><span data-i18n="书名作者">书名作者</span></div>
-                        <div class="ms" data-step="chapters"><i>3</i><span data-i18n="章节划分">章节划分</span></div>
-                        <div class="ms" data-step="cover"><i>4</i><span data-i18n="封面设置">封面设置</span></div>
-                    </div>
-
-                    <div class="make-scroll">
-                        <div class="make-cols">
-                            <div class="make-main">
-
-                                <!-- ===== 源文件 ===== -->
-                                <section class="mk-card">
-                                    <div class="mk-head">
-                                        <div class="t" data-i18n="源文件">源文件</div>
-                                        <div class="chip" id="mkFileBadge"></div>
-                                    </div>
-                                    <div class="drop is-empty" id="dropZone">
-                                        <div class="ftype"><span>TXT</span></div>
-                                        <div class="fmeta" id="dropContent">
-                                            <div class="fname" data-i18n="拖拽 TXT 文件至此">拖拽 TXT 文件至此</div>
-                                            <div class="fsub" data-i18n="或点击选择 · 支持 .txt">或点击选择 · 支持 .txt</div>
-                                        </div>
-                                        <div class="fmeta" id="fileInfo" style="display:none;">
-                                            <div class="fname">
-                                                <span id="fileNameDisplay" data-i18n="未命名.txt">未命名.txt</span>
-                                                <span class="ok">✓</span>
-                                            </div>
-                                            <div class="fsub">
-                                                <span><b id="fileSizeDisplay">0 KB</b></span>
-                                                <span id="fileChapterDisplay">0 章</span>
-                                            </div>
-                                        </div>
-                                        <button class="fbtn" id="removeFileBtn" style="display:none;" data-i18n="更换">更换</button>
-                                    </div>
-                                    <div class="bar"><i></i></div>
-                                </section>
-
-                                <!-- ===== 书籍信息 ===== -->
-                                <section class="mk-card" id="card-name">
-                                    <div class="mk-head"><div class="t" data-i18n="书籍信息">书籍信息</div></div>
-                                    <div class="fields">
-                                        <div class="fld">
-                                            <div class="lb"><span data-i18n="书 名">书 名</span> <span class="req">*</span></div>
-                                            <div class="wrap">
-                                                <div class="pre">
-                                                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                                                </div>
-                                                <input id="inputTitle" type="text" placeholder="输入书名" data-i18n-ph="输入书名" />
-                                            </div>
-                                            <div class="hint" data-i18n="将显示在 EPUB 的书名页与书库中">将显示在 EPUB 的书名页与书库中</div>
-                                        </div>
-                                        <div class="fld">
-                                            <div class="lb"><span data-i18n="作 者">作 者</span></div>
-                                            <div class="wrap">
-                                                <div class="pre">
-                                                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                                </div>
-                                                <input id="inputAuthor" type="text" placeholder="输入作者" data-i18n-ph="输入作者" />
-                                                <div class="suf"><button class="aiBtn" id="btnAiAuthor">✦ <span data-i18n="AI 搜索">AI 搜索</span></button></div>
-                                            </div>
-                                            <div class="hint" id="searchHint" data-i18n="填错也没关系，可以随时在书库里改">填错也没关系，可以随时在书库里改</div>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <!-- ===== 章节划分 ===== -->
-                                <section class="mk-card" id="card-chapters">
-                                    <div class="mk-head">
-                                        <div class="t" data-i18n="章节划分">章节划分</div>
-                                        <div class="chip" id="mkChapBadge"></div>
-                                    </div>
-
-                                    <div class="stat">
-                                        <div>
-                                            <div class="n" id="detectChapterCount">0</div>
-                                            <span id="previewCount" style="display:none;">0</span>
-                                            <div class="k" data-i18n="章节总数">章节总数</div>
-                                        </div>
-                                        <div class="div"></div>
-                                        <div class="list" id="chapterPreviewList">
-                                            <div style="color:var(--tx3);font-size:11.5px;" data-i18n="请先导入 TXT 文件，然后点击「预览章节」">请先导入 TXT 文件，然后点击「预览章节」</div>
-                                        </div>
-                                        <button class="btn2" id="btnPreviewChapters" data-i18n="预览切分">预览切分</button>
-                                    </div>
-
-                                    <div class="splitRow">
-                                        <div class="fld">
-                                            <div class="lb"><span data-i18n="标题最长">标题最长</span></div>
-                                            <div class="wrap">
-                                                <input id="maxTitleLength" type="number" value="25" min="5" max="500" step="1" />
-                                                <span class="unit" data-i18n="字">字</span>
-                                            </div>
-                                        </div>
-                                        <div class="fld">
-                                            <div class="lb"><span data-i18n="说明">说明</span></div>
-                                            <div class="splitNote" data-i18n="超过这个长度的一律当作正文，不拆成章节标题">超过这个长度的一律当作正文，不拆成章节标题</div>
-                                        </div>
-                                        <button class="btn2" id="btnResplit" data-i18n="重新拆分">重新拆分</button>
-                                        <div class="splitHint" id="splitHint" data-i18n="导入 TXT 后点「预览切分」，这里会显示拆出了多少章">导入 TXT 后点「预览切分」，这里会显示拆出了多少章</div>
-                                    </div>
-
-                                    <div class="diagnosis-bar" id="diagnosisBar" style="margin-top:12px;">
-                                        <span class="item"><span class="dot green"></span> <span data-i18n="置信度:">置信度:</span> <span id="confidenceDisplay">-</span></span>
-                                        <span class="item" id="issueDisplay" style="display:none;">⚠️ <span id="issueCount">0</span> <span data-i18n="个问题">个问题</span></span>
-                                    </div>
-
-                                    <div class="chActions">
-                                        <button class="btn2" id="btnOpenChapterEditor" data-i18n="✏️ 章节编辑">✏️ 章节编辑</button>
-                                        <button class="btn2" id="btnChapterModal" data-i18n="查看全部章节">查看全部章节</button>
-                                    </div>
-                                </section>
-                            </div>
-
-                            <!-- ===== 封面 ===== -->
-                            <aside class="make-side">
-                                <div class="coverCard" id="card-cover">
-                                    <div class="mk-head" style="border:0;padding:0 0 14px;">
-                                        <div class="t" data-i18n="封面预览">封面预览</div>
-                                    </div>
-                                    <div class="cover" id="coverBox">
-                                        <div class="ctag" id="coverTag" style="display:none;" data-i18n="已超分">已超分</div>
-                                        <div class="cover-placeholder" id="coverPlaceholder" style="position:relative;text-align:center;color:#8a94a2;font-size:11.5px;">
-                                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" style="opacity:.5;"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
-                                            <div style="margin-top:6px;" data-i18n="点击上传封面">点击上传封面</div>
-                                        </div>
-                                        <img id="coverPreview" style="display:none;" alt="封面预览" />
-                                    </div>
-
-                                    <div class="kv"><span data-i18n="原始尺寸">原始尺寸</span><b id="coverSrcSize">—</b></div>
-                                    <div class="kv"><span data-i18n="超分后">超分后</span><b id="coverOutSize">—</b></div>
-                                    <div class="kv"><span data-i18n="耗时">耗时</span><b id="coverCost">—</b></div>
-
-                                    <div class="cover-section-title" data-i18n="封面设置">封面设置</div>
-                                    <div style="display:flex;gap:10px;">
-                                        <button class="btn2" id="btnSearchCover" style="flex:1;" data-i18n="重新搜索封面">重新搜索封面</button>
-                                        <button class="btn2" id="btnClearCover" data-i18n="清除">清除</button>
-                                    </div>
-                                    <div class="search-status" id="searchStatus"></div>
-                                </div>
-                            </aside>
-                        </div>
-                    </div>
-
-                    <!-- ===== 底栏 ===== -->
-                    <div class="make-foot">
-                        <div class="outPath">
-                            <span data-i18n="输出至">输出至</span>
-                            <code id="outDirDisplay" data-i18n="与源文件同目录">与源文件同目录</code>
-                            <button class="fbtn" id="outDirPick" data-i18n="更改">更改</button>
-                            <button class="fbtn" id="outDirReset" data-i18n="恢复默认">恢复默认</button>
-                        </div>
-                        <button class="go" id="convertBtn" data-i18n="转换">转 换</button>
-                    </div>
-                </div>
-
-                <!-- 页面2: 书名作者 -->
-
-
-                <!-- 页面3: 章节划分 -->
-
-
-                <!-- 页面4: 封面设置 -->
-
-
-                
-
-<div class="page" id="page-applebooks">
-                    <!-- ★ 滚动容器（与「制作」页同款 .make-scroll）：内容高过窗口时只滚这里，
+<div class="nav-hidden">
+</div>
+</nav>
+<!-- ===== 内容区域 ===== -->
+<div class="content main"><div class="mainbar"><div class="breadcrumb"><span>systemo ebook</span><span class="crumb-sep">/</span><strong id="resonaCrumb">制作</strong></div><div class="mainbar-right"><span>TXT → EPUB</span><button id="backgroundSwitch" class="background-switch" type="button" role="switch" aria-checked="false" aria-label="简洁背景" title="切换为简洁背景"><span class="background-switch-track" aria-hidden="true"></span><span data-i18n="简洁背景">简洁背景</span></button></div></div>
+<!-- 页面1: 书籍信息 -->
+<div class="page active view" id="page-books">
+<header class="view-head"><div><div class="view-title-wrap"><span class="folio">01</span><h1 class="view-title" data-i18n="制作新书">制作新书</h1></div><p class="view-sub" data-i18n="TXT 转 EPUB · 全流程本地完成，不上传任何文件">TXT 转 EPUB · 全流程本地完成，不上传任何文件</p></div></header>
+<!-- 进度指示器（设计稿样式：完成的步骤打勾） -->
+<div class="make-steps" id="makeSteps">
+<div class="ms make-step" data-step="info"><i class="num">01</i><span data-i18n="书籍信息">书籍信息</span></div>
+<div class="ms make-step" data-step="name"><i class="num">02</i><span data-i18n="书名作者">书名作者</span></div>
+<div class="ms make-step" data-step="chapters"><i class="num">03</i><span data-i18n="章节划分">章节划分</span></div>
+<div class="ms make-step" data-step="cover"><i class="num">04</i><span data-i18n="封面设置">封面设置</span></div>
+</div>
+<div class="make-cols make-layout">
+<div class="make-main editor-stack">
+<!-- ===== 源文件 ===== -->
+<section class="mk-card editor-section">
+<div class="mk-head section-head">
+<div class="section-name"><span class="section-index">A</span><div class="t" data-i18n="源文件">源文件</div></div>
+<div class="chip section-meta" id="mkFileBadge"></div>
+</div>
+<div class="drop is-empty source-content" id="dropZone">
+<div class="ftype txt-mark"><span>TXT</span></div>
+<div class="fmeta source-copy" id="dropContent">
+<div class="fname" data-i18n="拖拽 TXT 文件至此">拖拽 TXT 文件至此</div>
+<div class="fsub" data-i18n="或点击选择 · 支持 .txt">或点击选择 · 支持 .txt</div>
+</div>
+<div class="fmeta source-copy" id="fileInfo" style="display:none;">
+<div class="fname">
+<span data-i18n="未命名.txt" id="fileNameDisplay">未命名.txt</span>
+<span class="ok">✓</span>
+</div>
+<div class="fsub">
+<span><b id="fileSizeDisplay">0 KB</b></span>
+<span id="fileChapterDisplay">0 章</span>
+</div>
+</div>
+<div class="source-actions"><button class="fbtn outline-btn" data-i18n="更换" id="removeFileBtn" style="display:none;">更换</button></div></div>
+</section>
+<!-- ===== 书籍信息 ===== -->
+<section class="mk-card editor-section" id="card-name">
+<div class="mk-head section-head"><div class="section-name"><span class="section-index">B</span><div class="t" data-i18n="书籍信息">书籍信息</div></div><span class="section-meta">EPUB METADATA</span></div>
+<div class="fields">
+<div class="fld field">
+<div class="lb concept-label"><span data-i18n="书 名">书 名</span> <span class="req">*</span></div>
+<div class="wrap inputbox">
+<input data-i18n-ph="输入书名" id="inputTitle" placeholder="输入书名" type="text"/>
+</div>
+<div class="hint field-hint" data-i18n="将显示在 EPUB 的书名页与书库中">将显示在 EPUB 的书名页与书库中</div>
+</div>
+<div class="fld field">
+<div class="lb concept-label"><span data-i18n="作 者">作 者</span></div>
+<div class="wrap inputbox">
+<input data-i18n-ph="输入作者" id="inputAuthor" placeholder="输入作者" type="text"/>
+<button class="aiBtn ai-search" id="btnAiAuthor">✦ <span data-i18n="AI 搜索">AI 搜索</span></button>
+</div>
+<div class="hint field-hint" data-i18n="填错也没关系，可以随时在书库里改" id="searchHint">填错也没关系，可以随时在书库里改</div>
+</div>
+</div>
+</section>
+<!-- ===== 章节划分 ===== -->
+<section class="mk-card editor-section" id="card-chapters">
+<div class="mk-head section-head">
+<div class="section-name"><span class="section-index">C</span><div class="t" data-i18n="章节划分">章节划分</div></div>
+<div class="chip section-meta" id="mkChapBadge"></div>
+</div>
+<div class="chapter-content"><div class="chapter-summary"><div class="chapter-total" id="detectChapterCount">0</div><span id="previewCount" style="display:none;">0</span><div class="chapter-caption" data-i18n="章节总数">章节总数</div><div class="diagnosis-bar" id="diagnosisBar" style="margin-top:12px;">
+<span class="item"><span class="dot green"></span> <span data-i18n="置信度:">置信度:</span> <span id="confidenceDisplay">-</span></span>
+<span class="item" id="issueDisplay" style="display:none;">⚠️ <span id="issueCount">0</span> <span data-i18n="个问题">个问题</span></span>
+</div></div><div class="chapter-main"><div class="chapter-top"><span data-i18n="章节预览">章节预览</span></div><div class="list chapter-list" id="chapterPreviewList">
+<div data-i18n="请先导入 TXT 文件，然后点击「预览章节」" style="color:var(--tx3);font-size:11.5px;">请先导入 TXT 文件，然后点击「预览章节」</div>
+</div><div class="chapter-settings"><label data-i18n="标题最长" for="maxTitleLength">标题最长</label><input id="maxTitleLength" max="500" min="5" step="1" type="number" value="25"/><span class="setting-note">字 · 超过长度按正文处理</span><div class="chapter-actions"><button class="btn2 outline-btn" data-i18n="重新拆分" id="btnResplit">重新拆分</button><button class="btn2 outline-btn" data-i18n="预览切分" id="btnPreviewChapters">预览切分</button><button class="btn2 outline-btn" data-i18n="✏️ 章节编辑" id="btnOpenChapterEditor">✏️ 章节编辑</button><button class="btn2 outline-btn" data-i18n="查看全部章节" id="btnChapterModal">查看全部章节</button></div></div><div class="field-hint chapter-live-hint" data-i18n="导入 TXT 后点「预览切分」，这里会显示拆出了多少章" id="splitHint">导入 TXT 后点「预览切分」，这里会显示拆出了多少章</div></div></div></section>
+</div>
+<!-- ===== 封面 ===== -->
+<div class="coverCard cover-proof" id="card-cover">
+<div class="mk-head proof-head" style="border:0;padding:0 0 14px;">
+<div class="t section-name" data-i18n="封面预览">封面预览</div>
+<span>04 / COVER</span></div>
+<div class="cover cover-art" id="coverBox">
+<div class="ctag" data-i18n="已超分" id="coverTag" style="display:none;">已超分</div>
+<div class="cover-placeholder studio-cover-placeholder" id="coverPlaceholder"><img alt="月夜静书封面" class="default-cover-art" src="assets/moonlit-cover-v2.png"/><span class="cover-edit-caption">点击更换封面 <i aria-hidden="true">↗</i></span></div>
+<img alt="封面预览" id="coverPreview" style="display:none;"/>
+</div><div class="cover-caption"><strong id="defaultCoverTitle">待命名的故事</strong><small id="defaultCoverAuthor">作者未填写</small></div><div class="cover-meta"><div class="kv cover-meta-row"><span data-i18n="原始尺寸">原始尺寸</span><b id="coverSrcSize">—</b></div><div class="kv cover-meta-row"><span data-i18n="超分后">超分后</span><b id="coverOutSize">—</b></div><div class="kv cover-meta-row"><span data-i18n="耗时">耗时</span><b id="coverCost">—</b></div></div>
+<div class="cover-buttons">
+<button class="btn2" data-i18n="重新搜索封面" id="btnSearchCover" style="flex:1;">重新搜索封面</button>
+<button class="btn2" data-i18n="清除" id="btnClearCover">清除</button>
+</div>
+<div class="search-status" id="searchStatus"></div>
+</div>
+</div>
+<!-- ===== 底栏 ===== -->
+<div class="make-foot make-footer">
+<div class="outPath out-path"><svg viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H10l2 2h7.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"></path></svg>
+<span data-i18n="输出至">输出至</span>
+<code data-i18n="与源文件同目录" id="outDirDisplay">与源文件同目录</code>
+<button class="fbtn" data-i18n="更改" id="outDirPick">更改</button>
+<button class="fbtn" data-i18n="恢复默认" id="outDirReset">恢复默认</button>
+</div>
+<div class="convert-actions"><span class="minor" data-i18n="输出为 EPUB">输出为 EPUB</span><button class="go convert-btn" data-i18n="转换" id="convertBtn">转 换</button></div>
+</div>
+</div>
+<!-- 页面2: 书名作者 -->
+<!-- 页面3: 章节划分 -->
+<!-- 页面4: 封面设置 -->
+<div class="page view studio-transfer" id="page-applebooks">
+<!-- ★ 滚动容器（与「制作」页同款 .make-scroll）：内容高过窗口时只滚这里，
                         头部 .tx-head 留白在滚动区内部，跟 make 页表现一致 -->
-                    <div class="make-scroll">
-                    <div class="tx-head make-head">
-                        <div class="mh-title"><span data-i18n="传输到设备">传输到设备</span> <em>TRANSFER</em></div>
-                        <div class="mh-sub" data-i18n="三合一：苹果图书（百度网盘）· WiFi 直传 · Send to Kindle">三合一：苹果图书（百度网盘）· WiFi 直传 · Send to Kindle</div>
-                    </div>
-
-                    <!-- ===== 三个通道 ===== -->
-                    <div class="ways" id="txChannels">
-                        <div class="way on" data-ch="applebooks">
-                            <div class="wico"><svg viewBox="0 0 24 24"><path d="M16 2H8a4 4 0 0 0-4 4v12a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4z"/><path d="M12 18h.01"/></svg></div>
-                            <div class="tx"><div class="n" data-i18n="苹果图书">苹果图书</div><div class="d" data-i18n="经百度网盘中转">经百度网盘中转</div></div>
-                            <div class="stt no" id="txSttAb"><i class="stt-i"></i><span data-i18n="检查中…">检查中…</span></div>
-                        </div>
-                        <div class="way" data-ch="wifi">
-                            <div class="wico"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
-                            <div class="tx"><div class="n" data-i18n="WiFi 直传">WiFi 直传</div><div class="d" data-i18n="手机浏览器上传">手机浏览器上传</div></div>
-                            <div class="stt no" id="txSttWf"><i class="stt-i"></i><span data-i18n="待启动">待启动</span></div>
-                        </div>
-                        <div class="way" data-ch="kindle">
-                            <div class="wico"><svg viewBox="0 0 24 24"><path d="M4 4h12a3 3 0 0 1 3 3v13a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4z"/><path d="M8 8h6M8 12h6"/></svg></div>
-                            <div class="tx"><div class="n" data-i18n="Send to Kindle">Send to Kindle</div><div class="d" data-i18n="经 Amazon 官方通道">经 Amazon 官方通道</div></div>
-                            <div class="stt no is-blank" id="txSttKd"><i class="stt-i"></i><span></span></div>
-                        </div>
-                    </div>
-
-                    <div class="tx-cols">
-                        <!-- ===== 待发送队列 ===== -->
-                        <section class="mk-card tx-queue" id="txQueueCard">
-                            <div class="mk-head">
-                                <div class="t" data-i18n="待发送队列">待发送队列</div>
-                                <div class="chip" id="txQueueChip" data-i18n="还没有添加文件">还没有添加文件</div>
-                            </div>
-                            <div class="qlist" id="txQueue">
-                                <div class="qempty" id="txQueueEmpty">
-                                    <div style="font-size:12px;color:var(--tx3);" data-i18n="队列是空的">队列是空的</div>
-                                    <div style="font-size:11px;color:var(--tx4);margin-top:6px;" data-i18n="去「书库」勾选后点「批量传输」，或点右下角从本地添加">去「书库」勾选后点「批量传输」，或点右下角从本地添加</div>
-                                </div>
-                            </div>
-                            <div class="qfoot">
-                                <div class="note" data-i18n="从书库拖书进来，或点这里从本地添加">从书库拖书进来，或点这里从本地添加</div>
-                                <button class="btn2" id="txAddLocal" data-i18n="+ 添加文件">+ 添加文件</button>
-                            </div>
-                        </section>
-
-                        <!-- ===== 右列 ===== -->
-                        <div class="tx-side">
-                            <section class="mk-card">
-                                <div class="mk-head"><div class="t" data-i18n="当前通道">当前通道</div></div>
-                                <div class="statRows">
-                                    <div class="statRow"><span class="dot"></span><span class="k" data-i18n="方式">方式</span><span class="v" id="txWayName">苹果图书</span></div>
-                                    <div class="statRow"><span class="dot"></span><span class="k" id="txAccountK" data-i18n="账户">账户</span><span class="v" id="txAccount">百度网盘</span></div>
-                                    <div class="statRow"><span class="dot"></span><span class="k" data-i18n="远端目录">远端目录</span><span class="v" id="txRemoteDirShow">/epub_download_backup</span></div>
-                                    <div class="statRow"><span class="dot"></span><span class="k" data-i18n="重名策略">重名策略</span><span class="v" id="txOnDupShow">覆盖</span></div>
-                                    <div class="statRow"><span class="dot"></span><span class="k" data-i18n="本地副本">本地副本</span><span class="v" id="txLocalCopyShow">sendqueue\</span></div>
-                                    <!-- ★ 2026-09-23：以前这里还会由 checkChannelStatus() 追加「本机地址 / 收件邮箱」
+<header class="view-head"><div><div class="view-title-wrap"><span class="folio">04</span><h1 class="view-title" data-i18n="传输到设备">传输到设备</h1></div><p class="view-sub" data-i18n="苹果图书（百度网盘） · WiFi 直传 · Send to Kindle">选好目的地，让好故事随身而行。</p></div><div class="head-stamp">待发送队列</div></header>
+<!-- ===== 三个通道 ===== -->
+<div class="ways transfer-channels" id="txChannels">
+<div class="way on channel" data-ch="applebooks"><span class="channel-number">01</span>
+<div class="wico channel-icon"><svg viewBox="0 0 24 24"><path d="M16 2H8a4 4 0 0 0-4 4v12a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4z"></path><path d="M12 18h.01"></path></svg></div>
+<div class="tx channel-copy"><div class="n" data-i18n="苹果图书">苹果图书</div><div class="d" data-i18n="经百度网盘中转">经百度网盘中转</div></div>
+<div class="stt no channel-state" id="txSttAb"><i class="stt-i"></i><span data-i18n="检查中…">检查中…</span></div>
+<span aria-hidden="true" class="channel-arrow">↗</span></div>
+<div class="way channel" data-ch="wifi"><span class="channel-number">02</span>
+<div class="wico channel-icon"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" x2="12.01" y1="20" y2="20"></line></svg></div>
+<div class="tx channel-copy"><div class="n" data-i18n="WiFi 直传">WiFi 直传</div><div class="d" data-i18n="手机浏览器上传">手机浏览器上传</div></div>
+<div class="stt no channel-state" id="txSttWf"><i class="stt-i"></i><span data-i18n="待启动">待启动</span></div>
+<span aria-hidden="true" class="channel-arrow">↗</span></div>
+<div class="way channel" data-ch="kindle"><span class="channel-number">03</span>
+<div class="wico channel-icon"><svg viewBox="0 0 24 24"><path d="M4 4h12a3 3 0 0 1 3 3v13a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4z"></path><path d="M8 8h6M8 12h6"></path></svg></div>
+<div class="tx channel-copy"><div class="n" data-i18n="Send to Kindle">Send to Kindle</div><div class="d" data-i18n="经 Amazon 官方通道">经 Amazon 官方通道</div></div>
+<div class="stt no is-blank channel-state" id="txSttKd"><i class="stt-i"></i><span></span></div>
+<span aria-hidden="true" class="channel-arrow">↗</span></div>
+</div>
+<div class="tx-cols transfer-columns">
+<!-- ===== 待发送队列 ===== -->
+<section class="mk-card tx-queue editor-section queue-card" id="txQueueCard">
+<div class="mk-head section-head panel-title">
+<div class="t section-name">准备出发的书</div>
+<div class="chip section-meta" data-i18n="还没有添加文件" id="txQueueChip">还没有添加文件</div>
+</div>
+<div class="qlist" id="txQueue">
+<div class="qempty queue-empty" id="txQueueEmpty"><span class="empty-mark">＋</span>
+<div data-i18n="队列是空的" style="font-size:12px;color:var(--tx3);">队列是空的</div>
+<div data-i18n="去「书库」勾选后点「批量传输」，或点右下角从本地添加" style="font-size:11px;color:var(--tx4);margin-top:6px;">去「书库」勾选后点「批量传输」，或点右下角从本地添加</div>
+</div>
+</div>
+<div class="qfoot queue-foot">
+<div class="note" data-i18n="从书库拖书进来，或点这里从本地添加">从书库拖书进来，或点这里从本地添加</div>
+<button class="btn2" data-i18n="+ 添加文件" id="txAddLocal">+ 添加文件</button>
+</div>
+</section>
+<!-- ===== 右列 ===== -->
+<div class="tx-side transfer-side">
+<section class="mk-card editor-section channel-info">
+<div class="mk-head section-head panel-title"><div class="t section-name" data-i18n="当前通道">当前通道</div></div>
+<div class="statRows info-rows">
+<div class="statRow info-row"><span class="k" data-i18n="方式">方式</span><span class="v" id="txWayName">苹果图书</span></div>
+<div class="statRow info-row"><span class="k" data-i18n="账户" id="txAccountK">账户</span><span class="v" id="txAccount">百度网盘</span></div>
+<div class="statRow info-row"><span class="k" data-i18n="远端目录">远端目录</span><span class="v" id="txRemoteDirShow">/epub_download_backup</span></div>
+<div class="statRow info-row"><span class="k" data-i18n="重名策略">重名策略</span><span class="v" id="txOnDupShow">覆盖</span></div>
+<div class="statRow info-row"><span class="k" data-i18n="本地副本">本地副本</span><span class="v" id="txLocalCopyShow">sendqueue\</span></div>
+<!-- ★ 2026-09-23：以前这里还会由 checkChannelStatus() 追加「本机地址 / 收件邮箱」
                                          等行，用户明确不要这些额外项（WiFi 那一行更是没有意义 —— 地址由手机浏览器
                                          自己决定，不是本机）。现在通道自己的结论只写在下面那一行小字 #txStatus 上。 -->
-                                </div>
-                                <!-- ★ 各通道自己的入口：按当前通道只显示对应的那个 -->
-                                <div class="ch-actions">
-                                    <button class="btn2" id="wfOpenBtn" data-ch="wifi" data-i18n="打开传书窗口">打开传书窗口</button>
-                                    <button class="btn2" id="abAuthBtn" data-ch="applebooks" data-i18n="重新授权">重新授权</button>
-                                    <button class="btn2" id="abGuideBtn" data-ch="applebooks" data-i18n="苹果图书操作指引">苹果图书操作指引</button>
-                                    <button class="btn2" id="kdEmailBtn" data-ch="kindle" data-i18n="Kindle 授权">Kindle 授权</button>
-                                    <button class="btn2" id="kdHelpBtn" data-ch="kindle" data-i18n="Kindle 操作指引">Kindle 操作指引</button>
-                                </div>
-                                <!-- ★ 一行小字状态：放在「当前通道」信息卡片里，配置按钮下面。
+</div>
+<!-- ★ 各通道自己的入口：按当前通道只显示对应的那个 -->
+<div class="ch-actions channel-actions">
+<button class="btn2" data-ch="wifi" data-i18n="打开传书窗口" id="wfOpenBtn">打开传书窗口</button>
+<button class="btn2" data-ch="applebooks" data-i18n="重新授权" id="abAuthBtn">重新授权</button>
+<button class="btn2" data-ch="applebooks" data-i18n="苹果图书操作指引" id="abGuideBtn">苹果图书操作指引</button>
+<button class="btn2" data-ch="kindle" data-i18n="Kindle 授权" id="kdEmailBtn">Kindle 授权</button>
+<button class="btn2" data-ch="kindle" data-i18n="Kindle 操作指引" id="kdHelpBtn">Kindle 操作指引</button>
+</div>
+<!-- ★ 一行小字状态：放在「当前通道」信息卡片里，配置按钮下面。
                                      这里只写**当前通道自己**的结论（苹果图书=百度授权/上传，
                                      Kindle=邮箱配置/推送）。
                                      ★ 2026-09-23：WiFi 直传的输出**不写这一行**，另起一行 #txStatusWifi ——
                                        否则「手机浏览器上传」的进度会跟别通道的结论互相顶掉，
                                        也不能因为它没加载出来就看不到局域网那行字。 -->
-                                <div class="tx-status" id="txStatus" data-state="idle"><i class="ts-i"></i><span class="ts-t" data-i18n="等待发送…">等待发送…</span></div>
-                                <div class="tx-status" id="txStatusWifi" data-state="idle" hidden><i class="ts-i"></i><span class="ts-t"></span></div>
-                            </section>
+<div class="tx-status" data-state="idle" id="txStatus"><i class="ts-i"></i><span class="ts-t" data-i18n="等待发送…">等待发送…</span></div>
+<div class="tx-status" data-state="idle" hidden="" id="txStatusWifi"><i class="ts-i"></i><span class="ts-t"></span></div>
+</section>
+<section class="mk-card editor-section concept-send-card">
 
-                            <section class="mk-card">
-                                <div class="mk-head"><div class="t" data-i18n="开始">开始</div></div>
-                                <button class="go" id="txSend">
-                                    <svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
-                                    <span data-i18n="发送">发送</span> <span id="txSendCount">0</span> <span data-i18n="本">本</span>
-                                </button>
-                                <div class="note" style="margin-top:12px;" data-i18n="传输在后台进行，可以随时切到别的板块。">传输在后台进行，可以随时切到别的板块。</div>
-                            </section>
-                        </div>
-                    </div>
-                    </div><!-- /.make-scroll -->
-
-                    <!-- ===== 原三通道的隐藏容器（一键模式与现有逻辑仍靠这些 id） =====
+<button class="go send-button" id="txSend">
+<svg viewBox="0 0 24 24"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>
+<span data-i18n="发送">发送</span> <span id="txSendCount">0</span> <span data-i18n="本">本</span>
+</button>
+<div class="note send-note" data-i18n="传输在后台进行，可以随时切到别的板块。" style="margin-top:12px;">传输在后台进行，可以随时切到别的板块。</div>
+</section>
+</div>
+</div>
+<!-- /.make-scroll -->
+<!-- ===== 原三通道的隐藏容器（一键模式与现有逻辑仍靠这些 id） =====
                          ★ 2026-09-23 修复：这个 #txLegacy 在「三合一传输页」改版时被删掉了，
                            但 JS 里 (function initAppleBooks/initWifi/initKindle) 和
                            CH_INFO 仍按这些 id 取元素。结果是：
@@ -1599,346 +1500,137 @@
                            → 整个 script 块从 index.html:2548 处中断，后面几千行
                            （WiFi 窗口、Kindle 推送、发送按钮转发、批量传输、书库）全部没绑定，
                            表现就是「发送/上传点不动、像授权异常」。★ 必须保留这些 id。 -->
-                    <div class="tx-legacy" id="txLegacy" style="display:none;">
-                        <div id="abDropZone"><div id="abDropContent"></div><div id="abFileInfo"><span id="abFileNameDisplay"></span><span id="abFileSizeDisplay"></span><button id="abRemoveFileBtn"></button></div></div>
-                        <button id="abUploadBtn"></button>
-                        <a id="abHelpLink"></a>
-                        <input id="abRemoteDir" type="text" value="/epub_download_backup" /><select id="abOnDup"><option value="overwrite" data-i18n="覆盖">覆盖</option><option value="skip" data-i18n="跳过">跳过</option><option value="prompt" data-i18n="询问">询问</option></select>
+<div class="tx-legacy" id="txLegacy" style="display:none;">
+<div id="abDropZone"><div id="abDropContent"></div><div id="abFileInfo"><span id="abFileNameDisplay"></span><span id="abFileSizeDisplay"></span><button id="abRemoveFileBtn"></button></div></div>
+<button id="abUploadBtn"></button>
+<a id="abHelpLink"></a>
+<input id="abRemoteDir" type="text" value="/epub_download_backup"/><select id="abOnDup"><option data-i18n="覆盖" value="overwrite">覆盖</option><option data-i18n="跳过" value="skip">跳过</option><option data-i18n="询问" value="prompt">询问</option></select>
+<div id="wfDropZone"><div id="wfDropContent"></div><div id="wfFileInfo"><span id="wfFileNameDisplay"></span><span id="wfFileSizeDisplay"></span><button id="wfRemoveFileBtn"></button></div></div>
+<button id="wfUploadBtn"></button>
+<div id="kdDropZone"><div id="kdDropContent"></div><div id="kdFileInfo"><span id="kdFileNameDisplay"></span><span id="kdFileSizeDisplay"></span><button id="kdRemoveFileBtn"></button></div></div>
+<button id="kdUploadBtn"></button>
+<span id="kdConfigStatus"></span>
+<div id="kdLogBox"></div>
+</div>
+</div>
+<!-- 页面6: 下载小说（v2 新增） -->
+<div class="page view" id="page-download"><header class="view-head"><div><div class="view-title-wrap"><span class="folio">02</span><h1 class="view-title">下载小说</h1></div><p class="view-sub">输入书名，按匹配结果查找可用来源。</p></div><div class="head-stamp">网文优先</div></header>
+<div class="studio-stage"><div class="center-tool studio-compose"><div class="tool-label">DISCOVER YOUR NEXT STORY</div><h2 class="tool-heading">每个故事，都值得被找到。</h2><p class="tool-intro">输入书名，开始寻找属于你的下一本书。</p><div class="tool-form"><input autocomplete="off" data-i18n-ph="书名 或 书名@作者（用@分隔）" id="dnBookInput" placeholder="书名 或 书名@作者（用@分隔）" type="text"/><button class="dn-icon-btn tool-submit" data-i18n-title="下载" id="dnDownloadBtn" title="下载" type="button">
+<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
+<span class="action-label">开始检索</span></button></div><div class="search-hint tool-status" data-i18n="输入格式：书名@作者（用 @ 分隔，可只写书名）" id="dnStatus">输入格式：书名@作者（用 @ 分隔，可只写书名）</div><div class="dn-tiny-hint tool-hints"><p>可以只写书名，也可以用 <b>书名 @ 作者</b> 精确查找。</p><p class="studio-example">例如 <span>吞没 @ 泡泡藻</span></p><p class="studio-guidance">轻小说支持在选卷窗口中挑选卷册；下载期间请避免操作浏览器。</p></div></div><aside aria-label="图书工作室插画" class="studio-artifact"><div class="artifact-caption"><span>THE MOONLIT ARCHIVE</span><span>藏书 · 月下</span></div><div class="studio-book"><div class="book-spine"></div><div class="book-face"><img alt="月夜窗前的静书插画" src="assets/moonlit-cover-v2.png"/><div class="book-lettering"><span>MOONLIT ARCHIVE</span><strong>让故事<br/>在此成书</strong><small>SYSTEMO EBOOK · STUDIO</small></div></div><div class="book-pages"></div></div><div class="artifact-foot"><span>TXT</span><i></i><span>EPUB</span></div></aside></div>
+</div>
+<!-- 页面8: 苹果图书（v3 新增） -->
+<!-- 页面9: WiFi 传书（v4 新增） -->
+<!-- 页面9.5: Kindle 传书 -->
+<!-- 页面10: 一键模式（v5 新增，完全照抄 page-download） -->
+<div class="page view" id="page-auto" style="position:relative;"><header class="view-head"><div><div class="view-title-wrap"><span class="folio">03</span><h1 class="view-title">一键完成</h1></div><p class="view-sub">下载 → 分章 → 找封面 → 转换 → 选择上传方式</p></div><div class="head-stamp">中途可暂停</div></header>
+<div class="studio-stage"><div class="center-tool studio-compose"><div class="tool-label">YOUR PERSONAL BOOK STUDIO</div><h2 class="tool-heading">从一个名字，到一本好书。</h2><p class="tool-intro">把繁琐交给流程，把阅读留给自己。</p><div class="tool-form"><input autocomplete="off" data-i18n-ph="书名 或 书名@作者（用@分隔）" id="autoBookInput" placeholder="书名 或 书名@作者（用@分隔）" type="text"/><button class="dn-icon-btn tool-submit" data-i18n-title="一键完成" id="autoCatBtn" title="一键完成" type="button">
+<svg viewBox="0 0 24 24"><circle cx="6" cy="9" r="2"></circle><circle cx="12" cy="7" r="2"></circle><circle cx="18" cy="9" r="2"></circle><circle cx="20" cy="14" r="1.6"></circle><path d="M18 19c0-2.2-2.7-4-6-4s-6 1.8-6 4c0 1.1 0.9 2 2 2h8c1.1 0 2-0.9 2-2z"></path></svg>
+<span class="action-label">开始制作</span></button></div><div class="search-hint tool-status" data-i18n="点击猫爪一键完成：下载 → 分章 → 封面 → 转换 → 上传" id="autoStatus">点击猫爪一键完成：下载 → 分章 → 封面 → 转换 → 上传</div><div class="dn-tiny-hint tool-hints"><p>可以只写书名，也可以用 <b>书名 @ 作者</b> 精确查找。</p><p class="studio-example">例如 <span>吞没 @ 泡泡藻</span></p><p class="studio-guidance">轻小说支持在选卷窗口中挑选卷册；下载期间请避免操作浏览器。</p></div><button class="auto-txt-btn auto-import" data-i18n="已导入 TXT，点此一键" id="autoTxtBtn" type="button">已导入 TXT，点此一键</button></div><aside aria-label="图书工作室插画" class="studio-artifact"><div class="artifact-caption"><span>THE MOONLIT ARCHIVE</span><span>藏书 · 月下</span></div><div class="studio-book"><div class="book-spine"></div><div class="book-face"><img alt="月夜窗前的静书插画" src="assets/moonlit-cover-v2.png"/><div class="book-lettering"><span>MOONLIT ARCHIVE</span><strong>让故事<br/>在此成书</strong><small>SYSTEMO EBOOK · STUDIO</small></div></div><div class="book-pages"></div></div><div class="artifact-foot"><span>TXT</span><i></i><span>EPUB</span></div></aside></div>
+<!-- 选择上传方式弹层（v5 新增；v6：加 Kindle 第三种路径 + 改用主界面设计令牌） -->
+<ol aria-label="自动制作流程" class="studio-flow"><li><span>01</span><strong>寻找书籍</strong></li><li><span>02</span><strong>识别章节</strong></li><li><span>03</span><strong>匹配封面</strong></li><li><span>04</span><strong>生成 EPUB</strong></li><li><span>05</span><strong>选择传输</strong></li></ol></div>
+<!-- ===== 页面：书库 ===== -->
+<div class="page view" id="page-library"><header class="view-head"><div><div class="view-title-wrap"><span class="folio">05</span><h1 class="view-title" data-i18n="书库">书库</h1></div><p class="view-sub" data-i18n="制作完成的 EPUB 会自动出现在这里。">制作完成的 EPUB 会自动出现在这里。</p></div><div class="lib-seg library-tabs" id="libSeg">
+<button class="lib-seg-btn active" data-i18n="我的书库" id="libSegMine">我的书库</button>
+<button class="lib-seg-btn" data-i18n="精选推荐" id="libSegRec">精选推荐</button>
+</div></header>
 
-                        <div id="wfDropZone"><div id="wfDropContent"></div><div id="wfFileInfo"><span id="wfFileNameDisplay"></span><span id="wfFileSizeDisplay"></span><button id="wfRemoveFileBtn"></button></div></div>
-                        <button id="wfUploadBtn"></button>
-
-                        <div id="kdDropZone"><div id="kdDropContent"></div><div id="kdFileInfo"><span id="kdFileNameDisplay"></span><span id="kdFileSizeDisplay"></span><button id="kdRemoveFileBtn"></button></div></div>
-                        <button id="kdUploadBtn"></button>
-                        <span id="kdConfigStatus"></span>
-                        <div id="kdLogBox"></div>
-                    </div>
-                </div>
-
-                                <!-- 页面6: 下载小说（v2 新增） -->
-                <div class="page" id="page-download">
-                    <div class="scroll-area" style="display:flex; align-items:center; justify-content:center;">
-                        <div class="name-page">
-                            <div class="field">
-                                <label data-i18n="书名">书名</label>
-                                <div class="dn-search-row">
-                                    <input
-                                        id="dnBookInput"
-                                        type="text"
-                                        placeholder="书名 或 书名@作者（用@分隔）" data-i18n-ph="书名 或 书名@作者（用@分隔）"
-                                        autocomplete="off"
-                                    />
-                                    <button type="button" id="dnDownloadBtn" class="dn-icon-btn" title="下载" data-i18n-title="下载">
-                                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    </button>
-                                </div>
-                                <div class="search-hint" id="dnStatus"></div>
-<!-- ★ 2026-09-30（用户要求）：**下载进度条删掉** —— 它的百分比是脚本按"已抓/总章数"估的，
-     跟真实进度对不上（还有搜索/预检/限流重试阶段），用户原话「一点都不符还误导人」。
-     进度只保留上面那行**状态小字**（#dnStatus），文案由 @ 下载进度 那条分支实时更新。 -->
-                            </div>
-                            <div class="dn-tiny-hint">
-                                    <span data-i18n="输入格式：">输入格式：</span><b data-i18n="书名@作者">书名@作者</b><span data-i18n="（用 @ 分隔，可只写书名）">（用 @ 分隔，可只写书名）</span><br>
-                                    <span data-i18n="示例：吞没@泡泡藻 · 或只写 · 吞没">示例：吞没@泡泡藻 · 或只写 · 吞没</span><br>
-                                    <span data-i18n="下载过程中请勿操作电脑防止误触">下载过程中请勿操作电脑防止误触</span><br>
-            <span data-i18n="轻小说可在书名后加卷号（不写＝第 1 卷）：败北女角太多了 第九卷（输书名会自动弹选卷窗）">轻小说可在书名后加卷号（不写＝第 1 卷）：败北女角太多了 第九卷（输书名会自动弹选卷窗）</span>
-                                </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 页面8: 苹果图书（v3 新增） -->
-
-
-                <!-- 页面9: WiFi 传书（v4 新增） -->
-
-
-                <!-- 页面9.5: Kindle 传书 -->
-
-
-                <!-- 页面10: 一键模式（v5 新增，完全照抄 page-download） -->
-                <div class="page" id="page-auto" style="position:relative;">
-                    <div class="scroll-area" style="display:flex; align-items:center; justify-content:center;">
-                        <div class="name-page">
-                            <div class="field">
-                                <label data-i18n="书名">书名</label>
-                                <div class="dn-search-row">
-                                    <input
-                                        id="autoBookInput"
-                                        type="text"
-                                        placeholder="书名 或 书名@作者（用@分隔）" data-i18n-ph="书名 或 书名@作者（用@分隔）"
-                                        autocomplete="off"
-                                    />
-                                    <button type="button" id="autoCatBtn" class="dn-icon-btn" style="background:#c7c7cc;" title="一键完成" data-i18n-title="一键完成">
-                                        <svg viewBox="0 0 24 24"><circle cx="6" cy="9" r="2"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="9" r="2"/><circle cx="20" cy="14" r="1.6"/><path d="M18 19c0-2.2-2.7-4-6-4s-6 1.8-6 4c0 1.1 0.9 2 2 2h8c1.1 0 2-0.9 2-2z"/></svg>
-                                    </button>
-                                </div>
-                                <div class="search-hint" id="autoStatus"></div>
-                            </div>
-                            <div class="dn-tiny-hint">
-                                <span data-i18n="输入格式：">输入格式：</span><b data-i18n="书名@作者">书名@作者</b><span data-i18n="（用 @ 分隔，可只写书名）">（用 @ 分隔，可只写书名）</span><br>
-                                <span data-i18n="示例：吞没@泡泡藻 · 或只写 · 吞没">示例：吞没@泡泡藻 · 或只写 · 吞没</span><br>
-                                <span data-i18n="点击猫爪一键完成：下载 → 分章 → 封面 → 转换 → 上传">点击猫爪一键完成：下载 → 分章 → 封面 → 转换 → 上传</span><br>
-                                <span data-i18n="中间任何步骤出错会暂停并提示，请保持窗口打开">中间任何步骤出错会暂停并提示，请保持窗口打开</span>
-                            </div>
-                            <!-- ★★★ 完整版新增：「已导入 TXT」一键（跳过「下载小说」那一步）★★★ -->
-                            <button type="button" id="autoTxtBtn" class="auto-txt-btn" data-i18n="已导入 TXT，点此一键">已导入 TXT，点此一键</button>
-                        </div>
-                    </div>
-
-                    <!-- 选择上传方式弹层（v5 新增；v6：加 Kindle 第三种路径 + 改用主界面设计令牌） -->
-                    <div id="autoChoiceModal" class="ac-modal">
-                        <div class="ac-card" role="dialog" aria-modal="true">
-                            <div class="ac-title" data-i18n="选择上传方式">选择上传方式</div>
-                            <div class="ac-sub" data-i18n="前 4 步已自动完成（下载 → 分章 → 找封面 → 转换），请选择最后上传方式：">前 4 步已自动完成（下载 → 分章 → 找封面 → 转换），请选择最后上传方式：</div>
-                            <button id="autoChoiceApple" type="button" class="ac-btn">
-                                <svg class="ac-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2H8a4 4 0 0 0-4 4v12a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4z"/><path d="M12 18h.01"/></svg>
-                                <span class="ac-tx">
-                                    <b data-i18n="苹果图书">苹果图书</b>
-                                    <i data-i18n="上传到百度网盘">上传到百度网盘</i>
-                                </span>
-                            </button>
-                            <button id="autoChoiceWifi" type="button" class="ac-btn">
-                                <svg class="ac-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-                                <span class="ac-tx">
-                                    <b data-i18n="WiFi 传书">WiFi 传书</b>
-                                    <i data-i18n="弹出新窗口">弹出新窗口</i>
-                                </span>
-                            </button>
-                            <button id="autoChoiceKindle" type="button" class="ac-btn">
-                                <svg class="ac-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12a3 3 0 0 1 3 3v13a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4z"/><path d="M8 8h6M8 12h6"/></svg>
-                                <span class="ac-tx">
-                                    <b data-i18n="Send to Kindle">Send to Kindle</b>
-                                    <i data-i18n="经 Amazon 官方通道上传">经 Amazon 官方通道上传</i>
-                                </span>
-                            </button>
-                            <button id="autoChoiceCancel" type="button" class="ac-cancel" data-i18n="取消">取消</button>
-                        </div>
-                    </div>
-                </div>
-            
-                <!-- ===== 页面：书库 ===== -->
-                <div class="page" id="page-library">
-            <div class="lib-seg" id="libSeg">
-                <button class="lib-seg-btn active" id="libSegMine" data-i18n="我的书库">我的书库</button>
-                <button class="lib-seg-btn" id="libSegRec" data-i18n="精选推荐">精选推荐</button>
-            </div>
-                    <div class="lib-top" id="libTop">
-                        <div class="lib-search">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                                <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
-                            </svg>
-                            <input id="libSearch" placeholder="搜索书名或作者…" data-i18n-ph="搜索书名或作者…" autocomplete="off">
-                        </div>
-                        <div class="lib-tools">
-                            <span class="lib-count" id="libCount">—</span>
-                            <button class="lib-btn prim" id="libImport" data-i18n="导入书籍">导入书籍</button>
-                            <button class="lib-btn" id="libDirBtn" data-i18n="打开目录">打开目录</button>
-                            <button class="lib-btn" id="libRefresh" data-i18n="刷新">刷新</button>
-            <button class="lib-btn" id="libLightNovel" data-i18n="轻小说">轻小说</button>
-                            <button class="lib-btn" id="libMultiBtn" data-i18n="多选">多选</button>
-                        </div>
-                    </div>
-
-                                <div class="rec-panel" id="recPanel" style="display:none">
-                <div class="rec-top">
-                    <span class="rec-title" data-i18n="精选推荐">精选推荐</span>
-                    <span class="rec-meta" id="recMeta"></span>
-                    <button class="lib-btn" id="recRefresh" data-i18n="刷新">刷新</button>
-                </div>
-                <!-- ★ 2026-09-30：推荐栏位（综合推荐 / 轻小说）+ 轻小说榜单切换 -->
-                <div class="rec-tabs">
-                    <button class="rec-tab active" id="recTabAll" data-i18n="综合推荐">综合推荐</button>
-                    <button class="rec-tab" id="recTabLn" data-i18n="轻小说">轻小说</button>
-                    <div class="rec-boards" id="recBoards" style="display:none">
-                        <button class="rec-board active" data-sort="monthvisit">月点击</button>
-                        <button class="rec-board" data-sort="weekvisit">周点击</button>
-                        <button class="rec-board" data-sort="monthvote">月推荐</button>
-                        <button class="rec-board" data-sort="goodnum">收藏</button>
-                        <button class="rec-board" data-sort="newhot">新书</button>
-                    </div>
-                </div>
-                <!-- ★ 2026-09-30：轻小说榜单页码（第1页/第2页…；刷新＝下一页） -->
-                <div class="rec-pager" id="recPager" style="display:none"></div>
-                <div class="lib-scroll">
-                    <div class="rec-grid" id="recGrid"></div>
-                    <div class="lib-empty" id="recEmpty" style="display:none">
-                        <div class="ie-icon">◻</div>
-                        <div class="ie-t" id="recEmptyText">正在准备推荐…</div>
-                    </div>
-                </div>
-            </div>
-            <div class="lib-scroll" id="libScroll">
-                        <div class="lib-grid" id="libGrid"></div>
-                        <div class="lib-empty" id="libEmpty" style="display:none">
-                            <div class="ie-icon">▤</div>
-                            <div class="ie-t" data-i18n="书库是空的">书库是空的</div>
-                            <div class="ie-s" data-i18n="在「制作」里转换成功的 EPUB 会自动出现在这里">在「制作」里转换成功的 EPUB 会自动出现在这里</div>
-                        </div>
-                        <!-- 双击阅读：错误提示（打开失败 / 非 EPUB） -->
-                        <div class="lib-toast" id="libToast"></div>
-                    </div>
-
-                    <div class="lib-bulk" id="libBulk">
-                        <div class="lb-cnt"><span data-i18n="已选">已选</span> <b id="libSelNum">0</b> <span data-i18n="项">项</span></div>
-                        <div class="lb-sep"></div>
-                        <button class="lb-b" id="libEdit" disabled data-i18n="编辑信息">编辑信息</button>
-                        <button class="lb-b" id="libSend" disabled data-i18n="批量传输">批量传输</button>
-                        <button class="lb-b" id="libReveal" disabled data-i18n="在文件夹中显示">在文件夹中显示</button>
-                        <button class="lb-b" id="libExport" disabled data-i18n="导出">导出</button>
-                        <button class="lb-b danger" id="libDel" disabled data-i18n="删除">删除</button>
-                        <button class="lb-b prim" id="libSelectAll" style="margin-left:auto" data-i18n="全选">全选</button>
-                    </div>
-                </div>
-
-                <!-- ★ 2026-09-29：#page-api（API 授权页）已整体删除。
+<div class="lib-top library-toolbar" id="libTop">
+<div class="lib-search library-search">
+<svg fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+<circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path>
+</svg>
+<input autocomplete="off" data-i18n-ph="搜索书名或作者…" id="libSearch" placeholder="搜索书名或作者…"/>
+</div>
+<span class="lib-count" id="libCount">—</span>
+<button class="lib-btn prim primary" data-i18n="导入书籍" id="libImport">导入书籍</button>
+<button class="lib-btn" data-i18n="打开目录" id="libDirBtn">打开目录</button>
+<button class="lib-btn" data-i18n="刷新" id="libRefresh">刷新</button>
+<button class="lib-btn" data-i18n="轻小说" id="libLightNovel">轻小说</button>
+<button class="lib-btn" data-i18n="多选" id="libMultiBtn">多选</button>
+</div>
+<div class="rec-panel" id="recPanel" style="display:none">
+<div class="rec-top">
+<span class="rec-title" data-i18n="精选推荐">精选推荐</span>
+<span class="rec-meta" id="recMeta"></span>
+<button class="lib-btn" data-i18n="刷新" id="recRefresh">刷新</button>
+</div>
+<!-- ★ 2026-09-30：推荐栏位（综合推荐 / 轻小说）+ 轻小说榜单切换 -->
+<div class="rec-tabs">
+<button class="rec-tab active" data-i18n="综合推荐" id="recTabAll">综合推荐</button>
+<button class="rec-tab" data-i18n="轻小说" id="recTabLn">轻小说</button>
+<div class="rec-boards" id="recBoards" style="display:none">
+<button class="rec-board active" data-sort="monthvisit">月点击</button>
+<button class="rec-board" data-sort="weekvisit">周点击</button>
+<button class="rec-board" data-sort="monthvote">月推荐</button>
+<button class="rec-board" data-sort="goodnum">收藏</button>
+<button class="rec-board" data-sort="newhot">新书</button>
+</div>
+</div>
+<!-- ★ 2026-09-30：轻小说榜单页码（第1页/第2页…；刷新＝下一页） -->
+<div class="rec-pager" id="recPager" style="display:none"></div>
+<div class="lib-scroll">
+<div class="rec-grid" id="recGrid"></div>
+<div class="lib-empty" id="recEmpty" style="display:none">
+<div class="ie-icon">◻</div>
+<div class="ie-t" id="recEmptyText">正在准备推荐…</div>
+</div>
+</div>
+</div>
+<div class="lib-scroll library-content" id="libScroll">
+<div class="lib-grid" id="libGrid"></div>
+<div class="lib-empty" id="libEmpty" style="display:none">
+<div class="ie-icon">▤</div>
+<div class="ie-t" data-i18n="书库是空的">书库是空的</div>
+<div class="ie-s" data-i18n="在「制作」里转换成功的 EPUB 会自动出现在这里">在「制作」里转换成功的 EPUB 会自动出现在这里</div>
+</div>
+<!-- 双击阅读：错误提示（打开失败 / 非 EPUB） -->
+<div class="lib-toast" id="libToast"></div>
+</div>
+<div class="lib-bulk bulkbar" id="libBulk">
+<div class="lb-cnt"><span data-i18n="已选">已选</span> <b id="libSelNum">0</b> <span data-i18n="项">项</span></div>
+<div class="lb-sep"></div>
+<button class="lb-b" data-i18n="编辑信息" disabled="" id="libEdit">编辑信息</button>
+<button class="lb-b" data-i18n="批量传输" disabled="" id="libSend">批量传输</button>
+<button class="lb-b" data-i18n="在文件夹中显示" disabled="" id="libReveal">在文件夹中显示</button>
+<button class="lb-b" data-i18n="导出" disabled="" id="libExport">导出</button>
+<button class="lb-b danger" data-i18n="删除" disabled="" id="libDel">删除</button>
+<button class="lb-b prim select-all" data-i18n="全选" id="libSelectAll" style="margin-left:auto">全选</button>
+</div>
+</div>
+<!-- ★ 2026-09-29：#page-api（API 授权页）已整体删除。
                      搜作者 / 搜封面改由 novelmeta（meta_lookup.py）直连公开接口完成，不需要任何 key。
                      ★ 不许恢复：不要重新加回 key 输入框 / 授权页 / 未授权弹窗。 -->
-
-                <!-- ★ 2026-09-29：#apiModal（未授权提示弹窗）已删除 —— 搜作者/搜封面不再需要授权 -->
-
-                <!-- ===== 多作者选择弹层（novelmeta 报 ambiguous=true 时用）=====
+<!-- ★ 2026-09-29：#apiModal（未授权提示弹窗）已删除 —— 搜作者/搜封面不再需要授权 -->
+<!-- ===== 多作者选择弹层（novelmeta 报 ambiguous=true 时用）=====
                      ★ 结构 / 类名刻意克隆 #autoChoiceModal（.ac-modal/.ac-card/.ac-btn/.ac-tx/.ac-cancel），
                        CSS 在 dark.css:3015+，所以外观与「选择上传方式」弹窗完全一致。 -->
-                <!-- 精选推荐：左键 = 下载弹窗；右键 = 详情弹窗 -->
-    <!-- 哔哩轻小说下载（零积分：抓公开章节 + 插图，自己组装 EPUB） -->
-    <div id="lnModal" class="ac-modal" style="display:none;visibility:hidden;pointer-events:none">
-          <div class="ac-card rec-card ln-card">
-              <div>
-                  <div class="rec-modal-name">哔哩轻小说下载</div>
-                  <div class="rec-modal-src">抓公开章节 + 插图自组 EPUB · <b>零积分 · 免登录 · 带插图</b></div>
-              </div>
-              <div class="ln-row">
-                  <input id="lnInput" class="ln-input"
-                         placeholder="书号 / 网址 / 书名，如 3095 或 败北女角太多了">
-                  <button class="rec-btn prim ln-query" id="lnQuery">查询</button>
-              </div>
-              <div class="ln-cand-list" id="lnCands" style="display:none"></div>
-              <!-- 书名卡：小封面 + 书名 + 作者 + 卷数（与「精选推荐」详情弹窗同款 class） -->
-              <div class="rec-modal-body" id="lnMeta" style="display:none">
-                  <img class="rec-modal-cover" id="lnMetaCover" alt="">
-                  <div class="rec-modal-info">
-                      <div class="rec-modal-name" id="lnMetaName"></div>
-                      <div class="rec-modal-sub" id="lnMetaAuthor"></div>
-                      <div class="rec-modal-src" id="lnMetaExtra"></div>
-                  </div>
-              </div>
-              <div class="ln-list-head" id="lnListHead" style="display:none">
-                  <span id="lnListCount">分卷</span>
-                  <button type="button" class="ln-mini" id="lnAll">全选 / 全不选</button>
-              </div>
-              <div id="lnVols" class="ln-vols"></div>
-              <!-- ★ 2026-10-01：Cookie 区（cf_clearance 通行证）——
-                   站方对"没通过 Cloudflare 人机验证"的请求会**静默截断正文**
-                   （约 530 字 +「內容加載失敗」），而 cf_clearance 只活约 30 分钟~几小时。
-                   以前界面上**完全没法处理**这件事：证一过期就只有一句「正文被站方截断」，
-                   得自己去浏览器 F12 重拷 Cookie。现在两个出口：
-                     · 勾选框 = 让脚本自己在过期时用 Selenium+Edge 续期（弹一次 Edge，约 10 秒）；
-                     · 按钮   = 现在就续一次（换域名 / 想手动确认时用）。 -->
-              <div class="ln-row" style="align-items:center;gap:8px;margin-top:2px">
-                  <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx3);cursor:pointer">
-                      <input type="checkbox" id="lnAutoCookie" checked>
-                      <span data-i18n="Cookie 过期自动续期（会弹一次 Edge，约 10 秒）">Cookie 过期自动续期（会弹一次 Edge，约 10 秒）</span>
-                  </label>
-                  <button type="button" class="ln-mini" id="lnRefreshCookie" style="margin-left:auto"
-                          data-i18n="刷新 Cookie">刷新 Cookie</button>
-              </div>
-              <div class="rec-modal-src ln-status" id="lnStatus">先查询，再勾选要下的卷</div>
-              <div class="rec-actions">
-                  <button class="rec-btn" id="lnClose">关闭</button>
-                  <!-- ★★★ 2026-10-02（用户要求）：「把下载也设一个取消键，点取消可以杀掉进程」
-                       默认隐藏，只有下载真在跑的时候才显示（见 startDownload / onLinovelibProgress）。 -->
-                  <button class="rec-btn" id="lnCancel" style="display:none;color:#ff453a"
-                          title="终止正在跑的抓取进程">取消下载</button>
-                  <button class="rec-btn prim" id="lnGo">下载选中</button>
-              </div>
-          </div>
-      </div>
-    <div id="recDownModal" class="ac-modal" style="display:none;visibility:hidden;pointer-events:none">
-        <div class="ac-card rec-card">
-            <div class="rec-modal-body">
-                <img id="recDownCover" class="rec-modal-cover" alt="">
-                <div class="rec-modal-info">
-                    <div class="rec-modal-name" id="recDownName"></div>
-                    <div class="rec-modal-sub" id="recDownAuthor"></div>
-                    <div class="rec-modal-src" id="recDownSource"></div>
-                </div>
-            </div>
-            <div class="rec-actions">
-                <button class="rec-btn" id="recDownCancel" data-i18n="取消">取消</button>
-                <button class="rec-btn prim" id="recDownOk" data-i18n="下载">下载</button>
-            </div>
-        </div>
-    </div>
-    <div id="recInfoModal" class="ac-modal" style="display:none;visibility:hidden;pointer-events:none">
-        <div class="ac-card rec-card">
-            <div class="rec-modal-body">
-                <img id="recInfoCover" class="rec-modal-cover" alt="">
-                <div class="rec-modal-info">
-                    <div class="rec-modal-name" id="recInfoName"></div>
-                    <div class="rec-modal-sub" id="recInfoAuthor"></div>
-                    <div class="rec-modal-src" id="recInfoSource"></div>
-                    <div class="rec-tags" id="recInfoTags"></div>
-                </div>
-            </div>
-            <div class="rec-intro" id="recInfoIntro"></div>
-            <div class="rec-actions">
-                <button class="rec-btn" id="recInfoClose" data-i18n="关闭">关闭</button>
-                <button class="rec-btn prim" id="recInfoDown" data-i18n="下载">下载</button>
-            </div>
-        </div>
-    </div>
-    <div id="metaChoiceModal" class="ac-modal" style="display:none;visibility:hidden;pointer-events:none;">
-                    <div class="ac-card" role="dialog" aria-modal="true">
-                        <div class="ac-title" data-i18n="这本书有多个同名结果">这本书有多个同名结果</div>
-                        <div class="ac-sub" data-i18n="请选择你要的那一本（作者不同）：">请选择你要的那一本（作者不同）：</div>
-                        <div id="metaChoiceList" class="meta-choice-list"></div>
-                        <button id="metaChoiceCancel" type="button" class="ac-cancel" data-i18n="取消">取消</button>
-                    </div>
-                </div>
-                <!-- ★★★ 2026-10-02（用户定稿）：轻小说「请你点一下第一章」提醒 ★★★
+<!-- 精选推荐：左键 = 下载弹窗；右键 = 详情弹窗 -->
+<!-- 哔哩轻小说下载（零积分：抓公开章节 + 插图，自己组装 EPUB） -->
+<!-- ★★★ 2026-10-10（用户：「先走 uu，如果 uu 有就弹出弹窗提示是否要下载精校源，
+                                     并告诉他精校源爬取速度非常慢并且经过多次失败重试，且要挂 vpn」）★★★
+                                     ★★ 两个源的身份（用户 2026-10-10 当面纠正，别搞反）：
+                                        **精校源 = UU看書（uukanshu.cc）** → 正文干净（实测站方样板 0、无凑字），
+                                          但要走浏览器爬：**非常慢（一本约 8~9 分钟）、会多次失败重试、要挂 VPN**；
+                                        **普通源 = 笔趣阁·爬虫源（xbiquzw.net）** → 纯 HTTP，**一分钟级别**，
+                                          正文带站方样板/凑字（实测 250+ 处）。
+                                     结构 / 类名照 #autoChoiceModal 那套（.ac-modal/.ac-card/.ac-title/.ac-sub/.ac-btn/.ac-tx/.ac-cancel），
+                                     外观与「选择上传方式」弹窗完全一致 —— 不新造视觉。
+                                     ★★ 位置很关键：必须挂在 `.content` 下（与 #metaChoiceModal / #grabCookieModal 同层），
+                                        **不能**放进任何 `<div class="page">` —— 用户实测「有选择小字但是没有弹窗」：
+                                        下载按钮在 #page-download，而弹窗曾被放进 #page-auto，`.page{display:none}` → 什么都看不到。
+                                     触发点：novel_dl.py 带 --ask-jx 探测到 UU看書（精校源）有这本书。 -->
+<!-- ★★★ 2026-10-02（用户定稿）：轻小说「请你点一下第一章」提醒 ★★★
                      这是**唯一的取 Cookie 路径**：打开
                      https://www.bilinovel.com/novel/<书号>/catalog → 弹这个窗 →
                      用户在浏览器里点第一章 → 进正文后自动继续。
                      结构/类名复用 #metaChoiceModal 那套 .ac-*，不新造视觉。 -->
-                <div id="lnNeedClickModal" class="ac-modal" style="display:none;visibility:hidden;pointer-events:none;">
-                    <div class="ac-card" role="dialog" aria-modal="true">
-                        <div class="ac-title">👉 请在浏览器里点一下第一章</div>
-                        <div class="ac-sub" id="lnNeedClickSub">这本书要登录/权限，脚本自己进不去 —— 请在已打开的浏览器里点一下第一章的链接。</div>
-                        <div id="lnNeedClickCatalog" style="font-size:12px;opacity:.7;word-break:break-all;margin:8px 0 2px;"></div>
-                        <div id="lnNeedClickCount" style="font-size:13px;margin:6px 0 2px;"></div>
-                        <button id="lnNeedClickOk" type="button" class="ac-cancel">我知道了（后台继续等）</button>
-                    </div>
-                </div>
-                <!-- ★★★ 2026-10-02（用户定稿）：取 Cookie 的**唯一**做法 ★★★
+<!-- ★★★ 2026-10-02（用户定稿）：取 Cookie 的**唯一**做法 ★★★
                      用户原话：「我点刷新 cookie，你就弹出个可叉的 html，告诉用户让他打开浏览器
                      ……点到 re 从零开始的异世界生活第一卷第一章的正文页，然后你一直在后台开脚本爬 cookie」
                      ★ 关键：脚本**一个网络请求都不发** —— 只从浏览器本地 SQLite 读 cookie，
                        所以 Cloudflare 拦不到。库被浏览器独占锁着 → 用户必须**关掉浏览器**。 -->
-                <div id="grabCookieModal" class="ac-modal" style="display:none;visibility:hidden;pointer-events:none;">
-                    <div class="ac-card" role="dialog" aria-modal="true">
-                        <div class="ac-title">🍪 取 Cookie（用你自己的浏览器）</div>
-                        <div class="ac-sub" style="text-align:left;line-height:1.9">
-                            点「开始」会打开一个<b>应用内的浏览器窗口</b>（不是外部浏览器、也不是脚本浏览器）。<br><br>
-                            <b>①</b> 在弹出的窗口里会打开 <code style="user-select:all">https://www.bilinovel.com/</code><br>
-                            <b>②</b> 在里面点到 <b>《Re:从零开始的异世界生活》第一卷 第一章</b> 的<b>正文页</b>
-                            （确认看得见正文；要登录就登，弹验证码就点）<br>
-                            <b>③</b> <b>什么都不用点也不用关窗口</b> —— 脚本每 2 秒看一次，
-                            认出正文页就自动取 cookie 并关窗<br><br>
-                            <span style="opacity:.7">（这条路绕开了 Selenium 的机器人特征，也不用去解
-                            浏览器加密库 —— cookie 由 Chromium 自己解密。）</span>
-                        </div>
-                        <div id="grabCookieStatus" style="font-size:13px;margin:10px 0 4px;min-height:20px"></div>
-                        <div id="grabCookieLog" style="font-size:11px;opacity:.65;max-height:96px;overflow-y:auto;white-space:pre-wrap;margin-bottom:6px"></div>
-                        <!-- ★★★ 2026-10-02（用户实测「我把浏览器关了啊」）：
-                             Chromium 关掉窗口后**仍留后台进程**（实测 msedge 7 个 / chrome 7 个），
-                             cookie 库被它们独占锁着 → 脚本读不到。给一个显式按钮（用户自己点=明确同意）。 -->
-                        <button id="grabCookieKill" type="button" class="ac-btn"
-                                style="margin:0 0 6px;width:100%">🧨 浏览器关不干净？点这里强制结束它</button>
-                        <button id="grabCookieClose" type="button" class="ac-cancel">关掉这个窗口（后台继续等）</button>
-                    </div>
-                </div>
-                <style>
+<style>
                     /* 多作者弹层专用样式（其余全部复用 .ac-*，不新造视觉） */
                     #metaChoiceModal .meta-choice-list { max-height: 46vh; overflow-y: auto; margin: 8px 0 4px; }
 
@@ -1969,162 +1661,13 @@
                         flex: 0 0 auto; background: var(--card2, #1a1d22);
                     }
                 </style>
-                <!-- ★★★★ 阉割版（2026-10-02）：法规提示弹窗 ★★★★
-                     完整 UI 保留，但任何「下载」入口点下去只弹这个。
-                     复用书库的 .lib-modal / .lm-* 观感，不新造视觉。 -->
-                <div class="lib-modal" id="legalModal" style="display:none">
-                    <div class="lm-scrim" data-legal-close="1"></div>
-                    <div class="lm-card api-dialog" role="dialog" aria-modal="true">
-                        <div class="lm-head">
-                            <div class="lm-title" data-i18n="提示">提示</div>
-                            <div class="lm-sub">NOTICE</div>
-                        </div>
-                        <div class="api-dialog-msg">
-                            <span data-i18n="因相关法律法规规定，该部分暂不开放使用。">因相关法律法规规定，该部分暂不开放使用。</span>
-                        </div>
-                        <div class="lm-foot">
-                            <div class="api-dialog-acts">
-                                <button type="button" class="lm-b prim" data-legal-close="1" data-i18n="知道了">知道了</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <script>
-                /* ★★★★ 阉割版（2026-10-02）：法规弹窗（自包含，不依赖别处的 hideModal）★★★★ */
-                (function () {
-                    function show() {
-                        var m = document.getElementById('legalModal');
-                        if (!m) { return; }
-                        m.style.display = 'flex';
-                        var b = m.querySelector('.lm-b');
-                        if (b && b.focus) { try { b.focus(); } catch (e) {} }
-                    }
-                    document.addEventListener('click', function (e) {
-                        var t = e.target;
-                        if (t && t.closest && t.closest('#legalModal [data-legal-close]')) {
-                            var m = document.getElementById('legalModal');
-                            if (m) { m.style.display = 'none'; }
-                        }
-                    });
-                    document.addEventListener('keydown', function (e) {
-                        if (e.key !== 'Escape') { return; }
-                        var m = document.getElementById('legalModal');
-                        if (m && m.style.display === 'flex') { m.style.display = 'none'; }
-                    });
-                    window.__legalPrompt = show;
-                })();
-                </script>
-
-                <!-- ===== 章节预览弹窗（按 N2_chapters 设计稿） ===== -->
-                <div class="lib-modal" id="chapterModal" style="display:none">
-                    <div class="lm-scrim" id="chapterModalScrim"></div>
-                    <div class="lm-card chapter-card">
-                        <div class="lm-head">
-                            <div class="lm-title" data-i18n="章节预览">章节预览</div>
-                            <div class="lm-sub">CHAPTERS</div>
-                            <div class="chip" id="chapterModalChip" style="margin-left:12px;"></div>
-                            <div class="lm-x" id="chapterModalClose">✕</div>
-                        </div>
-                        <div class="ch-body">
-                            <div class="ch-list" id="chapterModalList"></div>
-                        </div>
-                        <div class="lm-foot">
-                            <button class="lm-b" id="chapterModalEdit" data-i18n="✏️ 编辑章节">✏️ 编辑章节</button>
-                            <div class="lm-note" data-i18n="列表只用于核对；改动请在编辑器里做">列表只用于核对；改动请在编辑器里做</div>
-                            <button class="lm-b ghost" id="chapterModalOk" data-i18n="关闭">关闭</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== 书库：单本详情弹窗 ===== -->
-                <div class="lib-modal" id="libModal" style="display:none">
-                    <div class="lm-scrim" id="libModalScrim"></div>
-                    <div class="lm-card">
-                        <div class="lm-head">
-                            <div class="lm-title" data-i18n="书籍详情">书籍详情</div>
-                            <div class="lm-sub">BOOK DETAILS</div>
-                            <div class="lm-x" id="libModalClose">✕</div>
-                        </div>
-                        <div class="lm-body">
-                            <div class="lm-left">
-                                <div class="lm-cover" id="lmCover"></div>
-                                <button class="lm-btn" id="lmChangeCover" data-i18n="更换封面">更换封面</button>
-                                <div class="lm-kv"><span data-i18n="章节数">章节数</span><b class="num" id="lmChapters">—</b></div>
-                                <div class="lm-kv"><span data-i18n="文件大小">文件大小</span><b id="lmSize">—</b></div>
-                                <div class="lm-kv"><span data-i18n="修改时间">修改时间</span><b id="lmTime">—</b></div>
-                                <div class="lm-kv"><span data-i18n="格 式">格 式</span><b id="lmType">—</b></div>
-                            </div>
-                            <div class="lm-right">
-                                <div class="lm-fld">
-                                    <div class="lml" data-i18n="书 名">书 名</div>
-                                    <input id="lmTitle" autocomplete="off">
-                                </div>
-                                <div class="lm-fld">
-                                    <div class="lml" data-i18n="作 者">作 者</div>
-                                    <input id="lmAuthor" autocomplete="off">
-                                </div>
-                                <div class="lm-fld">
-                                    <div class="lml" data-i18n="简 介">简 介</div>
-                                    <textarea id="lmDesc" rows="4"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="lm-foot">
-                            <button class="lm-b" id="lmExport" data-i18n="导出">导出</button>
-                            <button class="lm-b danger" id="lmDelete" data-i18n="删除">删除</button>
-                            <div class="lm-note" id="lmNote" data-i18n="改动会写回原 EPUB，不会重新转换">改动会写回原 EPUB，不会重新转换</div>
-                            <button class="lm-b ghost" id="lmCancel" data-i18n="取消">取消</button>
-                            <button class="lm-b prim" id="lmSave" data-i18n="保存">保存</button>
-                        </div>
-                    </div>
-                </div>
-                <!-- ===== 书库：批量传输（三通道自选） ===== -->
-                <div class="lib-modal" id="libSendModal" style="display:none">
-                    <div class="lm-scrim" id="libSendScrim"></div>
-                    <div class="lm-card send-card">
-                        <div class="lm-head">
-                            <div class="lm-title" data-i18n="批量传输">批量传输</div>
-                            <div class="lm-sub">SEND BOOKS</div>
-                            <div class="lm-x" id="libSendClose">✕</div>
-                        </div>
-                        <div class="send-body">
-                            <div class="send-note"><span data-i18n="已选">已选</span> <b id="sendCount">0</b> <span data-i18n="本，选择传输方式：">本，选择传输方式：</span></div>
-
-                            <div class="send-opt" data-m="wifi">
-                                <div class="so-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tx2)"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
-                                <div class="so-txt">
-                                    <div class="so-t" data-i18n="WiFi 传书">WiFi 传书</div>
-                                    <div class="so-s" data-i18n="传到同一局域网内的阅读设备">传到同一局域网内的阅读设备</div>
-                                </div>
-                                <div class="so-go">→</div>
-                            </div>
-
-                            <div class="send-opt" data-m="kindle">
-                                <div class="so-ico">☁️</div>
-                                <div class="so-txt">
-                                    <div class="so-t" data-i18n="Send to Kindle">Send to Kindle</div>
-                                    <div class="so-s" data-i18n="经 Amazon 官方通道上传到云端">经 Amazon 官方通道上传到云端</div>
-                                </div>
-                                <div class="so-go">→</div>
-                            </div>
-
-                            <div class="send-opt" data-m="applebooks">
-                                <div class="so-ico">☁️</div>
-                                <div class="so-txt">
-                                    <div class="so-t" data-i18n="苹果图书">苹果图书</div>
-                                    <div class="so-s" data-i18n="复制到下载目录后上传百度网盘">复制到下载目录后上传百度网盘</div>
-                                </div>
-                                <div class="so-go">→</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<!-- ===== 章节预览弹窗（按 N2_chapters 设计稿） ===== -->
+<!-- ===== 书库：单本详情弹窗 ===== -->
+<!-- ===== 书库：批量传输（三通道自选） ===== -->
 </div>
-        </div>
-
-        <!-- ★★★ v2 新增：下载小说页面 CSS（独立作用域） ★★★ -->
-        <style>
+</div>
+<!-- ★★★ v2 新增：下载小说页面 CSS（独立作用域） ★★★ -->
+<style>
         /* ===== 下载小说页面（复刻 .name-page 风格，简洁对齐） ===== */
         .dn-search-row {
             display: flex;
@@ -2198,10 +1741,10 @@
             background: rgba(0, 122, 255, 0.10);
         }
         </style>
-        <!-- ★★★ 完整版（2026-09-25 移植）：API 授权页 + 授权弹窗 CSS ★★★
+<!-- ★★★ 完整版（2026-09-25 移植）：API 授权页 + 授权弹窗 CSS ★★★
              ★ 全部走 theme.css 的深色令牌 var(--xxx)：本 <style> 在深色主题 /
                library.css 之前加载，只有用令牌才不会被后面的主题文件改掉。 -->
-        <style>
+<style>
         /* ===== API 授权页 ===== */
         .api-page {
             width: 100%;
@@ -2400,80 +1943,383 @@
         .auto-txt-btn:active:not(:disabled) { transform: translateY(0); }
         .auto-txt-btn:disabled { cursor: default; opacity: .5; box-shadow: none; }
         </style>
-
-
-
-
-
-
-
-
-
-        <!-- 底栏 -->
-        <div class="bottom-bar">
-            <div class="format-group">
-                <span class="format-item active" data-format="epub">EPUB</span>
-                <span style="color:#8e8e93; font-size: 11px;" data-i18n="（唯一输出格式）">（唯一输出格式）</span>
-            </div>
-            <div class="status-bar">
-                <span id="statusText" data-i18n="就绪">就绪</span>
-                <a href="#" id="homeLink" data-i18n="访问主页">访问主页</a>
-            </div>
-            <div class="preset-group">
-                <span data-i18n="预设：">预设：</span>
-                <select>
-                    <option data-i18n="默认">默认</option>
-                    <option data-i18n="小说">小说</option>
-                    <option data-i18n="学术">学术</option>
-                    <option data-i18n="诗歌">诗歌</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- 章节编辑面板（弹窗） -->
-<div id="chapterEditorOverlay" style="display:none">
-    <div class="ce-card">
-        <div class="ce-head">
-            <h3 data-i18n="📋 章节编辑">📋 章节编辑</h3>
-            <button id="closeChapterEditor" class="ce-x">✕</button>
-        </div>
-
-        <div class="ce-tip" data-i18n="💡 手动添加章节：输入章节名称和所在行号 · 点击「删除」标记删除 · 点击「恢复」恢复 · 点击「永久删除」彻底移除">💡 手动添加章节：输入章节名称和所在行号 · 点击「删除」标记删除 · 点击「恢复」恢复 · 点击「永久删除」彻底移除</div>
-
-        <div class="ce-body">
-            <table class="ce-table">
-                <thead>
-                    <tr>
-                        <th class="c-no" data-i18n="序号">序号</th>
-                        <th data-i18n="章节名称">章节名称</th>
-                        <th class="c-line" data-i18n="行号">行号</th>
-                        <th class="c-act" data-i18n="操作">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="chapterTableBody"></tbody>
-            </table>
-        </div>
-
-        <div class="ce-foot">
-            <span class="ce-lb" data-i18n="添加章节：">添加章节：</span>
-            <input id="newChapterTitle" class="ce-in" placeholder="章节名称" data-i18n-ph="章节名称" />
-            <span class="ce-lb" data-i18n="行号">行号</span>
-            <input id="newChapterLine" class="ce-in ce-num" type="number" value="1" min="1" />
-            <button id="addChapterBtn" class="ce-b" data-i18n="添加">添加</button>
-            <div class="ce-spacer"></div>
-            <span class="ce-stat"><b id="totalChapterCount">0</b> <span data-i18n="章">章</span></span>
-            <span class="ce-stat"><b id="deletedChapterCount">0</b> <span data-i18n="已删除">已删除</span></span>
-        </div>
-
-        <div class="ce-foot ce-foot2">
-            <button id="resetChaptersBtn" class="ce-b ghost" data-i18n="重置">重置</button>
-            <button id="saveChaptersBtn" class="ce-b primary" data-i18n="保存修改">保存修改</button>
-        </div>
-    </div>
+<!-- 底栏 -->
+<div class="bottom-bar">
+<div class="format-group">
+<span class="format-item active" data-format="epub">EPUB</span>
+<span data-i18n="（唯一输出格式）" style="color:#8e8e93; font-size: 11px;">（唯一输出格式）</span>
 </div>
-
-    <script>
+<div class="status-bar">
+<span data-i18n="就绪" id="statusText">就绪</span>
+<a data-i18n="访问主页" href="#" id="homeLink">访问主页</a>
+</div>
+<div class="preset-group">
+<span data-i18n="预设：">预设：</span>
+<select>
+<option data-i18n="默认">默认</option>
+<option data-i18n="小说">小说</option>
+<option data-i18n="学术">学术</option>
+<option data-i18n="诗歌">诗歌</option>
+</select>
+</div>
+</div>
+</div>
+<!-- 章节编辑面板（弹窗） -->
+<div id="chapterEditorOverlay" style="display:none">
+<div class="ce-card">
+<div class="ce-head">
+<h3 data-i18n="📋 章节编辑">📋 章节编辑</h3>
+<button class="ce-x" id="closeChapterEditor">✕</button>
+</div>
+<div class="ce-tip" data-i18n="💡 手动添加章节：输入章节名称和所在行号 · 点击「删除」标记删除 · 点击「恢复」恢复 · 点击「永久删除」彻底移除">💡 手动添加章节：输入章节名称和所在行号 · 点击「删除」标记删除 · 点击「恢复」恢复 · 点击「永久删除」彻底移除</div>
+<div class="ce-body">
+<table class="ce-table">
+<thead>
+<tr>
+<th class="c-no" data-i18n="序号">序号</th>
+<th data-i18n="章节名称">章节名称</th>
+<th class="c-line" data-i18n="行号">行号</th>
+<th class="c-act" data-i18n="操作">操作</th>
+</tr>
+</thead>
+<tbody id="chapterTableBody"></tbody>
+</table>
+</div>
+<div class="ce-foot">
+<span class="ce-lb" data-i18n="添加章节：">添加章节：</span>
+<input class="ce-in" data-i18n-ph="章节名称" id="newChapterTitle" placeholder="章节名称"/>
+<span class="ce-lb" data-i18n="行号">行号</span>
+<input class="ce-in ce-num" id="newChapterLine" min="1" type="number" value="1"/>
+<button class="ce-b" data-i18n="添加" id="addChapterBtn">添加</button>
+<div class="ce-spacer"></div>
+<span class="ce-stat"><b id="totalChapterCount">0</b> <span data-i18n="章">章</span></span>
+<span class="ce-stat"><b id="deletedChapterCount">0</b> <span data-i18n="已删除">已删除</span></span>
+</div>
+<div class="ce-foot ce-foot2">
+<button class="ce-b ghost" data-i18n="重置" id="resetChaptersBtn">重置</button>
+<button class="ce-b primary" data-i18n="保存修改" id="saveChaptersBtn">保存修改</button>
+</div>
+</div>
+</div>
+<div class="ac-modal" id="autoChoiceModal">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog">
+<div class="ac-title" data-i18n="选择上传方式">选择上传方式</div>
+<div class="ac-sub" data-i18n="前 4 步已自动完成（下载 → 分章 → 找封面 → 转换），请选择最后上传方式：">前 4 步已自动完成（下载 → 分章 → 找封面 → 转换），请选择最后上传方式：</div>
+<button class="ac-btn" id="autoChoiceApple" type="button">
+<span aria-hidden="true" class="choice-num">01</span>
+<span class="ac-tx">
+<b data-i18n="苹果图书">苹果图书</b>
+<i data-i18n="上传到百度网盘">上传到百度网盘</i>
+</span>
+</button>
+<button class="ac-btn" id="autoChoiceWifi" type="button">
+<span aria-hidden="true" class="choice-num">02</span>
+<span class="ac-tx">
+<b data-i18n="WiFi 传书">WiFi 传书</b>
+<i data-i18n="弹出新窗口">弹出新窗口</i>
+</span>
+</button>
+<button class="ac-btn" id="autoChoiceKindle" type="button">
+<span aria-hidden="true" class="choice-num">03</span>
+<span class="ac-tx">
+<b data-i18n="Send to Kindle">Send to Kindle</b>
+<i data-i18n="经 Amazon 官方通道上传">经 Amazon 官方通道上传</i>
+</span>
+</button>
+<button class="ac-cancel" data-i18n="取消" id="autoChoiceCancel" type="button">取消</button>
+</div>
+</div><div class="ac-modal" id="lnModal" style="display:none;visibility:hidden;pointer-events:none">
+<div class="ac-card rec-card ln-card concept-dialog">
+<div>
+<div class="rec-modal-name">哔哩轻小说下载</div>
+<div class="rec-modal-src">抓公开章节 + 插图自组 EPUB · <b>零积分 · 免登录 · 带插图</b></div>
+</div>
+<div class="ln-row">
+<input class="ln-input" id="lnInput" placeholder="书号 / 网址 / 书名，如 3095 或 败北女角太多了"/>
+<button class="rec-btn prim ln-query" id="lnQuery">查询</button>
+</div>
+<div class="ln-cand-list" id="lnCands" style="display:none"></div>
+<!-- 书名卡：小封面 + 书名 + 作者 + 卷数（与「精选推荐」详情弹窗同款 class） -->
+<div class="rec-modal-body" id="lnMeta" style="display:none">
+<img alt="" class="rec-modal-cover" id="lnMetaCover"/>
+<div class="rec-modal-info">
+<div class="rec-modal-name" id="lnMetaName"></div>
+<div class="rec-modal-sub" id="lnMetaAuthor"></div>
+<div class="rec-modal-src" id="lnMetaExtra"></div>
+</div>
+</div>
+<div class="ln-list-head" id="lnListHead" style="display:none">
+<span id="lnListCount">分卷</span>
+<button class="ln-mini" id="lnAll" type="button">全选 / 全不选</button>
+</div>
+<div class="ln-vols" id="lnVols"></div>
+<!-- ★ 2026-10-01：Cookie 区（cf_clearance 通行证）——
+                   站方对"没通过 Cloudflare 人机验证"的请求会**静默截断正文**
+                   （约 530 字 +「內容加載失敗」），而 cf_clearance 只活约 30 分钟~几小时。
+                   以前界面上**完全没法处理**这件事：证一过期就只有一句「正文被站方截断」，
+                   得自己去浏览器 F12 重拷 Cookie。现在两个出口：
+                     · 勾选框 = 让脚本自己在过期时用 Selenium+Edge 续期（弹一次 Edge，约 10 秒）；
+                     · 按钮   = 现在就续一次（换域名 / 想手动确认时用）。 -->
+<div class="ln-row" style="align-items:center;gap:8px;margin-top:2px">
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx3);cursor:pointer">
+<input checked="" id="lnAutoCookie" type="checkbox"/>
+<span data-i18n="Cookie 过期自动续期（会弹一次 Edge，约 10 秒）">Cookie 过期自动续期（会弹一次 Edge，约 10 秒）</span>
+</label>
+<button class="ln-mini" data-i18n="刷新 Cookie" id="lnRefreshCookie" style="margin-left:auto" type="button">刷新 Cookie</button>
+</div>
+<div class="rec-modal-src ln-status" id="lnStatus">先查询，再勾选要下的卷</div>
+<div class="rec-actions">
+<button class="rec-btn" id="lnClose">关闭</button>
+<!-- ★★★ 2026-10-02（用户要求）：「把下载也设一个取消键，点取消可以杀掉进程」
+                       默认隐藏，只有下载真在跑的时候才显示（见 startDownload / onLinovelibProgress）。 -->
+<button class="rec-btn" id="lnCancel" style="display:none;color:#ff453a" title="终止正在跑的抓取进程">取消下载</button>
+<button class="rec-btn prim" id="lnGo">下载选中</button>
+</div>
+</div>
+</div><div class="ac-modal" id="recDownModal" style="display:none;visibility:hidden;pointer-events:none">
+<div class="ac-card rec-card concept-dialog">
+<div class="rec-modal-body">
+<img alt="" class="rec-modal-cover" id="recDownCover"/>
+<div class="rec-modal-info">
+<div class="rec-modal-name" id="recDownName"></div>
+<div class="rec-modal-sub" id="recDownAuthor"></div>
+<div class="rec-modal-src" id="recDownSource"></div>
+</div>
+</div>
+<div class="rec-actions">
+<button class="rec-btn" data-i18n="取消" id="recDownCancel">取消</button>
+<button class="rec-btn prim" data-i18n="下载" id="recDownOk">下载</button>
+</div>
+</div>
+</div><div class="ac-modal" id="recInfoModal" style="display:none;visibility:hidden;pointer-events:none">
+<div class="ac-card rec-card concept-dialog">
+<div class="rec-modal-body">
+<img alt="" class="rec-modal-cover" id="recInfoCover"/>
+<div class="rec-modal-info">
+<div class="rec-modal-name" id="recInfoName"></div>
+<div class="rec-modal-sub" id="recInfoAuthor"></div>
+<div class="rec-modal-src" id="recInfoSource"></div>
+<div class="rec-tags" id="recInfoTags"></div>
+</div>
+</div>
+<div class="rec-intro" id="recInfoIntro"></div>
+<div class="rec-actions">
+<button class="rec-btn" data-i18n="关闭" id="recInfoClose">关闭</button>
+<button class="rec-btn prim" data-i18n="下载" id="recInfoDown">下载</button>
+</div>
+</div>
+</div><div class="ac-modal" id="jxModal" style="display:none;visibility:hidden;pointer-events:none">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog">
+<div class="ac-title" data-i18n="要下「精校源」吗？">要下「精校源」吗？</div>
+<div class="ac-sub" id="jxSub"></div>
+<button class="ac-btn" id="jxYes" type="button">
+<svg class="ac-ico" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="18"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"></path></svg>
+<span class="ac-tx">
+<b data-i18n="下载精校源（UU看書）">下载精校源（UU看書）</b>
+<i data-i18n="速度非常慢 · 会多次失败重试 · 需挂 VPN">速度非常慢 · 会多次失败重试 · 需挂 VPN</i>
+</span>
+</button>
+<button class="ac-btn" id="jxNo" type="button">
+<svg class="ac-ico" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="18"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 1.5z"></path><path d="M8 7h6"></path></svg>
+<span class="ac-tx">
+<b data-i18n="就下普通源（笔趣阁）">就下普通源（笔趣阁）</b>
+<i data-i18n="快 · 一分钟级别 · 正文可能带站方样板">快 · 一分钟级别 · 正文可能带站方样板</i>
+</span>
+</button>
+<button class="ac-cancel" data-i18n="取消" id="jxCancel" type="button">取消</button>
+</div>
+</div><div class="ac-modal" id="metaChoiceModal" style="display:none;visibility:hidden;pointer-events:none;">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog">
+<div class="ac-title" data-i18n="这本书有多个同名结果">这本书有多个同名结果</div>
+<div class="ac-sub" data-i18n="请选择你要的那一本（作者不同）：">请选择你要的那一本（作者不同）：</div>
+<div class="meta-choice-list" id="metaChoiceList"></div>
+<button class="ac-cancel" data-i18n="取消" id="metaChoiceCancel" type="button">取消</button>
+</div>
+</div><div class="ac-modal" id="lnNeedClickModal" style="display:none;visibility:hidden;pointer-events:none;">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog">
+<div class="ac-title">👉 请在浏览器里点一下第一章</div>
+<div class="ac-sub" id="lnNeedClickSub">这本书要登录/权限，脚本自己进不去 —— 请在已打开的浏览器里点一下第一章的链接。</div>
+<div id="lnNeedClickCatalog" style="font-size:12px;opacity:.7;word-break:break-all;margin:8px 0 2px;"></div>
+<div id="lnNeedClickCount" style="font-size:13px;margin:6px 0 2px;"></div>
+<button class="ac-cancel" id="lnNeedClickOk" type="button">我知道了（后台继续等）</button>
+</div>
+</div><div class="ac-modal" id="grabCookieModal" style="display:none;visibility:hidden;pointer-events:none;">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog">
+<div class="ac-title">🍪 取 Cookie（用你自己的浏览器）</div>
+<div class="ac-sub" style="text-align:left;line-height:1.9">
+                            点「开始」会打开一个<b>应用内的浏览器窗口</b>（不是外部浏览器、也不是脚本浏览器）。<br/><br/>
+<b>①</b> 在弹出的窗口里会打开 <code style="user-select:all">https://www.bilinovel.com/</code><br/>
+<b>②</b> 在里面点到 <b>《Re:从零开始的异世界生活》第一卷 第一章</b> 的<b>正文页</b>
+                            （确认看得见正文；要登录就登，弹验证码就点）<br/>
+<b>③</b> <b>什么都不用点也不用关窗口</b> —— 脚本每 2 秒看一次，
+                            认出正文页就自动取 cookie 并关窗<br/><br/>
+<span style="opacity:.7">（这条路绕开了 Selenium 的机器人特征，也不用去解
+                            浏览器加密库 —— cookie 由 Chromium 自己解密。）</span>
+</div>
+<div id="grabCookieStatus" style="font-size:13px;margin:10px 0 4px;min-height:20px"></div>
+<div id="grabCookieLog" style="font-size:11px;opacity:.65;max-height:96px;overflow-y:auto;white-space:pre-wrap;margin-bottom:6px"></div>
+<!-- ★★★ 2026-10-02（用户实测「我把浏览器关了啊」）：
+                             Chromium 关掉窗口后**仍留后台进程**（实测 msedge 7 个 / chrome 7 个），
+                             cookie 库被它们独占锁着 → 脚本读不到。给一个显式按钮（用户自己点=明确同意）。 -->
+<button class="ac-btn" id="grabCookieKill" style="margin:0 0 6px;width:100%" type="button">🧨 浏览器关不干净？点这里强制结束它</button>
+<button class="ac-cancel" id="grabCookieClose" type="button">关掉这个窗口（后台继续等）</button>
+</div>
+</div><div class="lib-modal" id="chapterModal" style="display:none">
+<div class="lm-scrim" id="chapterModalScrim"></div>
+<div class="lm-card chapter-card">
+<div class="lm-head">
+<div class="lm-title" data-i18n="章节预览">章节预览</div>
+<div class="lm-sub">CHAPTERS</div>
+<div class="chip" id="chapterModalChip" style="margin-left:12px;"></div>
+<div class="lm-x" id="chapterModalClose">✕</div>
+</div>
+<div class="ch-body">
+<div class="ch-list" id="chapterModalList"></div>
+</div>
+<div class="lm-foot">
+<button class="lm-b" data-i18n="✏️ 编辑章节" id="chapterModalEdit">✏️ 编辑章节</button>
+<div class="lm-note" data-i18n="列表只用于核对；改动请在编辑器里做">列表只用于核对；改动请在编辑器里做</div>
+<button class="lm-b ghost" data-i18n="关闭" id="chapterModalOk">关闭</button>
+</div>
+</div>
+</div><div class="lib-modal" id="libModal" style="display:none">
+<div class="lm-scrim" id="libModalScrim"></div>
+<div class="lm-card">
+<div class="lm-head">
+<div class="lm-title" data-i18n="书籍详情">书籍详情</div>
+<div class="lm-sub">BOOK DETAILS</div>
+<div class="lm-x" id="libModalClose">✕</div>
+</div>
+<div class="lm-body">
+<div class="lm-left">
+<div class="lm-cover" id="lmCover"></div>
+<button class="lm-btn" data-i18n="更换封面" id="lmChangeCover">更换封面</button>
+<div class="lm-kv"><span data-i18n="章节数">章节数</span><b class="num" id="lmChapters">—</b></div>
+<div class="lm-kv"><span data-i18n="文件大小">文件大小</span><b id="lmSize">—</b></div>
+<div class="lm-kv"><span data-i18n="修改时间">修改时间</span><b id="lmTime">—</b></div>
+<div class="lm-kv"><span data-i18n="格 式">格 式</span><b id="lmType">—</b></div>
+</div>
+<div class="lm-right">
+<div class="lm-fld">
+<div class="lml" data-i18n="书 名">书 名</div>
+<input autocomplete="off" id="lmTitle"/>
+</div>
+<div class="lm-fld">
+<div class="lml" data-i18n="作 者">作 者</div>
+<input autocomplete="off" id="lmAuthor"/>
+</div>
+<div class="lm-fld">
+<div class="lml" data-i18n="简 介">简 介</div>
+<textarea id="lmDesc" rows="4"></textarea>
+</div>
+</div>
+</div>
+<div class="lm-foot">
+<button class="lm-b" data-i18n="导出" id="lmExport">导出</button>
+<button class="lm-b danger" data-i18n="删除" id="lmDelete">删除</button>
+<div class="lm-note" data-i18n="改动会写回原 EPUB，不会重新转换" id="lmNote">改动会写回原 EPUB，不会重新转换</div>
+<button class="lm-b ghost" data-i18n="取消" id="lmCancel">取消</button>
+<button class="lm-b prim" data-i18n="保存" id="lmSave">保存</button>
+</div>
+</div>
+</div><div class="lib-modal" id="libSendModal" style="display:none">
+<div class="lm-scrim" id="libSendScrim"></div>
+<div class="lm-card send-card">
+<div class="lm-head">
+<div class="lm-title" data-i18n="批量传输">批量传输</div>
+<div class="lm-sub">SEND BOOKS</div>
+<div class="lm-x" id="libSendClose">✕</div>
+</div>
+<div class="send-body">
+<div class="send-note"><span data-i18n="已选">已选</span> <b id="sendCount">0</b> <span data-i18n="本，选择传输方式：">本，选择传输方式：</span></div>
+<div class="send-opt" data-m="wifi">
+<div class="so-ico"><svg fill="none" height="22" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" style="color:var(--tx2)" viewBox="0 0 24 24" width="22"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" x2="12.01" y1="20" y2="20"></line></svg></div>
+<div class="so-txt">
+<div class="so-t" data-i18n="WiFi 传书">WiFi 传书</div>
+<div class="so-s" data-i18n="传到同一局域网内的阅读设备">传到同一局域网内的阅读设备</div>
+</div>
+<div class="so-go">→</div>
+</div>
+<div class="send-opt" data-m="kindle">
+<div class="so-ico">☁️</div>
+<div class="so-txt">
+<div class="so-t" data-i18n="Send to Kindle">Send to Kindle</div>
+<div class="so-s" data-i18n="经 Amazon 官方通道上传到云端">经 Amazon 官方通道上传到云端</div>
+</div>
+<div class="so-go">→</div>
+</div>
+<div class="send-opt" data-m="applebooks">
+<div class="so-ico">☁️</div>
+<div class="so-txt">
+<div class="so-t" data-i18n="苹果图书">苹果图书</div>
+<div class="so-s" data-i18n="复制到下载目录后上传百度网盘">复制到下载目录后上传百度网盘</div>
+</div>
+<div class="so-go">→</div>
+</div>
+</div>
+</div>
+</div><div class="ac-modal" id="stkAuthModal">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog" style="max-width:420px">
+<div class="ac-title" data-i18n="☁️ Kindle 授权">☁️ Kindle 授权</div>
+<div class="ac-sub" data-i18n="登录 Amazon 一次（Kindle 绑定的那个账号）。之后在「传输」页传书会直接进你的 Kindle 云端，约 1 分钟到手。">登录 Amazon 一次（Kindle 绑定的那个账号）。之后在「传输」页传书会直接进你的 Kindle 云端，约 1 分钟到手。</div>
+<div class="stk-st" id="stkChip"><span id="stkChipText">检查中…</span></div>
+<div class="stk-row">
+<label data-i18n="Amazon 邮箱 / 手机号">Amazon 邮箱 / 手机号</label>
+<input autocomplete="off" class="stk-in" id="stkEmail" placeholder="your@email.com" type="text"/>
+</div>
+<div class="stk-row">
+<label data-i18n="密码（不保存）">密码（不保存）</label>
+<input autocomplete="off" class="stk-in" id="stkPwd" placeholder="Amazon 账号密码" type="password"/>
+</div>
+<div class="stk-log" id="stkLog"></div>
+<div data-i18n="若弹出 Windows「通行密钥 / 安全密钥」窗口，直接点「取消」即可 —— 不影响授权。" style="font-size:11px;color:var(--tx3);line-height:1.6;margin-top:6px">若弹出 Windows「通行密钥 / 安全密钥」窗口，直接点「取消」即可 —— 不影响授权。</div>
+<div class="stk-tip" id="stkTip"></div>
+<div class="ac-acts" style="margin-top:12px">
+<button class="ac-btn" data-i18n="清空登录信息" id="stkLogout" style="margin-right:auto;font-size:11.5px;opacity:.75" type="button">清空登录信息</button>
+<button class="ac-btn" data-i18n="取消" id="stkCancel" type="button">取消</button>
+<button class="ac-btn" data-i18n="登录" id="stkLogin" type="button">登录</button>
+</div>
+</div>
+</div><div class="ac-modal" id="abAuthModal">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog" style="max-width:430px">
+<div class="ac-title" data-i18n="☁️ 百度网盘授权">☁️ 百度网盘授权</div>
+<div class="ac-sub" data-i18n="点「打开浏览器授权」→ 在弹出的浏览器里登录百度网盘并授权 → 把页面上的授权码粘到下面 → 提交。">点「打开浏览器授权」→ 在弹出的浏览器里登录百度网盘并授权 → 把页面上的授权码粘到下面 → 提交。</div>
+<div class="stk-st" id="abSt"><span id="abStTx">未授权</span></div>
+<div style="display:flex;gap:8px;margin-bottom:9px">
+<button class="ac-btn" data-i18n="打开浏览器授权" id="abStart" style="width:auto;padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer">打开浏览器授权</button>
+</div>
+<div class="stk-row">
+<label data-i18n="授权码">授权码</label>
+<input autocomplete="off" class="stk-in" id="abCode" placeholder="粘贴授权码…" spellcheck="false" type="text"/>
+</div>
+<div class="stk-log" id="abLog"></div>
+<div class="ac-acts" style="margin-top:12px">
+<button class="ac-btn" data-i18n="关闭" id="abClose" type="button">关闭</button>
+<button class="ac-btn" data-i18n="提交授权" id="abSubmit" type="button">提交授权</button>
+</div>
+</div>
+</div><div class="ac-modal" id="wifiModal">
+<div aria-modal="true" class="ac-card concept-dialog" role="dialog" style="max-width:440px">
+<div class="ac-title" style="display:flex;align-items:center;gap:8px"><svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" style="color:var(--tx2);flex:0 0 auto" viewBox="0 0 24 24" width="16"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" x2="12.01" y1="20" y2="20"></line></svg><span data-i18n="WiFi 传书">WiFi 传书</span></div>
+<div class="ac-sub" data-i18n="在手机浏览器里打开下面这个地址（手机和电脑要同一个 WiFi），选好书后回到这里点「开始传输」。">在手机浏览器里打开下面这个地址（手机和电脑要同一个 WiFi），选好书后回到这里点「开始传输」。</div>
+<div class="stk-st" id="wfSt"><span id="wfStTx">等待操作…</span></div>
+<div class="stk-row">
+<label data-i18n="手机上的地址">手机上的地址</label>
+<input autocomplete="off" class="stk-in" id="wfUrl" placeholder="例如：192.168.1.100:8080" type="text"/>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+<span data-i18n="刷新间隔（秒）" style="font-size:11px;color:var(--tx3)">刷新间隔（秒）</span>
+<input class="stk-in" id="wfDelay" max="30" min="1" step="0.5" style="width:80px" type="number" value="2.5"/>
+<button class="ac-btn" data-i18n="历史网址" id="wfHistory" style="width:auto;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer">历史网址</button>
+</div>
+<div id="wfUrlList" style="display:none;max-height:96px;overflow:auto;margin:4px 0 6px"></div>
+<div class="stk-log" id="wfLog"></div>
+<div class="ac-acts" style="margin-top:12px">
+<button class="ac-btn" data-i18n="关闭" id="wfClose" type="button">关闭</button>
+<button class="ac-btn" data-i18n="开始传输" id="wfStart" type="button">开始传输</button>
+</div>
+</div>
+</div><script>
     // ★ i18n 取词函数。中文模式下原样返回 key，所以包裹是安全无副作用的。
     // 注意：必须在调用时才查 window.__i18n —— i18n.js 是 defer 加载的，
     // 本内联脚本比它先执行。若在此处固定函数引用，英文模式永远拿不到译文。
@@ -2806,21 +2652,43 @@
 
                 try {
                     // ★ 2026-10-01（用户：「我搜无职转生他怎么不给我跳选搜索结果和选卷，直接就开始下了」）：
-                    //   给主进程带上 pickLightNovel —— 三个网文源全失败、回退到轻小说时，
+                    //   给主进程带上 pickLightNovel —— 网文源（爬虫源 / 久久）全失败、回退到轻小说时，
                     //   **不再静默直下**，而是把书号交回来，这里弹【轻小说】选卷窗让用户自己挑。
                     //   注意：这**不是**恢复当初删掉的那个"下载前先查轻小说"预检（那次要白等
                     //   站点搜索 5~15 秒），现在仍然是"先网文、失败才查"。
-                    const result = await window.electronAPI.downloadNovel(_norm, { pickLightNovel: true });
-                    console.log('📥 下载结果:', result);
-                    // ★★★★ 阉割版（2026-10-02）：下载执行已移除 —— 只弹法规提示 ★★★★
-                    if (result && result.notAvailable) {
-                        try { dnEndBar(false); } catch (e) {}
-                        setDnLoading(false);
-                        // ★ 2026-10-02（用户要求）：进度小字直接显示与弹窗一致的文案，红字
-                        setDnStatus('因相关法律法规规定，该部分暂不开放使用。', 'error');
-                        if (window.__legalPrompt) { window.__legalPrompt(); }
-                        return;
+                    // ★★★ 2026-10-10（用户：「先走 uu，如果 uu 有就弹出弹窗提示是否要下载精校源」）★★★
+                    //   源的身份（用户当面纠正）：**精校源 = UU看書**（干净但慢、会重试、要 VPN）；
+                    //                            **普通源 = 笔趣阁·爬虫源**（一分钟级别，正文带站方样板）。
+                    //   第一趟带 askJingxiao：novel_dl.py **只探测**（用 UU看書=精校源 搜，搜到就回
+                    //   {"needJingxiao":true,title,chapters}，不下正文）；
+                    //   命中 → 弹 #jxModal（与「选择上传方式」同一套 .ac-*）问用户走哪条源；
+                    //   选完再发起第二趟：选精校源 → 默认链路（UU 优先）；
+                    //                    选普通源 → ordinaryFirst（笔趣阁排最前）。
+                    // ★ 取消 = 什么都不下（不会静默开下，避免用户以为没选就开始下载）。
+                    let result = await window.electronAPI.downloadNovel(
+                        _norm, { pickLightNovel: true, askJingxiao: true });
+                    if (result && result.needJingxiao) {
+                        setDnStatus(T('精校源（UU看書）有这本书 —— 请选择用哪条源下载…'), 'searching');
+                        const _jxChoice = await window.askJingxiaoDialog(result);
+                        if (_jxChoice === 'cancel') {
+                            dnEndBar(false);
+                            setDnLoading(false);
+                            setDnStatus(T('已取消下载'), 'warn');
+                            return;
+                        }
+                        if (_jxChoice === 'jx') {
+                            setDnStatus(T('走精校源（UU看書）：速度非常慢，会多次失败重试，'
+                                + '进度不动时请耐心等；反复失败请确认已挂 VPN…'), 'warn');
+                        } else {
+                            setDnStatus(T('走普通源（笔趣阁）…'), 'searching');
+                        }
+                        result = await window.electronAPI.downloadNovel(
+                            _norm,
+                            _jxChoice === 'jx'
+                                ? { pickLightNovel: true }
+                                : { pickLightNovel: true, ordinaryFirst: true });
                     }
+                    console.log('📥 下载结果:', result);
 
                     // ★ 命中轻小说 → 开【轻小说】弹窗（**回填书名**，自动查询出搜索结果与分卷）
                     if (result && result.needPick && result.novelId) {
@@ -3052,13 +2920,6 @@
                     setStatus(T('⏳ [1/5] 正在下载小说...'), 'searching');
                     const dlResult = await window.electronAPI.downloadNovel(_normAuto);
                     console.log('[AutoMode] step1 dlResult:', JSON.stringify(dlResult));
-                    // ★★★★ 阉割版（2026-10-02）：一键里的下载步骤同样不开放 ★★★★
-                    if (dlResult && dlResult.notAvailable) {
-                        // ★ 2026-10-02（用户要求）：进度小字直接显示与弹窗一致的文案，红字
-                        setStatus('因相关法律法规规定，该部分暂不开放使用。', 'error');
-                        if (window.__legalPrompt) { window.__legalPrompt(); }
-                        return;
-                    }
                     if (!dlResult.success || !dlResult.filePath) {
                         setStatus(T('❌ 下载失败：') + (dlResult.error || T('未知错误')), 'error');
                         return;
@@ -3274,7 +3135,7 @@
                                 setStatus(T('WiFi 传书弹窗已打开：请在弹窗里填地址并点「开始传输」'), 'searching');
                                 const _wr = await window.__wifiWaitReal(function () { window.__wifiOpen(); });
                                 if (_wr === 'timeout') {
-                                    setStatus(T('⏱ WiFi 传书超时未完成（10 分钟）—— 请回弹窗确认后重试'), 'error');
+                                    setStatus(T('⏱ WiFi 传书超时未完成（5 分钟）—— 请回弹窗确认后重试'), 'error');
                                 } else if (_wr && _wr.success) {
                                     setStatus(T('🎉 [5/5] WiFi 传书完成 ✅'), 'success');
                                     if (window.showToast) window.showToast(T('🎉 全部完成！一键流程成功'), 'success');
@@ -3581,7 +3442,7 @@
                                 setStatus(T('WiFi 传书弹窗已打开：请在弹窗里填地址并点「开始传输」'), 'searching');
                                 const _wr4 = await window.__wifiWaitReal(function () { window.__wifiOpen(); });
                                 if (_wr4 === 'timeout') {
-                                    setStatus(T('⏱ WiFi 传书超时未完成（10 分钟）—— 请回弹窗确认后重试'), 'error');
+                                    setStatus(T('⏱ WiFi 传书超时未完成（5 分钟）—— 请回弹窗确认后重试'), 'error');
                                 } else if (_wr4 && _wr4.success) {
                                     setStatus(T('🎉 [4/4] WiFi 传书完成 ✅'), 'success');
                                     if (window.showToast) window.showToast(T('🎉 全部完成！一键流程成功'), 'success');
@@ -3729,6 +3590,57 @@
                 toast._hideTimer = setTimeout(function () { toast.style.opacity = '0'; }, ms || 2500);
             };
         })();
+
+        // ================================================================
+        // ★★★ 2026-10-10（用户：「先走 uu，如果 uu 有就弹出弹窗提示是否要下载精校源，
+        //      并告诉他精校源爬取速度非常慢并且经过多次失败重试，且要挂 vpn」）★★★
+        //   精校源询问弹窗 —— 复用 #autoChoiceModal 那套 .ac-* 结构与样式（不新造视觉）。
+        //   window.askJingxiaoDialog(info) → Promise<'jx' | 'uu' | 'cancel'>
+        //     info = { title, chapters, source }（来自 novel_dl.py 的 {"needJingxiao":true}）
+        // ================================================================
+        window.askJingxiaoDialog = function (info) {
+            return new Promise(function (resolve) {
+                const m = document.getElementById('jxModal');
+                const info2 = info || {};
+                const title = info2.title || '';
+                const chapters = info2.chapters ? (String(info2.chapters) + T(' 章')) : '';
+                // 书名/章数一行 + 警告一行（警告用主题 --warn，样式见 dark.css 末尾 #jxModal 那两条）
+                const sub = document.getElementById('jxSub');
+                if (sub) {
+                    sub.innerHTML =
+                        '<span class="jx-book">《' + title + '》</span>'
+                        + (chapters ? '　·　' + chapters : '')
+                        + '<br>'
+                        + T('精校源（UU看書）已经找到这本书了。要不要用精校源下载？')
+                        + '<br><span class="jx-warn">' + T('⚠️ 精校源爬取速度非常慢，'
+                            + '会经过多次失败重试，而且要挂 VPN；想快就选普通源（笔趣阁）。') + '</span>';
+                }
+                if (!m) { resolve('pt'); return; }   // 极端情况：弹窗不在 → 走普通源，别卡住
+                m.style.display = 'flex';
+                m.style.visibility = 'visible';
+                m.style.pointerEvents = 'auto';
+                function done(v) {
+                    m.style.display = 'none';
+                    m.style.visibility = 'hidden';
+                    m.style.pointerEvents = 'none';
+                    ['jxYes', 'jxNo', 'jxCancel'].forEach(function (id) {
+                        const b = document.getElementById(id);
+                        if (b) b.onclick = null;
+                    });
+                    resolve(v);
+                }
+                const y = document.getElementById('jxYes');
+                const n = document.getElementById('jxNo');
+                const c = document.getElementById('jxCancel');
+                if (y) y.onclick = function () { done('jx'); };    // 精校源（UU看書）
+                if (n) n.onclick = function () { done('pt'); };    // 普通源（笔趣阁）
+                if (c) c.onclick = function () { done('cancel'); };
+                if (window.showToast) {
+                    window.showToast(T('🔀 精校源（UU看書）有这本书 —— 请选择走精校源还是普通源'),
+                        'info', 6000);
+                }
+            });
+        };
 
         // ================================================================
         // ★★★ v3 增量：苹果图书逻辑（仿书籍信息页面写法） ★★★
@@ -4882,7 +4794,8 @@
                     alert(T('分章失败：') + (error.message || error));
                 }
             } finally {
-                this.innerHTML = T('<svg viewBox="0 0 24 24"><polyline points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><polyline points="8 2 8 18"/><polyline points="16 6 16 22"/></svg><span class="label">预览章节</span>');
+                // 与初始文字按钮一致；旧版折页 SVG 无描边样式，会默认填充成黑块。
+                this.textContent = T('预览切分');
                 this.disabled = false;
                 // ★ 一键模式的完成信号（内容已落定才置位，语言无关）
                 window.__previewDone = true;
@@ -5797,13 +5710,11 @@
         console.log('📌 动画引擎:', useAnimations ? '已加载' : '已降级');
         console.log('📌 GPU加速:', window.AnimationEngine ? window.AnimationEngine.useGPU : false);
     </script>
-
-    <!-- ★ 再挂一次：<body> 里 L1621 还有一个 <style> 块，
+<!-- ★ 再挂一次：<body> 里 L1621 还有一个 <style> 块，
          必须让 dark.css 排在它后面才能覆盖同优先级规则 ★ -->
-    <link rel="stylesheet" href="dark.css?v=1005150628" />
-
-    <!-- ★★★ 第 2 步新增：子标签 <-> 侧栏板块 同步 ★★★ -->
-    <script>
+<link href="dark.css?v=1025232203" rel="stylesheet"/>
+<!-- ★★★ 第 2 步新增：子标签 <-> 侧栏板块 同步 ★★★ -->
+<script>
     // ================================================================
     // 侧栏板块高亮 + 制作页进度指示器
     // ----------------------------------------------------------------
@@ -5884,15 +5795,11 @@
         sync();
     })();
     </script>
-
-    <link rel="stylesheet" href="library.css?v=1005150628" />
-    <script src="library.js?v=1005150628" defer></script>
-    <script src="i18n.js?v=1005150628" defer></script>
-    <script src="settings-ui.js?v=1005150628" defer></script>
-    <script src="batch-recv.js?v=1005150628" defer></script>
-
-    
-
+<link href="library.css?v=1025232203" rel="stylesheet"/>
+<script defer="" src="library.js?v=1025232203"></script>
+<script defer="" src="i18n.js?v=1025232203"></script>
+<script defer="" src="settings-ui.js?v=1025232203"></script>
+<script defer="" src="batch-recv.js?v=1025232203"></script>
 <script>
     // ================================================================
     // 传输页：通道切换 + 队列渲染
@@ -6451,7 +6358,7 @@
             if ($('txSendCount')) $('txSendCount').textContent = included.length;
 
             if (!BATCH.length) {
-                list.innerHTML = '<div class="qempty" id="txQueueEmpty">'
+                list.innerHTML = '<div class="qempty queue-empty" id="txQueueEmpty"><span class="empty-mark">＋</span>'
                     + '<div style="font-size:12px;color:var(--tx3);">队列是空的</div>'
                     + '<div style="font-size:11px;color:var(--tx4);margin-top:6px;">'
                     + '去「书库」勾选后点「批量传输」，或点右下角从本地添加</div></div>';
@@ -6720,7 +6627,6 @@
         window.addEventListener('focus', loadQueue);
     })();
     </script>
-
 <script>
     // ================================================================
     // 章节预览弹窗 + 重新拆分 + 拆出章数提示
@@ -6786,8 +6692,7 @@
 
     })();
     </script>
-
-    <script>
+<script>
 
     // ================================================================
     // 侧栏「帮助」→ 直接打开帮助窗口
@@ -6824,20 +6729,17 @@
     })();
 
     </script>
-
-
-    <!-- ================================================================ -->
-    <!-- ★ 2026-09-29：initApiPage 整块（API 授权页交互 + 未授权弹窗）已删除。 -->
-    <!--   搜作者 / 搜封面改由 novelmeta（meta_lookup.py）直连公开接口，不需要任何 key。 -->
-    <!--   ★ 不许恢复。渲染层请改用 window.electronAPI.metaLookup(payload)。 -->
-    <!-- ================================================================ -->
-
-    <!-- ================================================================ -->
-    <!-- ★ 2026-09-29：多作者选择弹窗控制器（顶替 initApiPage 原来的位置） -->
-    <!--   用法：const picked = await window.__metaPickCandidate(candidates);  // 取消返回 null -->
-    <!--   candidates 即 metaLookup() 返回的 {title,author,cover,source,score,...} 数组 -->
-    <!-- ================================================================ -->
-    <script>
+<!-- ================================================================ -->
+<!-- ★ 2026-09-29：initApiPage 整块（API 授权页交互 + 未授权弹窗）已删除。 -->
+<!--   搜作者 / 搜封面改由 novelmeta（meta_lookup.py）直连公开接口，不需要任何 key。 -->
+<!--   ★ 不许恢复。渲染层请改用 window.electronAPI.metaLookup(payload)。 -->
+<!-- ================================================================ -->
+<!-- ================================================================ -->
+<!-- ★ 2026-09-29：多作者选择弹窗控制器（顶替 initApiPage 原来的位置） -->
+<!--   用法：const picked = await window.__metaPickCandidate(candidates);  // 取消返回 null -->
+<!--   candidates 即 metaLookup() 返回的 {title,author,cover,source,score,...} 数组 -->
+<!-- ================================================================ -->
+<script>
     (function initMetaChoice() {
         var modal = document.getElementById('metaChoiceModal');
         var list = document.getElementById('metaChoiceList');
@@ -6901,7 +6803,6 @@
         window.__metaPickCandidate = show;
     })();
     </script>
-
 <script>
 /* ── 精选推荐：只读调 recommend-list / recommend-detail，
    下载复用现有 #dnBookInput + #dnDownloadBtn（不碰 download-novel 契约）── */
@@ -6933,8 +6834,10 @@
     if (recBoards) { recBoards.style.display = recSource === 'linovelib' ? 'flex' : 'none'; }
   }
   if (recTabAll) { recTabAll.addEventListener('click', function () {
+    pendingPage = 0;
     if (recSource === 'all') { return; } recSource = 'all'; setTabs(); load(false); }); }
   if (recTabLn) { recTabLn.addEventListener('click', function () {
+    pendingPage = 0;
     if (recSource === 'linovelib') { return; }
     recSource = 'linovelib'; lnPage = 1; lnAll = []; setTabs(); load(false); }); }
   if (recBoards) {
@@ -6942,6 +6845,7 @@
       b.addEventListener('click', function () {
         var s = b.getAttribute('data-sort');
         if (!s || s === lnSort) { return; }
+        pendingPage = 0;
         lnSort = s; lnPage = 1; lnAll = []; LN_MAXP = 5;
         [].slice.call(recBoards.querySelectorAll('.rec-board')).forEach(function (x) {
           x.classList.toggle('active', x === b);
@@ -6951,6 +6855,9 @@
     });
   }
   setTabs();
+  // ★ 2026-10-21（用户：「精选推荐没填满，改成 14 本」）：综合推荐每批 14 本
+  //   （当前窗口宽度下推荐网格是 7 列 × 2 行，正好铺满；轻小说栏位仍按 30/页）
+  var REC_PER = 14;
   // ★ 2026-09-30：轻小说榜单分页（每页 30 条、最多 5 页；页码优先本地切片 → 0 网络）
   var LN_PER = 30, LN_MAXP = 5, lnPage = 1, lnAll = [];   // LN_MAXP 由响应里的 pages_total 决定
   var recPager = $('recPager');
@@ -6975,9 +6882,13 @@
     items = lnAll.slice((lnPage - 1) * LN_PER, lnPage * LN_PER);
     render({ pool: lnAll.length });
   }
+  // ★ 2026-10-21（用户：「轻小说推荐的翻页是坏的」）：加载中点页码先记账，等这次加载结束再补翻
+  //   —— 原来 busy 时直接 return，点击没有反馈，看起来就像按钮坏了。
+  var pendingPage = 0;
   function gotoPage(pg) {
-    if (recSource !== 'linovelib' || busy) { return; }
+    if (recSource !== 'linovelib') { return; }
     if (pg < 1 || pg > LN_MAXP || pg === lnPage) { return; }
+    if (busy) { pendingPage = pg; return; }
     lnPage = pg;
     var need = lnPage * LN_PER;
     if (lnAll.length >= need) {          // 本地已有 → 0 网络
@@ -7027,22 +6938,39 @@
       var card = document.createElement('div');
       card.className = 'rec-card-item';
       var th = document.createElement('div'); th.className = 'rec-thumb';
+      // ★ 2026-10-21（用户：「推荐没加载出来封面的一律用骨架封面，不要出现图片未加载的那个图标」）：
+      //   · 缩略图容器本身就是骨架；img 默认 opacity:0，**只有真正 load 成功才淡入**；
+      //   · 没有封面 URL / 加载失败：只露骨架，不出现破图图标，也不让 alt 文字顶出来；
+      //   · 就绪门（gateCoverReveal）仍按前 10 张判断是否揭示整片网格。
       var img = document.createElement('img');
-      img.alt = it.title || ''; img.loading = 'lazy';
+      img.alt = ''; img.loading = 'lazy';
       // ★ 2026-09-30：封面经主进程并发下载 + 本地缓存（站点 CDN 单张 0.9~2.8s，直连 30 张要 20s+）
       //   ★ 同时产出**"这张图就绪"的 promise**（coverCache 回来 → 设 src → 等 load/error），
       //     供"封面就绪门"使用。★ 坑：`<img>` 没有 src 时 `complete` 就是 true，
       //     所以**不能**用 complete 判断"已加载"（第一版就因此秒开门 ✗），必须挂事件。
       var _imgReady = null;
       if (it.cover) {
-        img.onerror = function () { img.style.visibility = 'hidden'; };   // 真拉不到就留占位底色，别显示破图
-        function _waitImg() {
+        th.classList.add('is-loading');
+        var _coverOk = function () {
+          th.classList.remove('is-loading');
+          th.classList.add('is-loaded');
+        };
+        var _coverBad = function () {
+          th.classList.remove('is-loading');
+          th.classList.add('is-error');
+          try { img.style.display = 'none'; img.removeAttribute('src'); } catch (e) {}
+        };
+        img.addEventListener('load', function () {
+          if (img.naturalWidth > 0) { _coverOk(); } else { _coverBad(); }
+        }, { once: true });
+        img.addEventListener('error', _coverBad, { once: true });
+        var _waitImg = function () {
           return new Promise(function (res) {
-            if (img.complete && img.naturalWidth > 0) { res(); return; }
+            if (img.complete) { res(); return; }   // 已结束（成功或失败）—— 别再等，免得就绪门白等
             img.addEventListener('load', function () { res(); }, { once: true });
             img.addEventListener('error', function () { res(); }, { once: true });
           });
-        }
+        };
         if (window.electronAPI && window.electronAPI.coverCache) {
           _imgReady = Promise.race([
             window.electronAPI.coverCache({ url: it.cover }).then(function (cr) {
@@ -7055,9 +6983,11 @@
           img.src = it.cover;
           _imgReady = Promise.race([_waitImg(), new Promise(function (res) { setTimeout(res, 3000); })]);
         }
+      } else {
+        th.classList.add('is-empty');       // 站点没给封面 URL → 只显示骨架
       }
       if (i < TOP_N && _imgReady) { coverJobs.push(_imgReady); }
-      th.appendChild(img);
+      if (it.cover) { th.appendChild(img); }   // 无封面 URL 时不插 <img>，避免 alt/破图占位
       var nm = document.createElement('div'); nm.className = 'rec-name'; nm.textContent = it.title || '';
       var au = document.createElement('div'); au.className = 'rec-author'; au.textContent = it.author || '';
       card.appendChild(th); card.appendChild(nm); card.appendChild(au);
@@ -7095,8 +7025,8 @@
      · 未就绪期间：网格加 `.rec-loading` → 缩略图走骨架微光（CSS），图保持透明；
      · 揭示条件：前 10 张（不足 10 张就是全部）**每张要么 load 要么 error** —— 也就是
        不再有"待加载"的框；封面请求本身由 coverCache 的 promise 决定何时设 src；
-     · 兜底：8 秒一到无条件揭示，绝不把页面卡住；标题/作者文字不参与门（先出来没问题）。
-     · 加载失败的图由 `window.__guardCoverImg` 藏起来 → 露出容器骨架底色，不出现破图图标。 */
+     · 兜底：5 秒一到无条件揭示，绝不把页面卡住；标题/作者文字不参与门（先出来没问题）。
+     · 未加载 / 加载失败的缩略图由 `.rec-thumb.is-loading/.is-error/.is-empty` 露骨架，不出现破图图标。 */
   function gateCoverReveal(jobs) {
     if (!recGrid) { return; }
     if (!jobs || !jobs.length) { recGrid.classList.remove('rec-loading'); return; }
@@ -7134,7 +7064,7 @@
     }
     if (recRefresh) { recRefresh.disabled = true; }
     // ★ 2026-09-30：栏位 → 数据源。轻小说走哔哩轻小说榜单（1 页 30 条，约 1 秒）
-    var req = { batch: batch, count: recSource === 'linovelib' ? LN_MAXP * LN_PER : 10,
+    var req = { batch: batch, count: recSource === 'linovelib' ? LN_MAXP * LN_PER : REC_PER,
                 source: recSource };
     if (recSource === 'linovelib') { req.sort = lnSort; req.pages = Math.min(lnPage, LN_MAXP); }
     window.electronAPI.recommendList(req).then(function (r) {
@@ -7153,7 +7083,12 @@
       render(r);
     }).catch(function (e) {
       if (recEmptyText) { recEmptyText.textContent = '推荐加载失败：' + ((e && e.message) || e); }
-    }).then(function () { busy = false; if (recRefresh) { recRefresh.disabled = false; } });
+    }).then(function () {
+      busy = false;
+      if (recRefresh) { recRefresh.disabled = false; }
+      // ★ 2026-10-21：加载过程中点过的页码，等这次结束再补翻
+      if (pendingPage) { var _pp = pendingPage; pendingPage = 0; gotoPage(_pp); }
+    });
   }
   // ★ 2026-09-30：把榜单里的轻小说交给【轻小说】弹窗（书号回填 + 自动查询出分卷）
   function openLnPicker(it) {
@@ -7301,22 +7236,7 @@
     modal.style.visibility = on ? 'visible' : 'hidden';
     modal.style.pointerEvents = on ? 'auto' : 'none';
   }
-  function say(msg) {
-    // ★★★★ 阉割版（2026-10-02）：普通提示要把颜色复位（否则法规红字会一直留着）★★★★
-    if ($('lnStatus')) { $('lnStatus').textContent = msg; $('lnStatus').style.color = ''; }
-  }
-  // ★★★★ 阉割版（2026-10-02，用户要求）★★★★
-  //   「那些 ui 里下载时显示进度的小字，跳法规弹窗的时候直接显示和弹窗内容一样的文字就好（红字）」
-  //   → 下载被拦时：既弹法规窗，也把这行小字写成同款文案、用红色（--danger）。
-  function sayLegal() {
-    var el = $('lnStatus');
-    if (el) {
-      el.textContent = '因相关法律法规规定，该部分暂不开放使用。';
-      el.style.color = 'var(--danger)';
-      el.style.opacity = '1';
-    }
-    if (window.__legalPrompt) { window.__legalPrompt(); }
-  }
+  function say(msg) { if ($('lnStatus')) { $('lnStatus').textContent = msg; } }
   var openBtn = $('libLightNovel');
   if (openBtn) { openBtn.addEventListener('click', function () { show(true); }); }
   if ($('lnClose')) { $('lnClose').addEventListener('click', function () { show(false); }); }
@@ -7402,13 +7322,6 @@
       say('⏳ 正在打开主页…（会弹一个 Edge 窗口；我从主页一路点，点到目录页就提醒你点第一章）');
       window.electronAPI.linovelibRefreshCookie(_target ? { target: _target } : {}).then(function (r) {
         btn.disabled = false;
-        // ★★★★ 阉割版（2026-10-02）：取 Cookie 只服务于下载 —— 这里也弹法规提示 ★★★★
-        if (r && r.notAvailable) {
-          // ★ 2026-10-02（用户要求）：抓 Cookie 弹窗的状态小字 + LN 状态行，都用同款红字 + 弹窗
-          if (st) { st.textContent = '因相关法律法规规定，该部分暂不开放使用。'; st.style.color = '#ff3b30'; }
-          sayLegal();
-          return;
-        }
         if (r && r.success) {
           say('✅ Cookie 已取到（' + (((r.cookieFile || '').split('\\').pop()) || 'cookies.txt') + '）');
           try { if (window.showToast) { window.showToast('✅ 轻小说 Cookie 已取到', 'success', 4000); } } catch (e) {}
@@ -7736,12 +7649,6 @@
       }).then(function (r) {
         $('lnGo').disabled = false;
         showCancel(false);          // ★ 下载结束 → 收起「取消下载」按钮
-        // ★★★★ 阉割版（2026-10-02）：下载执行已移除 —— 查询/选卷照常，点「下载选中」只弹法规提示 ★★★★
-        if (r && r.notAvailable) {
-          // ★ 2026-10-02（用户要求）：小字同款文案 + 红字 + 弹窗
-          sayLegal();
-          return;
-        }
         if (r && r.ok) {
           var dest = r.exported || r.file;
           say('✅ 完成：章节 ' + r.chapters + ' · 插图 ' + r.images + ' · 正文 ' + r.words + ' 字'
@@ -7791,33 +7698,8 @@
   }
 })();
 </script>
-
-    <!-- ★ 2026-09-30：Kindle 授权弹窗（页面内；登录由主进程驱动内嵌 webview 完成，验证码就地显示） -->
-    <div id="stkAuthModal" class="ac-modal">
-        <div class="ac-card" role="dialog" aria-modal="true" style="max-width:420px">
-            <div class="ac-title" data-i18n="☁️ Kindle 授权">☁️ Kindle 授权</div>
-            <div class="ac-sub" data-i18n="登录 Amazon 一次（Kindle 绑定的那个账号）。之后在「传输」页传书会直接进你的 Kindle 云端，约 1 分钟到手。">登录 Amazon 一次（Kindle 绑定的那个账号）。之后在「传输」页传书会直接进你的 Kindle 云端，约 1 分钟到手。</div>
-            <div class="stk-st" id="stkChip"><span id="stkChipText">检查中…</span></div>
-            <div class="stk-row">
-                <label data-i18n="Amazon 邮箱 / 手机号">Amazon 邮箱 / 手机号</label>
-                <input class="stk-in" type="text" id="stkEmail" autocomplete="off" placeholder="your@email.com" />
-            </div>
-            <div class="stk-row">
-                <label data-i18n="密码（不保存）">密码（不保存）</label>
-                <input class="stk-in" type="password" id="stkPwd" autocomplete="off" placeholder="Amazon 账号密码" />
-            </div>
-            <div class="stk-log" id="stkLog"></div>
-            <div style="font-size:11px;color:var(--tx3);line-height:1.6;margin-top:6px" data-i18n="若弹出 Windows「通行密钥 / 安全密钥」窗口，直接点「取消」即可 —— 不影响授权。">若弹出 Windows「通行密钥 / 安全密钥」窗口，直接点「取消」即可 —— 不影响授权。</div>
-            <div class="stk-tip" id="stkTip"></div>
-            <div class="ac-acts" style="margin-top:12px">
-                <button type="button" class="ac-btn" id="stkLogout" data-i18n="清空登录信息" style="margin-right:auto;font-size:11.5px;opacity:.75">清空登录信息</button>
-                <button type="button" class="ac-btn" id="stkCancel" data-i18n="取消">取消</button>
-                <button type="button" class="ac-btn" id="stkLogin" data-i18n="登录">登录</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
+<!-- ★ 2026-09-30：Kindle 授权弹窗（页面内；登录由主进程驱动内嵌 webview 完成，验证码就地显示） -->
+<script>
 /* ★ Kindle 授权弹窗逻辑（独立块；元素在 DOM 里已存在，直接取）
    ★ 注意：不要用 window.confirm() —— Electron 原生确认框会阻塞渲染进程，界面会卡死。 */
 (function () {
@@ -7928,57 +7810,12 @@
     }
 })();
 </script>
-
-
-    <!-- ★ 2026-09-30：百度网盘授权弹窗（页面内，替代原来的 applebooks-auth.html 窗口） -->
-    <div id="abAuthModal" class="ac-modal">
-        <div class="ac-card" role="dialog" aria-modal="true" style="max-width:430px">
-            <div class="ac-title" data-i18n="☁️ 百度网盘授权">☁️ 百度网盘授权</div>
-            <div class="ac-sub" data-i18n="点「打开浏览器授权」→ 在弹出的浏览器里登录百度网盘并授权 → 把页面上的授权码粘到下面 → 提交。">点「打开浏览器授权」→ 在弹出的浏览器里登录百度网盘并授权 → 把页面上的授权码粘到下面 → 提交。</div>
-            <div class="stk-st" id="abSt"><span id="abStTx">未授权</span></div>
-            <div style="display:flex;gap:8px;margin-bottom:9px">
-                <button class="ac-btn" id="abStart" data-i18n="打开浏览器授权" style="width:auto;padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer">打开浏览器授权</button>
-            </div>
-            <div class="stk-row">
-                <label data-i18n="授权码">授权码</label>
-                <input class="stk-in" type="text" id="abCode" placeholder="粘贴授权码…" spellcheck="false" autocomplete="off" />
-            </div>
-            <div class="stk-log" id="abLog"></div>
-            <div class="ac-acts" style="margin-top:12px">
-                <button type="button" class="ac-btn" id="abClose" data-i18n="关闭">关闭</button>
-                <button type="button" class="ac-btn" id="abSubmit" data-i18n="提交授权">提交授权</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ★ 2026-09-30：WiFi 传书弹窗（页面内，替代原来的 wifi-page.html 窗口） -->
-    <div id="wifiModal" class="ac-modal">
-        <div class="ac-card" role="dialog" aria-modal="true" style="max-width:440px">
-            <div class="ac-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tx2);flex:0 0 auto"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg><span data-i18n="WiFi 传书">WiFi 传书</span></div>
-            <div class="ac-sub" data-i18n="在手机浏览器里打开下面这个地址（手机和电脑要同一个 WiFi），选好书后回到这里点「开始传输」。">在手机浏览器里打开下面这个地址（手机和电脑要同一个 WiFi），选好书后回到这里点「开始传输」。</div>
-            <div class="stk-st" id="wfSt"><span id="wfStTx">等待操作…</span></div>
-            <div class="stk-row">
-                <label data-i18n="手机上的地址">手机上的地址</label>
-                <input class="stk-in" type="text" id="wfUrl" placeholder="例如：192.168.1.100:8080" autocomplete="off" />
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
-                <span style="font-size:11px;color:var(--tx3)" data-i18n="刷新间隔（秒）">刷新间隔（秒）</span>
-                <input class="stk-in" type="number" id="wfDelay" min="1" max="30" step="0.5" value="2.5" style="width:80px" />
-                <button class="ac-btn" id="wfHistory" data-i18n="历史网址" style="width:auto;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--tx);cursor:pointer">历史网址</button>
-            </div>
-            <div id="wfUrlList" style="display:none;max-height:96px;overflow:auto;margin:4px 0 6px"></div>
-            <div class="stk-log" id="wfLog"></div>
-            <div class="ac-acts" style="margin-top:12px">
-                <button type="button" class="ac-btn" id="wfClose" data-i18n="关闭">关闭</button>
-                <button type="button" class="ac-btn" id="wfStart" data-i18n="开始传输">开始传输</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
+<!-- ★ 2026-09-30：百度网盘授权弹窗（页面内，替代原来的 applebooks-auth.html 窗口） -->
+<!-- ★ 2026-09-30：WiFi 传书弹窗（页面内，替代原来的 wifi-page.html 窗口） -->
+<script>
     /* ★ 百度网盘授权 + WiFi 传书 弹窗逻辑（2026-09-30：从独立 html 窗口搬进主界面） */
     (function () {
-        function open(id) { var m = document.getElementById(id); if (m) { m.style.display = 'flex'; } }
+        function open(id) { var m = document.getElementById(id); if (m) { m.style.display = 'flex'; m.style.visibility = 'visible'; m.style.pointerEvents = 'auto'; } }
         // ★ 主进程要开弹窗时会发 'ui-open-modal'（原来的两个独立窗口已删除）
         try {
             if (window.electronAPI && window.electronAPI.onOpenModal) {
@@ -7987,33 +7824,8 @@
                 });
             }
         } catch (e) {}
-        function close(id) { var m = document.getElementById(id); if (m) { m.style.display = 'none'; } }
+        function close(id) { var m = document.getElementById(id); if (m) { m.style.display = 'none'; m.style.visibility = 'hidden'; m.style.pointerEvents = 'none'; } }
 
-        /* ══ 百度网盘授权 ══ */
-        var abLog = document.getElementById('abLog'), abStTx = document.getElementById('abStTx');
-        function abSay(t, cls) { if (abStTx) { abStTx.textContent = t; } var s = document.getElementById('abSt'); if (s) { s.className = 'stk-st' + (cls ? ' ' + cls : ''); } }
-        function abAppend(msg) { if (!abLog) { return; } abLog.textContent += msg + '\n'; abLog.scrollTop = abLog.scrollHeight; abLog.style.display = 'block'; }
-        window.__abOpenAuth = function () {
-            open('abAuthModal');
-            if (window.electronAPI && window.electronAPI.applebooks && window.electronAPI.applebooks.authStatus) {
-                window.electronAPI.applebooks.authStatus().then(function (r) {
-                    var ok = !!(r && (r.authorized || r.hasToken || r.success));
-                    abSay(ok ? '✓ 已授权' : '未授权', ok ? 'ok' : 'no');
-                }).catch(function () {});
-            }
-        };
-        if (document.getElementById('abClose')) { document.getElementById('abClose').addEventListener('click', function () { close('abAuthModal'); }); }
-        if (document.getElementById('abStart')) {
-            document.getElementById('abStart').addEventListener('click', function () {
-                abAppend('正在打开浏览器授权页…');
-                abSay('等待授权…');
-                window.electronAPI.applebooks.startAuth().then(function (r) {
-                    if (r && r.success === false) { abAppend('❌ ' + (r.error || '启动失败')); abSay('启动失败', 'no'); }
-        // ★★★ 2026-10-02（用户要求）★★★
-        //   **所有弹窗都不能点旁边关掉，只能点各自的关闭按钮。**
-        //   以前这里给每个 .ac-modal 都挂了 `if (e.target === m) m.style.display='none'`，
-        //   点一下遮罩弹窗就没了。现在改成**在捕获阶段吞掉"点在遮罩上"的点击** ——
-        //   所有弹窗（含以后新加的）一律免疫；另外 5 处 Escape 关闭也已全部删除。
         (function blockBackdropDismiss() {
             document.addEventListener('click', function (e) {
                 var t = e.target;
@@ -8024,33 +7836,71 @@
                 }
             }, true);   // ← true = capture，先于所有冒泡处理器执行
         })();
-                }).catch(function (e) { abAppend('❌ ' + e.message); });
+        /* ══ 百度网盘授权 ══ */
+        var abLog = document.getElementById('abLog'), abStTx = document.getElementById('abStTx');
+        function abSay(t, cls) { if (abStTx) { abStTx.textContent = T(t); } var s = document.getElementById('abSt'); if (s) { s.className = 'stk-st' + (cls ? ' ' + cls : ''); } }
+        function abAppend(msg) { if (!abLog) { return; } abLog.textContent += T(msg) + '\n'; abLog.scrollTop = abLog.scrollHeight; abLog.style.display = 'block'; }
+        window.__abOpenAuth = function () {
+            open('abAuthModal');
+            if (window.electronAPI && window.electronAPI.applebooks && window.electronAPI.applebooks.authStatus) {
+                window.electronAPI.applebooks.authStatus().then(function (r) {
+                    var ok = !!(r && r.authorized);
+                    abSay(ok ? '✓ 已授权' : '未授权', ok ? 'ok' : 'no');
+                }).catch(function () {});
+            }
+        };
+        if (document.getElementById('abClose')) { document.getElementById('abClose').addEventListener('click', function () { close('abAuthModal'); }); }
+        if (document.getElementById('abStart')) {
+            document.getElementById('abStart').addEventListener('click', function () {
+                var button = this;
+                if (!window.electronAPI || !window.electronAPI.applebooks) { abSay(T('授权功能不可用'), 'no'); return; }
+                button.disabled = true;
+                abAppend('正在打开浏览器授权页…');
+                abSay('等待授权…');
+                window.electronAPI.applebooks.startAuth().then(function (r) {
+                    if (r && r.success === false) { abAppend('❌ ' + (r.error || '启动失败')); abSay('启动失败', 'no'); }
+        // ★★★ 2026-10-02（用户要求）★★★
+        //   **所有弹窗都不能点旁边关掉，只能点各自的关闭按钮。**
+        //   以前这里给每个 .ac-modal 都挂了 `if (e.target === m) m.style.display='none'`，
+        //   点一下遮罩弹窗就没了。现在改成**在捕获阶段吞掉"点在遮罩上"的点击** ——
+        //   所有弹窗（含以后新加的）一律免疫；另外 5 处 Escape 关闭也已全部删除。
+
+                }).catch(function (e) { abAppend('❌ ' + e.message); abSay(T('启动失败'), 'no'); }).finally(function () { button.disabled = false; });
             });
         }
         if (document.getElementById('abSubmit')) {
             document.getElementById('abSubmit').addEventListener('click', function () {
+                var button = this;
+                if (!window.electronAPI || !window.electronAPI.applebooks) { abSay(T('授权功能不可用'), 'no'); return; }
                 var codeEl = document.getElementById('abCode');
                 var code = (codeEl && codeEl.value || '').trim();
                 if (!code) { abAppend('❌ 请先粘贴授权码'); return; }
+                button.disabled = true;
                 abAppend('正在提交授权码…'); abSay('提交中…');
                 window.electronAPI.applebooks.submitAuthCode(code).then(function (r) {
-                    if (r && r.success) { abAppend('✅ 授权成功'); abSay('✓ 已授权', 'ok'); if (codeEl) { codeEl.value = ''; } }
+                    if (r && r.success) { abAppend('✅ 授权成功'); abSay('✓ 已授权', 'ok'); if (codeEl) { codeEl.value = ''; } if (window.__checkBaiduAuth) window.__checkBaiduAuth(); }
                     else { abAppend('❌ ' + ((r && r.error) || '授权失败')); abSay('授权失败', 'no'); }
-                }).catch(function (e) { abAppend('❌ ' + e.message); abSay('授权失败', 'no'); });
+                }).catch(function (e) { abAppend('❌ ' + e.message); abSay('授权失败', 'no'); }).finally(function () { button.disabled = false; });
             });
         }
         if (window.electronAPI && window.electronAPI.applebooks) {
             if (window.electronAPI.applebooks.onAuthLog) { window.electronAPI.applebooks.onAuthLog(function (d) { abAppend(typeof d === 'string' ? d : (d && d.text) || ''); }); }
-            if (window.electronAPI.applebooks.onAuthDone) { window.electronAPI.applebooks.onAuthDone(function (r) { if (r && r.success) { abAppend('✅ 授权完成'); abSay('✓ 已授权', 'ok'); } else { abSay('授权失败', 'no'); } }); }
+            if (window.electronAPI.applebooks.onAuthDone) { window.electronAPI.applebooks.onAuthDone(function (r) {
+                if (r && r.error) { abAppend(T(r.error)); abSay(T('浏览器启动失败'), 'no'); return; }
+                // 浏览器关闭不代表授权码已兑换成功，必须重新查询实际授权状态。
+                window.electronAPI.applebooks.authStatus().then(function (status) {
+                    abSay(status && status.authorized ? T('✓ 已授权') : T('请粘贴授权码并提交'), status && status.authorized ? 'ok' : 'no');
+                }).catch(function () { abSay(T('检查失败'), 'no'); });
+            }); }
         }
 
         /* ══ WiFi 传书 ══ */
         var wfLog = document.getElementById('wfLog'), wfStTx = document.getElementById('wfStTx');
-        function wfSay(t, cls) { if (wfStTx) { wfStTx.textContent = t; } var s = document.getElementById('wfSt'); if (s) { s.className = 'stk-st' + (cls ? ' ' + cls : ''); } }
-        function wfAppend(msg) { if (!wfLog) { return; } wfLog.textContent += msg + '\n'; wfLog.scrollTop = wfLog.scrollHeight; wfLog.style.display = 'block'; }
+        function wfSay(t, cls) { if (wfStTx) { wfStTx.textContent = T(t); } var s = document.getElementById('wfSt'); if (s) { s.className = 'stk-st' + (cls ? ' ' + cls : ''); } }
+        function wfAppend(msg) { if (!wfLog) { return; } wfLog.textContent += T(msg) + '\n'; wfLog.scrollTop = wfLog.scrollHeight; wfLog.style.display = 'block'; }
         window.__wifiOpen = function () {
             open('wifiModal');
-            if (window.electronAPI.wifi.getSettings) {
+            if (window.electronAPI && window.electronAPI.wifi && window.electronAPI.wifi.getSettings) {
                 window.electronAPI.wifi.getSettings().then(function (r) {
                     var el = document.getElementById('wfDelay');
                     if (el && r && r.wifiDelay) { el.value = r.wifiDelay; }
@@ -8068,47 +7918,69 @@
            老代码只等"弹窗被关"就报成功 ✗。这个工具把两者合起来：
              · done{success:true}            → 返回 {success:true}
              · done{success:false} / 关窗    → 返回 {success:false} 或 null（**不算成功**）
-             · 10 分钟还没动静               → 返回 'timeout'
+             · 5 分钟还没动静                → 返回 'timeout'
            注意：必须在开弹窗**之前**挂监听，否则可能漏掉很早就到的 done。 */
+        // 五分钟内只接受一次真实结果；完成、取消和超时都走同一收尾入口。
         window.__wifiWaitReal = function (openFn) {
+            const WAIT_TIMEOUT_MS = 5 * 60 * 1000;
             return new Promise(function (resolve) {
-                var done = false;
-                function finish(r) { if (done) { return; } done = true; resolve(r); }
-                try {
-                    var api = window.electronAPI && window.electronAPI.wifi;
-                    if (api && api.onUploadDone) {
-                        api.onUploadDone(function (r) { finish(r || { success: false }); });
-                    }
-                    if (api) {
-                        var onClosed = function () { finish(null); };
-                        if (api.onPageClosedOnce) { api.onPageClosedOnce(onClosed); }
-                        else if (api.onPageClosed) { api.onPageClosed(onClosed); }
-                    }
-                } catch (e) { console.warn('[wifi] 挂监听失败: ' + ((e && e.message) || e)); }
-                // ★★★ 2026-10-05：WiFi 弹窗是**页面内 modal** —— 关它**不会**触发主进程的
-                //   `wifi-page-closed`（那是独立窗口事件）→ 原来只能干等 10 分钟 ✗，
-                //   期间一键按钮一直是"进行中"（用户：「框被锁了」）。现在弹窗一关就结束。
-                window.__wifiModalClosed = function () { finish(null); };
-                try { openFn(); } catch (e) {
-                    console.warn('[wifi] 开弹窗失败: ' + ((e && e.message) || e));
-                    finish({ success: false, error: (e && e.message) || '打开弹窗失败' });
+                let finished = false;
+                const unsubscribeCallbacks = [];
+                const onClosed = function () { finish(null); };
+                const timeoutId = setTimeout(function () { finish('timeout'); }, WAIT_TIMEOUT_MS);
+
+                function finish(result) {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timeoutId);
+                    unsubscribeCallbacks.forEach(function (unsubscribe) {
+                        if (typeof unsubscribe === 'function') unsubscribe();
+                    });
+                    // 不能清掉后续传输重新注册的关闭回调。
+                    if (window.__wifiModalClosed === onClosed) window.__wifiModalClosed = null;
+                    resolve(result);
                 }
-                setTimeout(function () { finish('timeout'); }, 300000);   // 缩到 5 分钟
-                setTimeout(function () { try { window.__wifiModalClosed = null; } catch (e) {} }, 301000);
+
+                try {
+                    const wifiApi = window.electronAPI && window.electronAPI.wifi;
+                    if (!wifiApi) {
+                        finish({ success: false, error: T('WiFi 功能不可用') });
+                        return;
+                    }
+                    // 先订阅再打开弹窗，避免遗漏快速返回的结果。
+                    if (wifiApi.onUploadDone) {
+                        unsubscribeCallbacks.push(wifiApi.onUploadDone(function (result) {
+                            finish(result || { success: false });
+                        }));
+                    }
+                    if (wifiApi.onPageClosedOnce) {
+                        unsubscribeCallbacks.push(wifiApi.onPageClosedOnce(onClosed));
+                    } else if (wifiApi.onPageClosed) {
+                        unsubscribeCallbacks.push(wifiApi.onPageClosed(onClosed));
+                    }
+                    window.__wifiModalClosed = onClosed;
+                    openFn();
+                } catch (error) {
+                    finish({ success: false, error: error.message || T('打开弹窗失败') });
+                }
             });
         };
         if (document.getElementById('wfStart')) {
             document.getElementById('wfStart').addEventListener('click', function () {
+                var button = this;
+                if (!window.electronAPI || !window.electronAPI.wifi) { wfSay(T('WiFi 功能不可用'), 'no'); return; }
                 var urlEl = document.getElementById('wfUrl');
                 var url = (urlEl && urlEl.value || '').trim();
                 if (!url) { wfAppend('❌ 请先填手机上打开的地址'); return; }
                 var dEl = document.getElementById('wfDelay');
-                var delay = parseFloat(dEl && dEl.value) || 2.5;
-                if (window.electronAPI.wifi.setSettings) { window.electronAPI.wifi.setSettings({ wifiDelay: delay }).catch(function () {}); }
+                var delay = parseFloat(dEl && dEl.value);
+                if (!Number.isFinite(delay) || delay < 1 || delay > 30) { wfAppend(T('刷新间隔须为 1 到 30 秒')); return; }
+                button.disabled = true;
+                var settings = window.electronAPI.wifi.setSettings ? window.electronAPI.wifi.setSettings({ wifiDelay: delay }) : Promise.resolve();
                 wfAppend('开始传输…'); wfSay('传输中…');
-                window.electronAPI.wifi.startUpload(url).then(function (r) {
+                settings.then(function () { return window.electronAPI.wifi.startUpload(url); }).then(function (r) {
                     if (r && r.success === false) { wfAppend('❌ ' + (r.error || '启动失败')); wfSay('启动失败', 'no'); }
-                }).catch(function (e) { wfAppend('❌ ' + e.message); wfSay('启动失败', 'no'); });
+                }).catch(function (e) { wfAppend('❌ ' + e.message); wfSay('启动失败', 'no'); }).finally(function () { button.disabled = false; });
             });
         }
         if (document.getElementById('wfHistory')) {
@@ -8138,6 +8010,11 @@
         }
     })();
     </script>
-
+<link href="resona-theme.css?v=1025232203" rel="stylesheet"/>
+<link href="resona-layout.css?v=1025232203" rel="stylesheet"/>
+<link href="resona-bridge.css?v=1025232203" rel="stylesheet"/>
+<script src="resona-effects.js?v=1025232203"></script>
+<link href="resona-studio.css?v=1025232203" rel="stylesheet"/>
+<link href="resona-workspace.css?v=1025232203" rel="stylesheet"/><script src="background-switch.js?v=1025232203"></script>
 </body>
 </html>
