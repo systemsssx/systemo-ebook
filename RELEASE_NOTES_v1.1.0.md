@@ -19,7 +19,7 @@
 
 ## 安装与运行
 
-1. 下载 `systemo-ebook-v1.1.0-full.rar`（约 246 MB），解压到**可写目录**（例如 `D:\systemo ebook`，不要放 `C:\Program Files`）；
+1. 下载 `systemo-ebook-v1.1.0-full.rar`（245.6 MiB / 257,491,742 字节），解压到**可写目录**（例如 `D:\systemo ebook`，不要放 `C:\Program Files`）；
 2. 双击 `EasyPub.exe`。首次启动会多等几秒（初始化后端），属正常；
 3. 环境：Windows 10/11 x64；发布包自带 Python 后端、ChromeDriver、Pandoc、字体与超分模型，**无需安装任何运行库**。
 
