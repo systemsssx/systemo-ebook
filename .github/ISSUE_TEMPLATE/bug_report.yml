@@ -1,0 +1,78 @@
+name: 🐛 Bug 报告
+description: 使用中遇到报错、崩溃、功能异常
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请尽量填写完整，尤其是版本号和日志，能大幅加快定位。
+        提交前可以先看 [README](https://github.com/systemsssx/systemo-ebook#readme) 与 [Discussions](https://github.com/systemsssx/systemo-ebook/discussions)。
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: Release 文件名，或 index.html 里的 ?v= 时间戳（例如 v1.1.0 / ?v=1025232203）
+      placeholder: v1.1.0 / ?v=1025232203
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 系统环境
+      placeholder: Windows 11 23H2 x64
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 出问题的模块
+      options:
+        - 下载
+        - 制作 / 分章 / 封面
+        - 传输（苹果图书 / WiFi / Send to Kindle）
+        - 书库 / 阅读器
+        - 精选推荐
+        - 界面 / 翻译
+        - 安装 / 启动
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 尽量写清 1、2、3 步；能稳定复现最好
+      placeholder: |
+        1. 打开…
+        2. 点击…
+        3. 出现…
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 预期结果 / 实际结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 截图或日志
+      description: 程序目录下 logs\upload-*.log，或界面截图；请先打码账号、邮箱等个人信息
+      render: text
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 已使用最新 Release 版本，并重启过应用
+        - label: 已阅读 README 的免责声明（本工具仅供个人学习与自有文档整理）
+          required: true

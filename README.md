@@ -14,12 +14,15 @@
 ![release](https://img.shields.io/badge/release-v1.1.0-2ea043)
 ![license](https://img.shields.io/badge/license-All%20rights%20reserved-lightgrey)
 
+[![GitHub stars](https://img.shields.io/github/stars/systemsssx/systemo-ebook?style=social)](https://github.com/systemsssx/systemo-ebook/stargazers)
+
 </div>
 
 **[简体中文](README.md) | [English](README_EN.md)**
 
 > **本仓库是完整版 v1.1.0 的源码与文档**：下载、制作、传输、阅读、推荐全部开放。
 > 成品安装包见 [Releases](../../releases)（Windows 10/11 x64，解压即用，无需安装 Python / Node）。
+> ⭐ **如果这个项目帮到了你，欢迎点个 Star 支持一下** —— 这是个人项目最直接的动力。
 
 ---
 
@@ -193,6 +196,13 @@ npx electron-builder --win dir --x64   # 打免安装版（产物在 dist\win-un
 * **版权倡导**：好故事值得被温柔对待，更值得被付费支持。本工具生成的电子书仅限个人离线自用与护眼设备转码，严禁用于任何形式的二次分发、传播或商业牟利。看书遇到喜欢的作品，请一定去正版平台订阅支持原作者！
 
 ---
+
+## ⭐ 如果这个项目帮到了你
+
+如果 systemo ebook 帮你少折腾了几个小时，欢迎点右上角的 **Star** ⭐ 支持一下 ——
+这是个人项目最直接的动力，也能让更多需要「TXT / 网文 → 带封面 EPUB」的人找到它。
+
+[![GitHub stars](https://img.shields.io/github/stars/systemsssx/systemo-ebook?style=social&label=Star)](https://github.com/systemsssx/systemo-ebook/stargazers)
 
 ## 📦 版本与更新
 

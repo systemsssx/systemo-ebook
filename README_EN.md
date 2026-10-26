@@ -14,12 +14,15 @@ From a title to a cover-ready EPUB you can read on your phone, Kindle or Apple B
 ![release](https://img.shields.io/badge/release-v1.1.0-2ea043)
 ![license](https://img.shields.io/badge/license-All%20rights%20reserved-lightgrey)
 
+[![GitHub stars](https://img.shields.io/github/stars/systemsssx/systemo-ebook?style=social)](https://github.com/systemsssx/systemo-ebook/stargazers)
+
 </div>
 
 **[简体中文](README.md) | English**
 
 > **This repository contains the source code and docs of the full v1.1.0 release.** Download, make, transfer, read and discovery are all enabled.
 > The ready-to-run installer is on the [Releases](../../releases) page (Windows 10/11 x64 — extract and run, no Python/Node required).
+> ⭐ **If this project saves you time, please consider giving it a Star** — it is the most direct support for a personal project.
 
 ---
 
@@ -194,6 +197,13 @@ Add a new source, adjust the parsing rules, or wire up your own ranking feed, th
 * **Support the authors**: good stories deserve to be treated kindly, and to be paid for. Ebooks produced with this tool are for personal offline reading and e-ink transcoding only; any redistribution, transmission or commercial use is strictly forbidden. When you love a work, please subscribe to it on the official platform and support the author!
 
 ---
+
+## ⭐ If this project helped you
+
+If systemo ebook saved you some hours, please consider giving it a **Star** ⭐ —
+it is the most direct support for a personal project, and helps more people who need "TXT / web novel → cover-ready EPUB" find it.
+
+[![GitHub stars](https://img.shields.io/github/stars/systemsssx/systemo-ebook?style=social&label=Star)](https://github.com/systemsssx/systemo-ebook/stargazers)
 
 ## 📦 Version & updates
 

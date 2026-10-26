@@ -1,0 +1,46 @@
+name: 💡 功能建议
+description: 想要的新功能、交互改进或书源建议
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢建议！如果是「使用问题 / 求教程 / 书源交流」，请先去 [Discussions](https://github.com/systemsssx/systemo-ebook/discussions)。
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 相关模块
+      options:
+        - 下载 / 书源
+        - 制作 / 分章 / 封面
+        - 传输通道
+        - 书库 / 阅读器
+        - 精选推荐
+        - 界面 / 翻译 / 体验
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你遇到的痛点
+      description: 现在是什么体验？哪里不舒服？
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 期望的解决方式
+      description: 你希望它怎么工作？有参考产品也可以写
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充信息（可选）
+      description: 截图、参考链接、类似工具等

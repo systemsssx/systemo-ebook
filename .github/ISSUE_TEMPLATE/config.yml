@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 使用交流 / 教程 / 书源分享
+    url: https://github.com/systemsssx/systemo-ebook/discussions
+    about: 使用问题、教程、自定义书源交流请到 Discussions 讨论区
+  - name: 📖 使用说明与常见问题
+    url: https://github.com/systemsssx/systemo-ebook#readme
+    about: 先看 README：下载、安装、首次配置与从源码运行
