@@ -160,63 +160,107 @@ def extract_cover(path, cache_dir):
 # ================================================================
 # 动作
 # ================================================================
-def do_scan(params):
-    d = params.get('dir')
-    if not d or not os.path.isdir(d):
-        return {'success': False, 'error': '目录不存在: %s' % d}
+def _build_book_item(full, cache_dir):
+    name = os.path.basename(full)
+    ext = os.path.splitext(name)[1].lower()
+    if ext != '.epub' or not os.path.isfile(full):
+        return None
+    try:
+        st = os.stat(full)
+    except OSError:
+        return None
 
-    cache_dir = os.path.join(d, '.covers')
+    item = {
+        'file': name,
+        'path': full,
+        'type': ext.lstrip('.'),
+        'size': st.st_size,
+        'mtime': int(st.st_mtime),
+        'title': os.path.splitext(name)[0],
+        'author': '',
+        'description': '',
+        'language': '',
+        'cover': None,
+    }
+    meta = read_meta(full)
+    if meta['ok']:
+        _meta_title = (meta['title'] or '').strip()
+        _stem_title = (item['title'] or '').strip()
+        if _meta_title and _stem_title and _meta_title in _stem_title:
+            item['title'] = _stem_title
+        elif _meta_title:
+            item['title'] = _meta_title
+        item['author'] = meta['author']
+        item['description'] = meta['description']
+        item['language'] = meta['language']
+    item['cover'] = extract_cover(full, cache_dir)
+    return item
+
+
+def do_scan(params):
+    primary_dir = params.get('dir')
+    raw_dirs = params.get('dirs') or ([primary_dir] if primary_dir else [])
+    dirs = []
+    seen_dirs = set()
+    for d in raw_dirs:
+        if not d:
+            continue
+        nd = os.path.normcase(os.path.abspath(d))
+        if nd in seen_dirs:
+            continue
+        seen_dirs.add(nd)
+        dirs.append(os.path.abspath(d))
+
+    if not dirs:
+        return {'success': False, 'error': '未提供书库目录'}
+
+    primary = dirs[0]
+    os.makedirs(primary, exist_ok=True)
+    cache_dir = os.path.join(primary, '.covers')
+
     books = []
-    for name in sorted(os.listdir(d)):
-        if name.startswith('.'):
+    seen_paths = set()
+    seen_files = set()
+
+    for d in dirs:
+        if not os.path.isdir(d):
             continue
-        full = os.path.join(d, name)
-        if not os.path.isfile(full):
+        for name in sorted(os.listdir(d)):
+            if name.startswith('.'):
+                continue
+            full = os.path.abspath(os.path.join(d, name))
+            norm_p = os.path.normcase(full)
+            if norm_p in seen_paths:
+                continue
+            item = _build_book_item(full, cache_dir)
+            if not item:
+                continue
+            seen_paths.add(norm_p)
+            seen_files.add((name.lower(), item['size']))
+            books.append(item)
+
+    for fp in (params.get('extra_files') or []):
+        if not fp:
             continue
-        ext = os.path.splitext(name)[1].lower()
-        # ★ 只收 EPUB：书库是成品书架，TXT 是原材料（在制作流程里）。
-        #   三个传输通道也都只吃 EPUB，混着 TXT 会让用户选中却传不了。
-        if ext != '.epub':
+        full = os.path.abspath(fp)
+        norm_p = os.path.normcase(full)
+        if norm_p in seen_paths or not os.path.isfile(full):
             continue
         try:
-            st = os.stat(full)
+            sig = (os.path.basename(full).lower(), os.stat(full).st_size)
         except OSError:
             continue
-
-        item = {
-            'file': name,
-            'path': full,
-            'type': ext.lstrip('.'),
-            'size': st.st_size,
-            'mtime': int(st.st_mtime),
-            'title': os.path.splitext(name)[0],
-            'author': '',
-            'description': '',
-            'language': '',
-            'cover': None,
-        }
-        meta = read_meta(full)
-        if meta['ok']:
-            # ★★ 2026-09-30（用户要求）：**书库标题以文件名为准**。
-            #   原因：轻小说按卷下载，文件名带卷号（`弹珠汽水瓶里的千岁同学 第 4 卷.epub`），
-            #   而 dc:title 是**纯书名**（用户明确要求"书内标题不带卷名"）—— 于是书库里
-            #   四卷全显示成同一个名字，看不出是哪一卷（用户截图实锤）。
-            #   规则：OPF 标题**是文件名的子串**时用文件名（信息更全）；否则仍用 OPF 标题
-            #   （文件名被手动改过、或跟书名无关时，别乱改）。
-            _meta_title = (meta['title'] or '').strip()
-            _stem_title = (item['title'] or '').strip()
-            if _meta_title and _stem_title and _meta_title in _stem_title:
-                item['title'] = _stem_title
-            elif _meta_title:
-                item['title'] = _meta_title
-            item['author'] = meta['author']
-            item['description'] = meta['description']
-            item['language'] = meta['language']
-        item['cover'] = extract_cover(full, cache_dir)
+        if sig in seen_files:
+            continue
+        item = _build_book_item(full, cache_dir)
+        if not item:
+            continue
+        seen_paths.add(norm_p)
+        seen_files.add(sig)
         books.append(item)
 
     log('扫描完成：%d 本' % len(books))
-    return {'success': True, 'dir': d, 'books': books}
+    return {'success': True, 'dir': primary, 'books': books}
 
 
 def do_cover(params):
@@ -225,7 +269,13 @@ def do_cover(params):
     if not p or not os.path.isfile(p):
         return {'success': False, 'error': '文件不存在'}
     cover = extract_cover(p, cache_dir)
-    return {'success': bool(cover), 'cover': cover}
+    meta = read_meta(p)
+    return {
+        'success': bool(cover or meta.get('ok')),
+        'cover': cover,
+        'title': meta.get('title') or '',
+        'author': meta.get('author') or '',
+    }
 
 
 def do_update(params):

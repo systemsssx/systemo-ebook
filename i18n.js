@@ -22,6 +22,7 @@
         'nav.send': '传输',
         'nav.library': '书库',
         'nav.auto': '一键',
+        'nav.proxy': '节点',
         'nav.help': '帮助',
         'sub.info': '书籍信息',
         'sub.name': '书名作者',
@@ -42,7 +43,51 @@
         "nav.send": "Send",
         "nav.library": "Library",
         "nav.auto": "One-Click",
+        "nav.proxy": "Node",
         "nav.help": "Help",
+        "使用教程": "Tutorial",
+        "使用教程 ↗": "Tutorial ↗",
+        "操作说明": "Quick Guide",
+        "双页分屏": "Split",
+        "合拢单页": "Single",
+        "分屏": "Split",
+        "单页": "Single",
+        "纯纸": "Plain",
+        "提示：登录时若系统弹出「Windows 安全 / 通行密钥」弹窗，直接点右上角 ✕ 关闭或点「取消」即可，不影响继续用账号密码完成登录。": "Tip: If Windows pops up a \"Windows Security / Passkey\" dialog, simply close it (✕) or click Cancel — email and password login will continue normally.",
+        "刷新 Cookie 后请在弹出窗口中打开《Re：从零开始的异世界生活》（re0 正传）任意正文章节": "After clicking Refresh Cookie, open any main-story chapter page of Re:Zero (re0) in the popup window.",
+        "获取通行 Cookie — 请按步骤操作": "Refresh Cookie — Follow These Steps",
+        "1. 在弹出的轻小说窗口里找到《Re：从零开始的异世界生活》（re0 正传）；": "1. In the popup window, find Re:Zero (re0 main story);",
+        "2. 点开任意一卷的正文章节阅读页（看到正文，有验证码请勾选）；": "2. Open any volume's chapter reading page (complete Cloudflare check if shown);",
+        "3. 看到正文后不用手动关窗口，程序会自动抓取 Cookie 并关闭。": "3. Once the chapter text loads, do not close the window — Cookie will be captured automatically.",
+        "关闭分屏": "Close",
+        "FOLIO L · 左页展开": "FOLIO L · Left Leaf",
+        "FOLIO R · 右页展开": "FOLIO R · Right Leaf",
+        "松手置入左书页": "Drop to open on left",
+        "松手置入右书页": "Drop to open on right",
+        "双页分屏已展开": "Split folio opened",
+        "双页分屏：": "Split: ",
+        "点击切页，或按住拖入下方左/右书页分屏": "Click to switch, or drag onto left/right folio",
+        "展开双页分屏，或拖拽顶部栏目至左/右页": "Toggle split view, or drag a tab onto left/right leaf",
+        "切换羊皮肌理与纯纸模式": "Toggle parchment texture / plain paper",
+        "添加文件": "Add Files",
+        "暂无待传书籍": "No Books Queued",
+        "可拖入 EPUB 或点击「添加文件」": "Drop EPUBs here or click Add Files",
+        "TXT 一键成书": "One-Click from TXT",
+        "一键制作": "Start One-Click",
+        "开始检索": "Search & Download",
+        "生成 EPUB": "Build EPUB",
+        "搜索封面": "Find Cover",
+        "重新拆分": "Re-split",
+        "编辑章节": "Edit Chapters",
+        "全部章节": "All Chapters",
+        "清除封面": "Clear Cover",
+        "更改目录": "Change Folder",
+        "拖拽分屏": "Drag to Split",
+        "按住顶栏任意栏目（如「II · 制作」），拖向下方左/右书页即可展开双页对开模式。": "Drag any tab in the header onto the left or right folio leaf to open split view.",
+        "跨页拖书": "Cross-Folio Drop",
+        "分屏时可直接把「IV · 书库」的书籍封面拖入「III · 传输」待传列表。": "In split view, drag any book cover from Library directly into the Transfer queue.",
+        "高效折叠": "Clean Foldouts",
+        "常用功能全部外露，低频参数收纳在各页折叠条内。": "Core actions stay visible while secondary options rest inside compact foldout bars.",
         "nav.api": "API",
         "sub.info": "Book Info",
         "sub.name": "Title & Author",
@@ -447,6 +492,7 @@
         "🔍 联网搜索封面": "🔍 Search cover online",
         "🚀 启动 Kindle 推送...": "🚀 Starting Kindle send...",
         "等待发送…": "Waiting to send...",
+        "检查中": "Checking...",
         "检查中…": "Checking...",
         "⚠️ 百度网盘未授权或授权已过期，点上方「重新授权」": "⚠️ Baidu Netdisk is not authorized or the token expired — click \"Re-authorize\" above",
         "🔄 授权已自动续期（access_token 过期但 refresh_token 有效，无需重新登录）": "🔄 Authorization renewed automatically (access_token expired but refresh_token is still valid — no need to log in again)",
@@ -562,20 +608,19 @@
         "❌ Send to Kindle 上传失败": "❌ Kindle upload failed",
         "❌ Send to Kindle 上传异常：": "❌ Kindle upload error: ",
         "精校源（UU看書）已经找到这本书了。要不要用精校源下载？": "A proofread edition was found on UU. Use this source?",
-        "⚠️ 精校源爬取速度非常慢，会经过多次失败重试，而且要挂 VPN；想快就选普通源（笔趣阁）。": "⚠️ The proofread source is very slow, needs multiple retries and requires a VPN. Choose the standard source for speed.",
-        "⚠️ 精校源爬取速度非常慢，": "⚠️ The proofread source is very slow,",
-        "🔀 精校源（UU看書）有这本书 —— 请选择走精校源还是普通源": "🔀 A proofread edition is available. Choose proofread or standard source.",
-        "⚠ 未授权": "⚠ Not authorized",
+        "精校源爬取速度非常慢，会经过多次失败重试；想快就选普通源（笔趣阁）。": "The proofread source is slower and retries often. Choose the standard source for speed.",
+        "精校源爬取速度非常慢，": "The proofread source is very slow,",
+        "精校源（UU看書）有这本书 —— 请选择走精校源还是普通源": "A proofread edition is available. Choose proofread or standard source.",
+        "未授权": "Not authorized",
         "已登录 Amazon，可直接上传到 Kindle 云端": "Signed in to Amazon; ready to upload to Kindle cloud",
         "请先点「Kindle 授权」登录 Amazon 一次": "Select Authorize Kindle to sign in to Amazon first",
-        "⚠ 状态未知": "⚠ Status unknown",
-        "⚠️ 还没授权：请点上方「☁️ 授权」登录 Amazon 一次": "⚠️ Not authorized. Select Authorize to sign in to Amazon.",
-        "❌ 读取授权状态失败：": "❌ Failed to read authorization status: ",
-        "🚀 启动 Send to Kindle 上传...": "🚀 Starting Kindle upload…",
+        "状态未知": "Status unknown",
+        "还没授权：请点上方「授权」登录 Amazon 一次": "Not authorized. Select Authorize to sign in to Amazon.",
+        "读取授权状态失败：": "Failed to read authorization status: ",
+        "启动 Send to Kindle 上传...": "Starting Kindle upload…",
         "已发送到 Kindle 云端": "Sent to Kindle cloud",
-        "✅ 已发送到 Kindle 云端": "✅ Sent to Kindle cloud",
-        "❌ 发送失败：": "❌ Send failed: ",
-        "⚠️ 请先填写书名": "⚠️ Enter a book title first",
+        "发送失败：": "Send failed: ",
+        "请先填写书名": "Enter a book title first",
         "工作区": "Workspace",
         "系统": "System",
         "制作过程在本机完成，不上传源文件。": "Books are made locally. Source files stay on your computer.",
@@ -627,10 +672,10 @@
         "先查询，再勾选要下的卷": "Search first, then select volumes to download",
         "取消下载": "Cancel download",
         "下载选中": "Download selected",
-        "👉 请在浏览器里点一下第一章": "👉 Open the first chapter in the browser",
+        "请在浏览器里点一下第一章": "Open the first chapter in the browser",
         "这本书要登录/权限，脚本自己进不去 —— 请在已打开的浏览器里点一下第一章的链接。": "This book requires sign-in or access. Open the first chapter in the browser that is already running.",
         "我知道了（后台继续等）": "Got it (keep waiting)",
-        "🍪 取 Cookie（用你自己的浏览器）": "🍪 Get cookies in your browser",
+        "取 Cookie（用你自己的浏览器）": "Get cookies in your browser",
         "点「开始」会打开一个": "Select Start to open an",
         "应用内的浏览器窗口": "in-app browser window",
         "（不是外部浏览器、也不是脚本浏览器）。": "(separate from your external or automated browser).",
@@ -639,7 +684,7 @@
         "正文页": "the chapter text",
         "（确认看得见正文；要登录就登，弹验证码就点）": "Make sure chapter text is visible. Sign in or complete verification if asked.",
         "什么都不用点也不用关窗口": "Leave the window open",
-        "🧨 浏览器关不干净？点这里强制结束它": "🧨 Browser stuck? Force close it",
+        "浏览器关不干净？点这里强制结束它": "Browser stuck? Force close it",
         "关掉这个窗口（后台继续等）": "Close dialog (keep waiting)",
         "等待操作…": "Ready when you are…",
         "粘贴授权码…": "Paste authorization code…",
@@ -684,8 +729,137 @@
         "书号 / 网址 / 书名，如 3095 或 败北女角太多了": "Book ID, URL or title, e.g. 3095",
         "终止正在跑的抓取进程": "Stop the active download",
         "Amazon 账号密码": "Amazon password",
-        "WiFi 传输正在进行，请勿重复启动": "WiFi transfer is already running. Wait for it to finish."
+        "WiFi 传输正在进行，请勿重复启动": "WiFi transfer is already running. Wait for it to finish.",
+        "版式：": "Preset: ",
+        "待传书籍": "Transfer Queue",
+        "授权与说明": "Auth & Options",
+        "操作指引": "Guide",
+        "同步账户": "Sync Account",
+        "同步至百度网盘": "Via Baidu Netdisk",
+        "局域网无线传输": "LAN Wireless Transfer",
+        "Amazon 云端推送": "Amazon Cloud Push",
+        "导入文件": "Import Manuscript",
+        "章节拆分": "Chapter Split",
+        "拖入或点击选择 TXT 文件": "Drop or click to choose a TXT file",
+        "章已识别": "chapters detected",
+        "识别置信度：": "Confidence:",
+        "处异常": "issues",
+        "章节相关设置": "Chapter Settings",
+        "导入 TXT 文件后显示章节目录": "Import a TXT file to preview chapters",
+        "新增章节：": "Add chapter:",
+        "封面相关设置": "Cover Settings",
+        "输出设置": "Output Settings",
+        "原始尺寸：": "Original:",
+        "超分尺寸：": "Upscaled:",
+        "耗时：": "Elapsed:",
+        "输出目录：": "Output to:",
+        "准备检索…": "Ready to search…",
+        "下载原稿": "Source Formats",
+        "格式与说明": "Formats & Notes",
+        "1. 支持直接输入书名，或用": "1. Enter a title directly, or use",
+        "精确匹配。": "for exact matching.",
+        "2. 轻小说分卷与插图下载请前往「IV · 书库 → 更多工具 → 轻小说」。": "2. For light novel volumes & illustrations, go to IV · Library → More Tools → Light Novel.",
+        "换一批": "More",
+        "更多工具": "More Tools",
+        "书库暂无书籍": "Your library is empty",
+        "点击「导入书籍」或在「II · 制作」生成 EPUB": "Click Import Books or build an EPUB under II · Make",
+        "大小": "Size",
+        "时间": "Modified",
+        "格式": "Format",
+        "本": "book(s)",
+        "打开所在目录": "Show in Folder",
+        "更换封面 ↗": "Change Cover ↗",
+        "选择投递方式": "Choose Destination",
+        "未命名书籍": "Untitled Book",
+        "轻小说分卷下载": "Light Novel Volumes",
+        "获取通行 Cookie": "Get Access Cookie",
+        "下载选中分卷": "Download Selected",
+        "分卷列表": "Volume List",
+        "全选 / 反选": "Toggle All",
+        "正在加载…": "Loading…",
+        "请在浏览器点开第一章": "Open Chapter 1 in Browser",
+        "结束浏览器进程": "Kill Browser",
+        "流程与说明": "Workflow & Notes",
+        "百度网盘授权": "Baidu Netdisk Auth",
+        "百度网盘同步": "Baidu Netdisk Sync",
+        "获取授权码 ↗": "Get Auth Code ↗",
+        "清空凭证": "Sign Out",
+        "选择下载源": "Choose Download Source",
+        "精校源（UU看书）": "Proofread (UUKanshu)",
+        "自动连节点 · 正文无广告": "Auto-node · Ad-free text",
+        "常规源（笔趣阁）": "Standard (Biquge)",
+        "速度快 · 偶有尾注": "Fast · Occasional footnotes",
+        "选择匹配书籍": "Choose Matching Title",
+        "待连接": "Standby",
+        "阅读器局域网地址": "Reader LAN URL",
+        "历史地址": "Recent URLs",
+        "连接并传输": "Connect & Send",
+        "轮询间隔（秒）": "Interval (s)",
+        "通道参数": "Channel Settings",
+        "同名覆盖": "Overwrite",
+        "确定": "OK",
+        "章 · 已排除": "ch. · excluded",
+        "默认 (export)": "Default (export)",
+        "re0正传的正文页": "a Re:ZERO main-story chapter page",
+        "已打开应用内浏览器窗口 —— 请在里面点到re0正传的正文页，cookie 会自动取到": "In-app browser opened — navigate to a Re:ZERO main-story chapter page to capture cookies",
+        "请在里面点到re0正传的正文页": "Navigate to a Re:ZERO main-story chapter page",
+        "节点已开启": "Node On",
+        "节点已关闭": "Node Off",
+        "测速中": "Testing",
+        "正在连接可用节点…": "Connecting available node…",
+        "轻小说推荐下载已展开（本页直接选卷，无需跳转）": "Light novel volume card opened inline",
+        "AI 搜索": "AI Lookup",
+        "正在搜索封面...": "Searching for cover...",
+        "已获取封面": "Cover loaded",
+        "未找到封面，请手动上传": "No cover found — upload manually",
+        "走精校源（UU看书）：速度较慢，会多次失败重试，请耐心等待…": "Using proofread source (UU): slower with retries, please wait…",
+        "走精校源（UU看書）：速度较慢，会多次失败重试，请耐心等待…": "Using proofread source (UU): slower with retries, please wait…",
+        "云盘同步": "Cloud Sync",
+        "自动检测": "Auto Detect",
+        "自定义目录": "Custom Folder",
+        "自定义云盘目录": "Custom Cloud Folder",
+        "选择目录": "Choose Folder",
+        "打开目录": "Open Folder",
+        "选择云盘": "Select Cloud Drive",
+        "未配置目录": "No Folder Set",
+        "同步来源": "Sync Source",
+        "同步目录": "Sync Folder",
+        "同步中…": "Syncing…",
+        "已同步": "Synced",
+        "同步失败": "Sync Failed",
+        "未选择书籍": "No Books Selected",
+        "iCloud / OneDrive / Google Drive": "iCloud / OneDrive / Google Drive",
+        "正在同步到云盘目录…": "Syncing to cloud folder…",
+        "[5/5] 正在同步到本机云盘目录...": "[5/5] Syncing to cloud folder...",
+        "[4/4] 正在同步到本机云盘目录...": "[4/4] Syncing to cloud folder...",
+        "[5/5] 已同步到云盘目录：": "[5/5] Synced to cloud folder: ",
+        "[4/4] 已同步到云盘目录：": "[4/4] Synced to cloud folder: ",
+        "云盘同步完成": "Cloud sync complete",
+        "云盘同步失败": "Cloud sync failed",
+        "云盘同步失败：": "Cloud sync failed: ",
+        "云盘同步异常：": "Cloud sync error: ",
+        "云盘同步功能不可用": "Cloud sync unavailable",
+        "待传列表为空，请先选择或转换书籍": "Transfer queue is empty — add or convert books first",
+        "请先选择本机云盘同步文件夹": "Please select a local cloud sync folder first",
+        "找不到要同步的 EPUB 文件": "Cannot locate EPUB file to sync",
+        "未检测到本机云盘，请选择本地同步文件夹…": "No local cloud drive detected — choose sync folder…",
+        "未完成同步": "Sync did not complete"
     };
+
+    // 统一清除词典中的彩色 Emoji，并同时索引去 Emoji 前缀的原文 key
+    (function sanitizeDictEmojis() {
+        var re = /[\uD83C-\uDBFF\uDC00-\uDFFF\u26A0\u2705\u274C\u23F3\u270F\u2601\u2611\u2714\u2726\u23F1\u2139\uFE0F]/g;
+        var extra = {};
+        Object.keys(EN).forEach(function (k) {
+            var cleanVal = String(EN[k] == null ? '' : EN[k]).replace(re, '').replace(/^\s+/, '');
+            EN[k] = cleanVal;
+            var cleanKey = String(k).replace(re, '').replace(/^\s+/, '');
+            if (cleanKey && extra[cleanKey] == null && EN[cleanKey] == null) {
+                extra[cleanKey] = cleanVal;
+            }
+        });
+        Object.keys(extra).forEach(function (k) { EN[k] = extra[k]; });
+    })();
 
     var cur = 'zh';
     // 动态翻译独立维护原文与节点缓存，避免与原有词典查询、语言开关相互耦合。
@@ -695,6 +869,7 @@
         const TRANSLATABLE_ATTRIBUTES = ['placeholder', 'title', 'aria-label'];
         const SKIP_CONTENT = [
             'script', 'style', 'textarea', 'code', 'pre', '[data-i18n-skip]',
+            '#resonaCrumb', '#slotBadgeLeftName', '#slotBadgeRightName', '#splitModeLabel',
             '.stk-log', '.lib-meta .n', '.lib-author', '.rec-name', '.rec-author',
             '#defaultCoverTitle', '#defaultCoverAuthor', '#fileNameDisplay'
         ].join(',');
@@ -815,12 +990,20 @@
         return cur === 'en' ? EN : ZH;
     }
 
-    // 中文模式下，中文原文 key 直接返回自身
+    // 中文模式下，中文原文 key 直接返回自身（同步过滤任何残留彩色 Emoji）
+    function _stripEmojiStr(s) {
+        return String(s == null ? '' : s)
+            .replace(/[\uD83C-\uDBFF\uDC00-\uDFFF\u26A0\u2705\u274C\u23F3\u270F\u2601\u2611\u2714\u2726\u23F1\u2139\uFE0F]/g, '')
+            .replace(/^[ \t]+/, '');
+    }
+
     function t(key, fallback) {
         var d = dict();
-        if (d[key] != null) return d[key];
-        if (cur === 'zh') return key;
-        return (fallback != null) ? fallback : key;
+        var clean = _stripEmojiStr(key);
+        if (d[key] != null) return _stripEmojiStr(d[key]);
+        if (d[clean] != null) return _stripEmojiStr(d[clean]);
+        if (cur === 'zh') return clean;
+        return _stripEmojiStr((fallback != null) ? fallback : clean);
     }
 
     function apply(root) {
@@ -864,7 +1047,7 @@
         cur = (lang === 'en') ? 'en' : 'zh';
         apply();
         document.dispatchEvent(new CustomEvent('languagechange', { detail: { language: cur } }));
-        console.log('🌐 语言已切换:', cur, '（覆盖', document.querySelectorAll('[data-i18n]').length, '处）');
+        console.log('语言已切换:', cur, '（覆盖', document.querySelectorAll('[data-i18n]').length, '处）');
     }
 
     window.__i18n = { t: t, setLang: setLang, apply: apply, get: function () { return cur; } };

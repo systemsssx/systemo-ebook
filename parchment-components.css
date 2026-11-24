@@ -1,0 +1,1496 @@
+/* ==========================================================================
+   parchment-components.css (V3) — 西洋古典羊皮卷装帧、方圆相济器物组件与信笺弹窗
+   ========================================================================== */
+
+/* ===== 1. 深胡桃皮质书壳与极简天头栏 ===== */
+.window.app {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 8px 7px;
+    background-color: var(--leather-bg);
+    background-image:
+        linear-gradient(180deg, rgba(29, 21, 14, 0.88) 0%, rgba(19, 13, 8, 0.95) 100%),
+        url('./assets/tex-leather-spine.webp');
+    background-size: auto, 360px 360px;
+    overflow: hidden;
+}
+
+.folio-header {
+    height: 40px;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
+    align-items: center;
+    column-gap: 14px;
+    padding: 0 6px 0 12px;
+    color: var(--leather-text);
+    -webkit-app-region: drag;
+}
+
+.header-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.brand-name {
+    font-family: var(--font-display);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: #BD9F70;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.brand-crumb {
+    display: none;
+    font-family: var(--font-editorial);
+    font-size: 12px;
+    color: var(--leather-muted);
+    padding-left: 10px;
+    border-left: 1px solid rgba(189, 159, 112, 0.22);
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ----- 居中书眉导航（罗马数字 + 古典衬线，5 个主导航按钮视觉聚焦，支持按住拖入双页分屏） ----- */
+.bookmark-nav {
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+    height: 100%;
+    -webkit-app-region: no-drag;
+}
+
+.nav-item.bookmark-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 100%;
+    padding: 0 5px;
+    background: transparent;
+    border: none;
+    color: #C8B390;
+    font-family: var(--font-editorial);
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: grab;
+    transition: color var(--dur-fast) ease;
+}
+
+.nav-item.bookmark-tab:active {
+    cursor: grabbing;
+}
+
+.nav-item.bookmark-tab:hover {
+    color: #F0DFBF;
+}
+
+.nav-item.bookmark-tab .bm-num {
+    font-family: var(--font-display);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #9F8763;
+}
+
+.nav-item.bookmark-tab .bm-dot {
+    opacity: 0.5;
+    font-size: 11px;
+}
+
+.nav-item.bookmark-tab.active,
+.nav-item.bookmark-tab.in-left,
+.nav-item.bookmark-tab.in-right {
+    color: #F3E4C5;
+    font-weight: 700;
+}
+
+.nav-item.bookmark-tab.active .bm-num,
+.nav-item.bookmark-tab.in-left .bm-num,
+.nav-item.bookmark-tab.in-right .bm-num {
+    color: #D8B77C;
+}
+
+.nav-item.bookmark-tab.active::after,
+.nav-item.bookmark-tab.in-left::after,
+.nav-item.bookmark-tab.in-right::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2.5px;
+    background: #D2AE6D;
+    box-shadow: 0 0 6px rgba(197, 162, 103, 0.45);
+}
+
+/* 双页分屏下的微字角标（L / R） */
+.bm-slot-tag {
+    display: none;
+    font-family: var(--font-display);
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #C5A267;
+    margin-left: 2px;
+    transform: translateY(-3px);
+}
+
+body[data-split="dual"] .nav-item.bookmark-tab.in-left .bm-slot-tag.tag-l,
+body[data-split="dual"] .nav-item.bookmark-tab.in-right .bm-slot-tag.tag-r {
+    display: inline;
+}
+
+.nav-item.bookmark-tab.is-dragging-src {
+    opacity: 0.38;
+}
+
+/* ----- 顶栏右侧：退居二线的紧凑辅助工具组 ----- */
+.header-tools {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
+}
+
+.top-link-btn {
+    border: none;
+    background: transparent;
+    color: #867258;
+    font-family: var(--font-editorial);
+    font-size: 12px;
+    font-weight: 450;
+    letter-spacing: 0.02em;
+    padding: 2px 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    position: relative;
+    transition: color var(--dur-fast) ease;
+}
+
+.top-link-btn:hover {
+    color: #DFCCA8;
+}
+
+.top-link-btn.is-on,
+.background-switch[aria-checked="true"] {
+    color: #D4B57E;
+}
+
+.top-link-btn.is-on::after,
+.background-switch[aria-checked="true"]::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    background: #C5A267;
+}
+
+.top-sep {
+    width: 1px;
+    height: 10px;
+    background: rgba(189, 159, 112, 0.16);
+    flex-shrink: 0;
+}
+
+.lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    color: #7E6B52;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.lang-switch > div {
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color var(--dur-fast) ease;
+}
+
+.lang-switch > div:hover {
+    color: #DFCCA8;
+}
+
+.lang-switch > div.on {
+    color: #E2CEAA;
+    font-weight: 600;
+}
+
+.win-ctrl {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    gap: 1px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.win-ctrl button {
+    width: 28px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: #9D886B;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.win-ctrl button svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.4;
+}
+
+.win-ctrl button:hover {
+    background: rgba(215, 195, 158, 0.12);
+    color: #E8D6B4;
+}
+
+.win-ctrl button.close:hover {
+    background: rgba(94, 51, 32, 0.85);
+    color: #EAD8B5;
+}
+
+/* ----- 英文模式 & 窄窗天头栏舒朗自适应（严禁按钮折行或挤压） ----- */
+html[lang="en"] .brand-name {
+    letter-spacing: 0.14em;
+    font-size: 11px;
+}
+
+html[lang="en"] .bookmark-nav {
+    gap: 14px;
+}
+
+html[lang="en"] .nav-item.bookmark-tab {
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+}
+
+html[lang="en"] .header-tools {
+    gap: 8px;
+}
+
+html[lang="en"] .top-link-btn {
+    font-size: 11.5px;
+    letter-spacing: 0.01em;
+}
+
+@media (max-width: 1240px) {
+    .brand-crumb {
+        display: none;
+    }
+
+    .bookmark-nav,
+    html[lang="en"] .bookmark-nav {
+        gap: 12px;
+    }
+}
+
+/* ----- 顶栏内置节点开关 & 暗金扁平图标 & 轻小说页面内嵌卡片 ----- */
+.proxy-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.proxy-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6F5D46;
+    border: 1px solid rgba(189, 159, 112, 0.35);
+    flex-shrink: 0;
+    transition: background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.proxy-switch.is-on .proxy-dot {
+    background: #C5A267;
+    border-color: #EAD8B5;
+    box-shadow: 0 0 6px rgba(197, 162, 103, 0.65);
+}
+
+@keyframes epPulseDot {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+}
+
+.proxy-switch.is-testing .proxy-dot {
+    background: #B88F52;
+    animation: epPulseDot 1s ease-in-out infinite;
+}
+
+.ep-flat-ico,
+.btn-linen svg.ep-flat-ico {
+    width: 13.5px;
+    height: 13.5px;
+    stroke: #8E6E3E;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: -2px;
+}
+
+.ep-flat-ico.inline-status {
+    margin-right: 4px;
+}
+
+.lib-chk svg,
+.qchk svg {
+    width: 11px;
+    height: 11px;
+    stroke: #8E6E3E;
+    fill: none;
+    stroke-width: 2.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+}
+
+.lib-card.sel .lib-chk svg,
+.qchk:not(.off) svg {
+    stroke: #DFC18B;
+}
+
+.rec-inline-ln-host {
+    margin: 4px 0 14px;
+}
+
+.rec-inline-ln-host > .ac-card {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    background: var(--vellum-surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-box);
+    box-shadow: 0 4px 16px rgba(42, 30, 17, 0.09);
+    padding: 14px 18px;
+}
+
+/* ===== 2. 摊开厚羊皮书主体、叠页切口厚度与真实中缝弯曲阴影 ===== */
+.folio-book-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--vellum-page);
+    border-top: 1px solid #8A6E43;
+    border-bottom: 2px solid #5B4527;
+    box-shadow:
+        -1px 0 0 #705633,
+        -2px 0 0 #BDA274,
+        -3px 0 0 #644C2C,
+        -4px 0 0 #AF9466,
+         1px 0 0 #705633,
+         2px 0 0 #BDA274,
+         3px 0 0 #644C2C,
+         4px 0 0 #AF9466,
+         0 10px 30px rgba(0, 0, 0, 0.58);
+    margin: 0 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.folio-stage {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    position: relative;
+    overflow: hidden;
+}
+
+body[data-split="dual"] .folio-stage {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.folio-slot {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    contain: layout paint style;
+    container-type: inline-size;
+    container-name: folio;
+    background-color: var(--vellum-page);
+    background-image:
+        radial-gradient(ellipse at center, transparent 58%, rgba(102, 76, 40, 0.14) 100%),
+        url('./assets/tex-vellum-base.webp');
+    background-size: 100% 100%, 512px 512px;
+    position: relative;
+}
+
+body[data-split="single"] #folioLeft::before {
+    content: "";
+    position: fixed;
+    pointer-events: none;
+    display: none;
+}
+
+body[data-split="single"] #folioSpine,
+body[data-split="single"] #folioRight {
+    display: none;
+}
+
+/* ★★★ 真实纸质书两页中缝弯曲立体阴影层（144px） ★★★ */
+.folio-spine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 144px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 20;
+    background: linear-gradient(
+        90deg,
+        rgba(228, 208, 170, 0.00) 0%,
+        rgba(232, 213, 176, 0.15) 18%,
+        rgba(56, 38, 18, 0.03)    33%,
+        rgba(46, 30, 13, 0.13)    42%,
+        rgba(32, 19, 7, 0.31)     47.5%,
+        rgba(18, 10, 3, 0.56)     49.6%,
+        rgba(14, 8, 2, 0.72)      50%,
+        rgba(20, 11, 4, 0.52)     50.4%,
+        rgba(34, 21, 8, 0.28)     52.5%,
+        rgba(46, 30, 13, 0.11)    58%,
+        rgba(56, 38, 18, 0.02)    67%,
+        rgba(232, 213, 176, 0.14) 82%,
+        rgba(228, 208, 170, 0.00) 100%
+    );
+}
+
+/* 双页分屏下的西洋古典眉批（FOLIO L · ... / FOLIO R · ...） */
+.slot-folio-badge {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 14px 38px 0;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    letter-spacing: 0.12em;
+}
+
+body[data-split="dual"] .slot-folio-badge {
+    display: flex;
+}
+
+body[data-split="dual"] #folioLeft .slot-folio-badge {
+    padding-right: 48px;
+}
+
+body[data-split="dual"] #folioRight .slot-folio-badge {
+    padding-left: 48px;
+}
+
+.slot-folio-badge .slot-close-btn {
+    border: none;
+    background: transparent;
+    color: var(--ink-muted);
+    font-family: var(--font-editorial);
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.slot-folio-badge .slot-close-btn:hover {
+    color: var(--ink-primary);
+    background: var(--vellum-hover);
+}
+
+/* ===== 3. 西洋摊开书页（彻底移除中式四周双线直角方框，扩大松弛留白） ===== */
+.page {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    max-width: 900px;
+    margin: 10px auto 26px;
+    padding: 28px 38px 34px;
+    position: relative;
+}
+
+body[data-split="dual"] #folioLeft .page {
+    margin: 4px 38px 22px 18px;
+    width: auto;
+}
+
+body[data-split="dual"] #folioRight .page {
+    margin: 4px 18px 22px 38px;
+    width: auto;
+}
+
+.page.active {
+    display: flex;
+}
+
+.page.is-entering {
+    animation: pageSettle var(--dur-mid) var(--ease-paper);
+}
+
+@keyframes pageSettle {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 4px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+#pageStash {
+    display: none !important;
+}
+
+/* ===== 4. 拖拽书签分屏落点提示层 ===== */
+.folio-drop-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 18px 24px;
+    pointer-events: none;
+    background: rgba(26, 18, 10, 0.14);
+}
+
+.folio-drop-layer.is-active {
+    display: grid;
+}
+
+.drop-half {
+    border: 1px dashed var(--rule-strong);
+    border-radius: var(--r-box);
+    background: rgba(213, 195, 163, 0.72);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.drop-half .dh-tag {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    letter-spacing: 0.10em;
+}
+
+.drop-half .dh-sub {
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+
+.drop-half.is-over {
+    border: 1.5px solid var(--seal-walnut);
+    background: rgba(219, 202, 176, 0.92);
+}
+
+.drop-half.is-over .dh-tag {
+    color: var(--ink-primary);
+}
+
+.drag-ghost-bookmark {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    pointer-events: none;
+    padding: 6px 16px;
+    border-radius: var(--r-btn);
+    background: var(--seal-walnut);
+    border: 1px solid var(--brass-bright);
+    box-shadow: 0 8px 20px rgba(20, 12, 5, 0.38);
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--seal-walnut-text);
+    letter-spacing: 0.08em;
+    will-change: transform;
+}
+
+/* ===== 5. 古典版记地脚栏（Bottom Colophon） ===== */
+.bottom-bar {
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: #C6B18D;
+    border-top: 1px solid var(--rule-outer);
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+
+.format-group,
+.status-bar,
+.preset-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.format-item.active {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink-primary);
+    padding: 0 7px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 4px;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+}
+
+.status-bar a {
+    color: var(--ink-secondary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.preset-group select {
+    background: var(--vellum-page);
+    border: 1px solid var(--rule-outer);
+    border-radius: 5px;
+    padding: 1px 8px;
+    font-size: 12px;
+    color: var(--ink-primary);
+    outline: none;
+}
+
+/* ===== 6. 西洋书卷页头（单道盲压线）与卷草菱花分隔线 ===== */
+.view-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    padding-bottom: 14px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--rule-outer);
+    box-shadow: 0 1px 0 rgba(236, 225, 204, 0.38);
+    position: relative;
+}
+
+.view-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.folio-num {
+    font-family: var(--font-display);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--brass-gold);
+    letter-spacing: 0.10em;
+}
+
+.view-title {
+    font-family: var(--font-editorial);
+    font-size: var(--fs-page-title);
+    font-weight: var(--fw-serif-bold);
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    color: var(--ink-primary);
+}
+
+.vellum-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* 西洋古典卷草菱花分隔线 (─── ◇ ───) */
+.western-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 0 18px;
+    color: var(--brass-gold);
+}
+
+.western-divider::before,
+.western-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+}
+
+.western-divider::before {
+    background: linear-gradient(90deg, transparent 0%, rgba(142, 110, 62, 0.55) 100%);
+}
+
+.western-divider::after {
+    background: linear-gradient(90deg, rgba(142, 110, 62, 0.55) 0%, transparent 100%);
+}
+
+.western-divider svg {
+    width: 78px;
+    height: 14px;
+    flex-shrink: 0;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.25;
+}
+
+/* ===== 7. 三级器物按钮体系（6px 手工打磨微圆角皮签/铜扣） ===== */
+
+/* 一级主按钮：38px 高，深胡桃皮签 + 压金内框 */
+.btn-seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 22px;
+    border-radius: var(--r-btn);
+    border: 1px solid #1E130A;
+    background: linear-gradient(180deg, var(--seal-walnut-top) 0%, var(--seal-walnut-bot) 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(212, 180, 124, 0.28),
+        inset 0 1px 0 rgba(235, 214, 174, 0.16),
+        0 2px 5px rgba(24, 14, 6, 0.24);
+    color: var(--seal-walnut-text);
+    font-family: var(--font-editorial);
+    font-size: var(--fs-btn-main);
+    font-weight: var(--fw-serif-bold);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+
+.btn-seal svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+}
+
+.btn-seal:hover:not(:disabled) {
+    background: linear-gradient(180deg, #4C3522 0%, #302013 100%);
+    color: #EFE0C2;
+}
+
+.btn-seal:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.btn-seal:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* 二级常规按钮：35px 高，小牛皮压纹浅签 */
+.btn-linen {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 35px;
+    padding: 0 16px;
+    border-radius: var(--r-btn);
+    border: 1px solid var(--rule-strong);
+    background: linear-gradient(180deg, #D0BE9E 0%, #C0AA84 100%);
+    box-shadow: inset 0 1px 0 rgba(238, 226, 205, 0.42);
+    color: var(--ink-primary);
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: var(--fw-serif-mid);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.btn-linen svg {
+    width: 13.5px;
+    height: 13.5px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.65;
+}
+
+.btn-linen:hover:not(:disabled) {
+    background: linear-gradient(180deg, #D8C7A8 0%, #C8B48F 100%);
+    border-color: var(--ink-secondary);
+}
+
+.btn-linen:active:not(:disabled) {
+    transform: translateY(1px);
+    background: #B8A079;
+}
+
+.btn-linen:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+}
+
+.btn-linen.danger {
+    color: var(--err-umber);
+    border-color: rgba(94, 51, 32, 0.48);
+}
+
+/* 三级极简短名折叠抽屉（8px 圆角内嵌小牛皮抽屉） */
+.fold-panel {
+    margin-top: 16px;
+    contain: content;
+}
+
+.fold-trigger {
+    width: 100%;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: transparent;
+    color: var(--ink-secondary);
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: var(--fw-serif-mid);
+    letter-spacing: 0.04em;
+    text-align: left;
+    padding: 0 2px;
+}
+
+.fold-trigger .fold-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    color: var(--brass-deep);
+    font-size: 10.5px;
+    transition: transform 160ms ease;
+}
+
+.fold-trigger .fold-rule {
+    flex: 1;
+    height: 1px;
+    border-bottom: 1px dashed var(--rule-dashed);
+    margin-left: 6px;
+}
+
+.fold-trigger:hover {
+    color: var(--ink-primary);
+}
+
+.fold-panel.is-open .fold-trigger .fold-arrow {
+    transform: rotate(90deg);
+}
+
+.fold-body {
+    display: none;
+    margin-top: 8px;
+    padding: 16px 18px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+    box-shadow: inset 0 1px 3px rgba(36, 25, 17, 0.08);
+    animation: foldFadeIn 150ms ease-out;
+}
+
+.fold-panel.is-open > .fold-body {
+    display: block;
+}
+
+@keyframes foldFadeIn {
+    from {
+        opacity: 0;
+        transform: translate3d(0, -2px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+/* ===== 8. 手稿书写栏（40px / 6px 内凹暗影）与椭圆封蜡状态签 ===== */
+.vellum-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    border-bottom-color: var(--rule-strong);
+    border-radius: var(--r-input);
+    box-shadow:
+        inset 0 1px 3px rgba(36, 25, 17, 0.12),
+        0 1px 0 rgba(238, 226, 205, 0.38);
+    color: var(--ink-primary);
+    font-size: var(--fs-body);
+    outline: none;
+    transition: border-color var(--dur-fast) ease, background-color var(--dur-fast) ease;
+}
+
+.vellum-input::placeholder {
+    color: var(--ink-faint);
+}
+
+.vellum-input:focus {
+    background: var(--vellum-focus);
+    border-color: var(--ink-secondary);
+}
+
+.vellum-select {
+    height: 30px;
+    padding: 0 10px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-btn);
+    font-family: var(--font-editorial);
+    font-size: 12.5px;
+    color: var(--ink-primary);
+    outline: none;
+    cursor: pointer;
+}
+
+.vellum-select:focus {
+    border-color: var(--brass-deep);
+    background: var(--vellum-focus);
+}
+
+/* 椭圆封蜡状态签 (999px) */
+.stt-badge,
+.stt.channel-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    font-size: 11.5px;
+    line-height: 1.4;
+    border: 1px solid var(--rule-outer);
+    background: rgba(142, 110, 62, 0.14);
+    color: var(--ink-secondary);
+}
+
+.stt.channel-state.is-blank {
+    display: none;
+}
+
+.stt.channel-state .stt-i {
+    display: none;
+}
+
+.stt.channel-state::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ink-muted);
+    flex-shrink: 0;
+}
+
+.stt.channel-state.ok {
+    color: var(--ok-olive);
+    background: var(--ok-olive-bg);
+    border-color: rgba(59, 75, 43, 0.38);
+}
+.stt.channel-state.ok::before {
+    background: var(--ok-olive);
+}
+
+.stt.channel-state.run,
+.stt.channel-state.bad {
+    color: var(--warn-ochre);
+    background: var(--warn-ochre-bg);
+    border-color: rgba(107, 75, 30, 0.38);
+}
+.stt.channel-state.run::before,
+.stt.channel-state.bad::before {
+    background: var(--warn-ochre);
+}
+
+/* 点状目录引导行（参数值走 Cormorant Garamond Italic + Noto Serif SC，绝无 Consolas） */
+.leader-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 12.5px;
+    padding: 4px 0;
+}
+.leader-row .k {
+    color: var(--ink-muted);
+    flex-shrink: 0;
+}
+.leader-row .dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--rule-outer);
+    min-width: 16px;
+}
+.leader-row .v {
+    font-family: var(--font-italic-mix);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-primary);
+}
+
+/* ===== 9. 深暖羊皮信笺弹窗（10px 圆角，去白去红去双线框） ===== */
+.ac-modal,
+.lib-modal,
+#chapterEditorOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(18, 12, 7, 0.64);
+}
+
+.ac-modal.show,
+.lib-modal.show {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.lm-scrim {
+    position: absolute;
+    inset: 0;
+}
+
+.ac-card,
+.lm-card,
+.ce-card {
+    position: relative;
+    z-index: 1;
+    width: min(450px, 92vw);
+    max-height: 86vh;
+    overflow-y: auto;
+    padding: 24px 26px;
+    background: var(--vellum-sheet);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-modal);
+    box-shadow:
+        inset 0 1px 0 rgba(239, 229, 210, 0.45),
+        0 18px 48px rgba(12, 7, 3, 0.55);
+    color: var(--ink-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: modalLetterSettle 180ms var(--ease-paper);
+}
+
+.lm-card {
+    width: min(710px, 92vw);
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+}
+
+.ce-card {
+    width: min(740px, 94vw);
+}
+
+@keyframes modalLetterSettle {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.ac-title,
+.lm-title,
+.rec-modal-name,
+.ce-head h3 {
+    font-family: var(--font-editorial);
+    font-size: 17px;
+    font-weight: var(--fw-serif-bold);
+    color: var(--ink-primary);
+    letter-spacing: 0.04em;
+}
+
+.ac-sub,
+.lm-note,
+.rec-modal-sub,
+.rec-modal-src,
+.ce-tip {
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--ink-secondary);
+}
+
+.ac-sub:empty,
+.lm-note:empty,
+.rec-modal-src:empty {
+    display: none;
+}
+
+/* ----- 批注式醒目操作指引卡（左侧 3px 古铜暗金强调竖线，零 Emoji） ----- */
+.vellum-callout {
+    border-left: 3px solid var(--brass-gold);
+    border-radius: 0 4px 4px 0;
+    background: var(--vellum-focus);
+    padding: 8px 11px;
+    font-size: 12.5px;
+    line-height: 1.62;
+    color: var(--ink-primary);
+}
+
+.vellum-callout strong,
+.vellum-callout b {
+    color: var(--ink-primary);
+    font-weight: 700;
+}
+
+.vellum-callout.callout-strong {
+    background: rgba(197, 162, 103, 0.16);
+    border-left-width: 3.5px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.68;
+}
+
+.vellum-callout .vc-head {
+    font-weight: 700;
+    color: var(--ink-primary);
+    margin-bottom: 4px;
+}
+
+.vellum-callout .vc-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ln-cookie-tip {
+    border-left: 3px solid var(--brass-gold);
+    border-radius: 0 4px 4px 0;
+    background: rgba(197, 162, 103, 0.12);
+    padding: 6px 10px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-primary);
+}
+
+.stk-st {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 11px;
+    border-radius: var(--r-pill);
+    font-size: 12px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    color: var(--ink-secondary);
+}
+
+.stk-st.ok {
+    color: var(--ok-olive);
+    background: var(--ok-olive-bg);
+    border-color: rgba(59, 75, 43, 0.35);
+}
+
+.stk-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stk-row label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+}
+
+.stk-in,
+.ln-input,
+.ce-in,
+.lm-right input,
+.lm-right textarea {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-input);
+    box-shadow: inset 0 1px 2px rgba(36, 25, 17, 0.10);
+    color: var(--ink-primary);
+    font-size: 13px;
+    outline: none;
+}
+
+.stk-in,
+.ln-input,
+.ce-in,
+.lm-right input {
+    min-height: 40px;
+}
+
+.stk-in:focus,
+.ln-input:focus,
+.ce-in:focus,
+.lm-right input:focus,
+.lm-right textarea:focus {
+    background: var(--vellum-focus);
+    border-color: var(--ink-primary);
+}
+
+.stk-log {
+    display: none;
+    max-height: 84px;
+    overflow-y: auto;
+    padding: 8px 12px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-input);
+    font-family: var(--font-italic-mix);
+    font-size: 12px;
+    color: var(--ink-secondary);
+    white-space: pre-wrap;
+}
+
+.ac-acts,
+.rec-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.ac-btn,
+.rec-btn,
+.lm-b,
+.ce-b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 6px 18px;
+    border-radius: var(--r-btn);
+    border: 1px solid var(--rule-strong);
+    background: linear-gradient(180deg, #D0BE9E 0%, #C0AA84 100%);
+    color: var(--ink-primary);
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: 560;
+}
+
+.ac-btn:hover,
+.rec-btn:hover,
+.lm-b:hover,
+.ce-b:hover {
+    background: linear-gradient(180deg, #D8C7A8 0%, #C8B48F 100%);
+}
+
+.ac-acts .ac-btn.prim,
+.ac-acts #abSubmit,
+.ac-acts #wfStart,
+.ac-acts #stkLogin,
+.rec-btn.prim,
+.lm-b.prim,
+.ce-b.primary {
+    background: linear-gradient(180deg, var(--seal-walnut-top) 0%, var(--seal-walnut-bot) 100%);
+    border-color: #1E130A;
+    color: var(--seal-walnut-text);
+}
+
+.ac-acts .ac-btn.prim:hover,
+.ac-acts #abSubmit:hover,
+.ac-acts #wfStart:hover,
+.ac-acts #stkLogin:hover,
+.rec-btn.prim:hover,
+.lm-b.prim:hover,
+.ce-b.primary:hover {
+    background: linear-gradient(180deg, #4B3421 0%, var(--seal-walnut) 100%);
+}
+
+.ac-card > .ac-btn {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 11px 16px;
+    text-align: left;
+}
+
+.ac-tx {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.ac-tx b {
+    font-family: var(--font-editorial);
+    font-size: 14px;
+    color: var(--ink-primary);
+}
+.ac-tx i {
+    font-style: normal;
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+
+.ac-cancel {
+    align-self: center;
+    border: none;
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 12.5px;
+    padding: 4px 14px;
+    border-radius: var(--r-btn);
+}
+.ac-cancel:hover {
+    color: var(--ink-primary);
+    text-decoration: underline;
+}
+
+.lm-head,
+.ce-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 22px;
+    border-bottom: 1px solid var(--rule-outer);
+}
+.lm-sub {
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    letter-spacing: 0.10em;
+}
+.lm-x,
+.ce-x {
+    margin-left: auto;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-btn);
+    background: var(--vellum-well);
+    color: var(--ink-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.lm-body {
+    display: flex;
+    gap: 20px;
+    padding: 18px 22px;
+    overflow-y: auto;
+}
+.lm-left {
+    width: 154px;
+    flex-shrink: 0;
+}
+.lm-cover {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border: 1px solid var(--rule-strong);
+    border-radius: 6px;
+    background: var(--vellum-well) center/cover no-repeat;
+    overflow: hidden;
+}
+.lm-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.lm-btn {
+    width: 100%;
+    margin-top: 10px;
+}
+.lm-kv {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 6px;
+}
+.lm-kv b {
+    font-family: var(--font-italic-mix);
+    color: var(--ink-primary);
+}
+.lm-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.lml {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    margin-bottom: 4px;
+}
+.lm-foot,
+.ce-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 22px;
+    border-top: 1px solid var(--rule-outer);
+    background: var(--vellum-well);
+}
+.send-body {
+    padding: 16px 22px 20px;
+}
+.send-opt {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+    cursor: pointer;
+}
+.send-opt:hover {
+    border-color: var(--ink-secondary);
+    background: #CEB689;
+}
+.so-t {
+    font-family: var(--font-editorial);
+    font-size: 14px;
+    font-weight: 600;
+}
+.so-s {
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+.so-go {
+    margin-left: auto;
+    color: var(--ink-primary);
+}

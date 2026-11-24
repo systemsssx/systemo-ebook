@@ -3,14 +3,21 @@
 
 from __future__ import annotations
 
+import io
 import os
 import re
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Iterable, Sequence
 
 from .net import FetchError, fetch
 from .sources import cover_variants
+
+try:
+    from PIL import Image as _PILImage
+except Exception:  # noqa: BLE001
+    _PILImage = None
 
 _EXT_BY_TYPE = {
     "image/jpeg": ".jpg",
@@ -40,9 +47,16 @@ _REFERER_BY_HOST = {
     "fqnovelpic.com": "https://fanqienovel.com/",
     "myqcloud.com": "https://weread.qq.com/",
     "weread.qq.com": "https://weread.qq.com/",
+    "yuewen.com": "https://www.qidian.com/",
+    "qidian.com": "https://www.qidian.com/",
+    "doubanio.com": "https://book.douban.com/",
     "bilinovel.com": "https://www.bilinovel.com/",
     "linovelib.com": "https://www.bilinovel.com/",
+    "readpai.com": "https://www.bilinovel.com/",
     "jjwxc.net": "https://www.jjwxc.net/",
+    "baidu.com": "https://image.baidu.com/",
+    "bdimg.com": "https://image.baidu.com/",
+    "sogoucdn.com": "https://pic.sogou.com/",
 }
 
 
@@ -126,7 +140,57 @@ def image_size(data: bytes) -> tuple[int, int]:
                 return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
     except Exception:  # noqa: BLE001 - dimensions are a nicety, never fatal
         pass
+    if _PILImage is not None:
+        try:
+            with _PILImage.open(io.BytesIO(data)) as im:
+                return int(im.size[0]), int(im.size[1])
+        except Exception:  # noqa: BLE001
+            pass
     return 0, 0
+
+
+def compute_dhash(data: bytes, hash_size: int = 8) -> int | None:
+    """Compute a 64-bit difference hash (dHash) for same-artwork comparison."""
+    if _PILImage is None or not data:
+        return None
+    try:
+        with _PILImage.open(io.BytesIO(data)) as im:
+            resample = getattr(getattr(_PILImage, "Resampling", _PILImage), "LANCZOS", _PILImage.LANCZOS)
+            gray = im.convert("L").resize((hash_size + 1, hash_size), resample)
+            px = gray.tobytes()
+        bits = 0
+        stride = hash_size + 1
+        for row in range(hash_size):
+            base = row * stride
+            for col in range(hash_size):
+                bits = (bits << 1) | (1 if px[base + col] > px[base + col + 1] else 0)
+        return bits
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def hamming_distance(h1: int, h2: int) -> int:
+    return int(h1 ^ h2).bit_count()
+
+
+def _host_family(url: str) -> str:
+    host = (urllib.parse.urlsplit(url).hostname or "").lower()
+    if host.endswith("myqcloud.com") or host.endswith("weread.qq.com"):
+        return "weread"
+    if host.endswith("yuewen.com") or host.endswith("qidian.com"):
+        return "yuewen"
+    parts = host.split(".")
+    return ".".join(parts[-2:]) if len(parts) >= 2 else host
+
+
+def _is_placeholder_cover(url: str, body: bytes, w: int, h: int) -> bool:
+    """Reject known site blank/placeholder images."""
+    if not body or w <= 0 or h <= 0:
+        return True
+    # 阅文/起点默认空白封面是 ~6.9KB 的 180x240 纯底图
+    if "yuewen.com" in url and w <= 180 and h <= 240 and len(body) < 8000:
+        return True
+    return False
 
 
 def safe_filename(name: str, *, max_length: int = 80) -> str:
@@ -136,6 +200,18 @@ def safe_filename(name: str, *, max_length: int = 80) -> str:
     if len(cleaned) > max_length:
         cleaned = cleaned[:max_length].rstrip(" .")
     return cleaned or "cover"
+
+
+@dataclass
+class _FetchedCover:
+    url: str
+    body: bytes
+    ctype: str
+    ext: str
+    width: int
+    height: int
+    dhash: int | None
+    native: bool
 
 
 def download_cover(
@@ -148,47 +224,133 @@ def download_cover(
     min_bytes: int = 512,
     timeout: float = 15.0,
     tries: int = 3,
+    extra_urls: Sequence[str] | None = None,
+    same_image_max_dist: int = 10,
 ) -> CoverResult:
-    """Download the largest working variant of a cover into dest_dir.
+    """Download candidates and select the highest-clarity version of the SAME cover artwork.
 
-    Tries every size variant in order and keeps the first response that really is
-    an image (content-type / magic bytes), so a dead `b_` URL degrades to the
-    original file instead of writing an error page to disk.
-
-    `referer` overrides the host-derived Referer; passing an empty string disables
-    the header entirely (which is what hot-link-protected CDNs want).
+    1. Expands `variants` (e.g. WeRead `t9_` + Yuewen `/0`, Qidian `/0`) and optional
+       `extra_urls` (other sources for the same book / search results).
+    2. Establishes an authentic native anchor image on the book's own host family.
+    3. Verifies cross-host candidates are the EXACT SAME artwork using `dHash`
+       perceptual hashing (Hamming distance <= `same_image_max_dist` & aspect ratio match).
+    4. Picks the verified image with maximum `(width * height, len(body))`.
     """
     if not url:
         raise CoverError("没有可用的封面地址")
-    candidates: Iterable[str] = variants if variants else cover_variants(url)
-    candidates = list(dict.fromkeys([c for c in candidates if c])) or [url]
+    base_list: list[str] = list(variants) if variants else cover_variants(url)
+    base_list.extend(extra_urls or ())
+    base_list.append(url)
+    all_cands = list(dict.fromkeys([c.strip() for c in base_list if c and c.strip()])) or [url]
+
+    anchor_family = _host_family(url)
+    native_cands = [c for c in all_cands if _host_family(c) == anchor_family]
+    cross_cands = [c for c in all_cands if _host_family(c) != anchor_family]
+
+    # Pick high-res native contenders first (avoid wasting requests on tiny s_/m_/b_ if t9_ works)
+    if anchor_family == "weread":
+        top_native = [c for c in native_cands if "/t9_" in c or "/outpic/" in c or "/weread/cover/" in c]
+        if not top_native:
+            top_native = native_cands[:2]
+        fallback_native = [c for c in native_cands if c not in top_native]
+    elif anchor_family == "yuewen":
+        top_native = native_cands[:3]
+        fallback_native = native_cands[3:]
+    else:
+        top_native = native_cands[:2]
+        fallback_native = native_cands[2:]
 
     errors: list[str] = []
-    for candidate in candidates:
+
+    def _fetch_one(cand: str, req_tries: int, is_native: bool) -> _FetchedCover | None:
         headers = {"User-Agent": _UA}
-        ref = referer_for(candidate) if referer is None else referer
+        ref = referer_for(cand) if referer is None else referer
         if ref:
             headers["Referer"] = ref
         try:
-            resp = fetch(candidate, headers=headers, timeout=timeout, tries=tries)
+            resp = fetch(cand, headers=headers, timeout=min(timeout, 10.0), tries=req_tries)
         except FetchError as exc:
-            errors.append(f"{candidate} -> {exc}")
-            continue
+            errors.append(f"{cand} -> {exc}")
+            return None
         if resp.status != 200:
-            errors.append(f"{candidate} -> HTTP {resp.status}")
-            continue
+            errors.append(f"{cand} -> HTTP {resp.status}")
+            return None
         ctype = (resp.headers.get("Content-Type") or "").split(";")[0].strip().lower()
         ext = _sniff_ext(resp.body, ctype)
-        if not ext or len(resp.body) < min_bytes:
-            errors.append(f"{candidate} -> 非图片响应 (ctype={ctype or '?'}, {len(resp.body)}B)")
+        if not ext or ext == ".gif" or len(resp.body) < min_bytes:
+            errors.append(f"{cand} -> 非有效位图响应 (ctype={ctype or '?'}, {len(resp.body)}B)")
+            return None
+        w, h = image_size(resp.body)
+        if w <= 0 or h <= 0 or _is_placeholder_cover(cand, resp.body, w, h):
+            errors.append(f"{cand} -> 占位图或无尺寸 ({w}x{h}, {len(resp.body)}B)")
+            return None
+        return _FetchedCover(
+            url=cand,
+            body=resp.body,
+            ctype=ctype or ext.lstrip("."),
+            ext=ext,
+            width=w,
+            height=h,
+            dhash=compute_dhash(resp.body),
+            native=is_native,
+        )
+
+    fetched: list[_FetchedCover] = []
+    batch_jobs: list[tuple[str, int, bool]] = (
+        [(c, min(2, tries), True) for c in top_native]
+        + [(c, 1, False) for c in cross_cands[:10]]
+    )
+    if batch_jobs:
+        with ThreadPoolExecutor(max_workers=min(6, len(batch_jobs))) as pool:
+            futs = [pool.submit(_fetch_one, u, t, n) for u, t, n in batch_jobs]
+            for fut in futs:
+                res = fut.result()
+                if res is not None:
+                    fetched.append(res)
+
+    # Ensure we have at least one valid native image if top_native failed (e.g. t9_ missing -> try t7_/b_/s_)
+    if not any(f.native for f in fetched):
+        for cand in fallback_native:
+            res = _fetch_one(cand, tries, True)
+            if res is not None:
+                fetched.append(res)
+                break
+
+    if not fetched:
+        raise CoverError("封面下载失败: " + " | ".join(errors[-3:]))
+
+    native_valid = [f for f in fetched if f.native]
+    pool_for_anchor = native_valid or fetched
+    anchor = max(pool_for_anchor, key=lambda f: (f.width * f.height, len(f.body)))
+    anchor_ratio = anchor.width / max(1, anchor.height)
+
+    verified: list[_FetchedCover] = []
+    for item in fetched:
+        if item.native:
+            verified.append(item)
             continue
+        if anchor.dhash is None or item.dhash is None:
+            # Without perceptual hash support, never blindly trust cross-host images
+            continue
+        dist = hamming_distance(anchor.dhash, item.dhash)
+        ratio_diff = abs((item.width / max(1, item.height)) - anchor_ratio)
+        if dist <= same_image_max_dist and ratio_diff <= 0.18:
+            verified.append(item)
 
-        os.makedirs(dest_dir, exist_ok=True)
-        path = os.path.join(dest_dir, f"{safe_filename(stem)}{ext}")
-        with open(path, "wb") as fh:
-            fh.write(resp.body)
-        width, height = image_size(resp.body)
-        return CoverResult(path=path, url=candidate, bytes=len(resp.body),
-                           content_type=ctype or ext.lstrip("."), width=width, height=height)
+    if not verified:
+        verified = [anchor]
 
-    raise CoverError("封面下载失败: " + " | ".join(errors[-3:]))
+    winner = max(verified, key=lambda f: (f.width * f.height, len(f.body)))
+
+    os.makedirs(dest_dir, exist_ok=True)
+    path = os.path.join(dest_dir, f"{safe_filename(stem)}{winner.ext}")
+    with open(path, "wb") as fh:
+        fh.write(winner.body)
+    return CoverResult(
+        path=path,
+        url=winner.url,
+        bytes=len(winner.body),
+        content_type=winner.ctype,
+        width=winner.width,
+        height=winner.height,
+    )

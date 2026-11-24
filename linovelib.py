@@ -53,6 +53,7 @@ import html as H
 import json
 import os
 import re
+import ssl
 import sys
 import tempfile
 import threading
@@ -323,6 +324,15 @@ for _s in (sys.stdout, sys.stderr):
         pass
 
 
+def _active_proxy_url() -> str:
+    px = (os.environ.get("EASYPUB_PROXY") or "").strip()
+    if not px or px.upper() == "DIRECT":
+        return ""
+    if "://" not in px:
+        px = "http://" + px
+    return px
+
+
 def _urllib_get(url: str, timeout: float, headers: dict):
     """★ 2026-10-01（实测定位，必看）：**本站必须走 urllib，不能走 novelmeta.net.fetch。**
 
@@ -343,8 +353,13 @@ def _urllib_get(url: str, timeout: float, headers: dict):
 
     所以这里直接用标准库发请求；`_get()` 只在 urllib 真失败时才退回 fetch。
     """
+    px = _active_proxy_url()
+    handlers = [urllib.request.ProxyHandler({"http": px, "https": px})] if px else [urllib.request.ProxyHandler({})]
+    if url.lower().startswith("https://"):
+        handlers.append(urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+    opener = urllib.request.build_opener(*handlers)
     req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with opener.open(req, timeout=timeout) as r:
         raw = r.read()
         enc = (r.headers.get("Content-Encoding") or "").lower()
         status = r.status
@@ -582,21 +597,36 @@ def book_info(novel_id: str, *, with_chapters: bool = False) -> dict:
       `with_chapters=True` 时每卷带上 `chapters`（下载用）；`--info` 用 False，避免把
       几百章的清单塞进 stdout 的 JSON 里。
     """
-    cat = catalog_tree(novel_id)
-    if cat["volumes"]:
-        vols = cat["volumes"]
-        if not with_chapters:
-            vols = [{"name": v["name"], "url": v["url"], "cover": v["cover"]} for v in vols]
-        return {"id": novel_id, "title": cat["title"], "author": cat["author"],
-                "url": f"{BASE}/novel/{novel_id}.html", "volumes": vols,
-                "cover": cat["cover"], "offline": False, "error": None}
-    # ── 兜底：目录页没有分卷块 → 去书页要一句人话（拿不到就自己拼一句）
-    cover, note = _book_page_note(novel_id, cat.get("title") or "")
-    note = note or f"《{cat.get('title') or novel_id}》的目录页没有分卷"
-    return {"id": novel_id, "title": cat.get("title") or "", "author": cat.get("author") or "",
-            "url": f"{BASE}/novel/{novel_id}.html", "volumes": [],
-            "cover": cat.get("cover") or cover,
-            "offline": True, "error": note}
+    last_err = ""
+    while True:
+        try:
+            cat = catalog_tree(novel_id)
+            if cat["volumes"]:
+                vols = cat["volumes"]
+                if not with_chapters:
+                    vols = [{"name": v["name"], "url": v["url"], "cover": v["cover"]} for v in vols]
+                return {"id": novel_id, "title": cat["title"], "author": cat["author"],
+                        "url": f"{BASE}/novel/{novel_id}.html", "volumes": vols,
+                        "cover": cat["cover"], "offline": False, "error": None}
+            # ── 兜底：目录页没有分卷块 → 去书页要一句人话（拿不到就自己拼一句）
+            cover, note = _book_page_note(novel_id, cat.get("title") or "")
+            note = note or f"《{cat.get('title') or novel_id}》的目录页没有分卷"
+            is_copyright = any(k in note for k in ("版权方", "已下架", "现已屏蔽"))
+            if not is_copyright and _rotate_proxy_node("目录页未返回分卷"):
+                continue
+            return {"id": novel_id, "title": cat.get("title") or "", "author": cat.get("author") or "",
+                    "url": f"{BASE}/novel/{novel_id}.html", "volumes": [],
+                    "cover": cat.get("cover") or cover,
+                    "offline": True, "error": note}
+        except Exception as exc:  # noqa: BLE001
+            last_err = f"{type(exc).__name__}: {str(exc)[:100]}"
+            if _rotate_proxy_node(last_err):
+                continue
+            cover, note = _book_page_note(novel_id, "")
+            return {"id": novel_id, "title": "", "author": "",
+                    "url": f"{BASE}/novel/{novel_id}.html", "volumes": [],
+                    "cover": cover,
+                    "offline": True, "error": note or f"读取目录失败：{last_err}"}
 
 
 def volume_covers(novel_id: str, *, timeout: float = 20.0) -> list:
@@ -1163,30 +1193,41 @@ def resolve_by_name(name: str, timeout: float = 25.0) -> dict:
         _nm_sources.BILINOVEL_PROGRESS = _say
     except Exception:  # noqa: BLE001
         pass
-    try:
-        _say("① 本地目录索引：只读缓存（未缓存则跳过现爬）")
-        # ★ 走统一解析：本地目录命中 = 0.1s 零网络；没缓存就直接进②站内搜索
-        # ★★★ 2026-10-01（用户：「那你的意思是他要爬完哔轻整个站的内容？」—— 一针见血）★★★
-        #   **必须传 `allow_index_build=False`**。`resolve_bilinovel` 的这个参数默认是
-        #   **True**，含义是"本地索引缓存不在时，就现爬 /wenku/ 那 178 页把它建出来"
-        #   —— 实测后果：冷缓存下敲一次「无职转生」，它会闷头爬完 178 页
-        #   （缓存目录里 `bilinovel_index.json` 1.7MB，就是这么来的），界面像卡死好几分钟。
-        #   这正是本函数文档头那句「冷缓存时**绝不现爬**那 178 页目录」要保证的事，
-        #   而旧代码本来也传了 —— 模块化时被删掉，注释理由是
-        #   "novelmeta 的 resolve_bilinovel() 没有这个参数（传了直接 TypeError）"。
-        #   那句话对 `C:\work\novelmeta` 那份成立，对**随包的这份不成立**
-        #   （EasyPub-New\novelmeta\sources.py 的签名里就有 allow_index_build）。
-        #   所以：先按带参数的签名调，真遇到老版 novelmeta 再退回老签名。
-        #   冷缓存时正确行为 = 跳过①，直接走②站内搜索（一个请求，~1 秒）。
+    best = None
+    last_exc = None
+    while True:
+        last_exc = None
         try:
-            best = resolve_bilinovel(key, timeout=max(timeout, 15.0), allow_bing=False,
-                                     allow_index_build=False)
-        except TypeError:
-            _say("  ℹ️ 这份 novelmeta 没有 allow_index_build 参数 → 用老签名调用")
-            best = resolve_bilinovel(key, timeout=max(timeout, 15.0), allow_bing=False)
-        _say("② 站内搜索 → " + (best.title if best is not None else "无结果"))
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"查询失败：{type(exc).__name__}: {str(exc)[:80]}"}
+            _say("① 本地目录索引：只读缓存（未缓存则跳过现爬）")
+            try:
+                best = resolve_bilinovel(key, timeout=max(timeout, 15.0), allow_bing=False,
+                                         allow_index_build=False)
+            except TypeError:
+                _say("  ℹ️ 这份 novelmeta 没有 allow_index_build 参数 → 用老签名调用")
+                best = resolve_bilinovel(key, timeout=max(timeout, 15.0), allow_bing=False)
+            _say("② 站内搜索 → " + (best.title if best is not None else "无结果"))
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            best = None
+
+        if best is not None and best.extra.get("novelId"):
+            break
+
+        # If search raised OR the site itself returned HTTP >= 400 / failed, rotate to another node and retry
+        site_blocked = last_exc is not None
+        if not site_blocked:
+            try:
+                probe_r = _get(BASE + "/", timeout=8, tries=1)
+                if getattr(probe_r, "status", 0) >= 400:
+                    site_blocked = True
+            except Exception:  # noqa: BLE001
+                site_blocked = True
+        if site_blocked and _rotate_proxy_node(f"按书名搜书受阻: {type(last_exc).__name__ if last_exc else 'HTTP受限'}"):
+            continue
+        break
+
+    if last_exc is not None and (best is None or not best.extra.get("novelId")):
+        return {"error": f"查询失败：{type(last_exc).__name__}: {str(last_exc)[:80]}"}
     if best is None or not best.extra.get("novelId"):
         return {"error": f"没找到《{key}》（站内搜索没命中；可直接填书号，"
                          f"或稍后重试 —— 站点搜索偶发不回数据）"}
@@ -1262,6 +1303,11 @@ class _BrowserSession:
         opt.add_argument("--start-minimized")
         opt.add_argument("--log-level=3")
         opt.add_experimental_option("excludeSwitches", ["enable-logging"])
+        px = _active_proxy_url()
+        if px:
+            opt.add_argument(f"--proxy-server={px}")
+        else:
+            opt.add_argument("--no-proxy-server")
         if headless:
             opt.add_argument("--headless=new")
         self.drv = webdriver.Edge(options=opt)
@@ -1316,6 +1362,61 @@ def close_browser() -> None:
     if _BROWSER and _BROWSER is not False:
         _BROWSER.close()
     _BROWSER = None
+
+
+_TRIED_PROXY_NODES: set[str] = set()
+_PROXY_ROTATE_LOCK = threading.Lock()
+
+
+def _bridge_call(path: str, payload: dict | None = None, timeout: float = 15.0) -> dict | None:
+    ctl = (os.environ.get("EASYPUB_PROXY_CTL") or "").strip().rstrip("/")
+    tok = (os.environ.get("EASYPUB_PROXY_TOKEN") or "").strip()
+    if not ctl or not tok:
+        return None
+    ctl_base = re.sub(r"/switch/?$", "", ctl)
+    try:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        data = json.dumps(payload or {}, ensure_ascii=False).encode("utf-8") if payload is not None else None
+        headers = {"X-EasyPub-Token": tok}
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(
+            f"{ctl_base}{path}",
+            data=data,
+            headers=headers,
+            method="POST" if data is not None else "GET",
+        )
+        with opener.open(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8", errors="replace"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _rotate_proxy_node(reason: str = "fetch-failed") -> bool:
+    """Rotate via EasyPub proxy bridge across untried usable nodes (TW/HK first, then rest)."""
+    with _PROXY_ROTATE_LOCK:
+        res = _bridge_call("/rotate", {
+            "mode": "lightnovel",
+            "exclude": sorted(_TRIED_PROXY_NODES),
+            "reason": str(reason or "ln-retry")[:80],
+        }, timeout=16.0)
+        if not res:
+            return False
+        prev = str(res.get("prevNode") or "").strip()
+        if prev:
+            _TRIED_PROXY_NODES.add(prev)
+        nxt = str(res.get("activeNode") or "").strip()
+        if not res.get("rotated") or not nxt:
+            return False
+        _TRIED_PROXY_NODES.add(nxt)
+        px = str(res.get("proxyUrl") or "").strip()
+        if px:
+            os.environ["EASYPUB_PROXY"] = px
+        _THROTTLE.delay = _THROTTLE.floor
+        close_browser()
+        rem = int(res.get("remainingCount") or 0)
+        _say(f"🔄 当前节点访问受限（{reason}），已自动切换至「{nxt}」重试（剩余可试 {rem} 个）…")
+        return True
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -1416,6 +1517,8 @@ def negotiate_base(vols: list, auto_cookie: bool = False) -> list:
         return _probe_verdict(base, probe)
 
     v0 = _probe_verdict(start, probe)
+    while v0 in ("error", "other") and _rotate_proxy_node(f"探测章节受阻({v0})"):
+        v0 = _probe_verdict(start, probe)
     if v0 == "ok":
         return vols
     if v0 == "truncated" and auto_cookie:
@@ -1433,6 +1536,11 @@ def negotiate_base(vols: list, auto_cookie: bool = False) -> list:
             _say(f"🔁 {start} 对这本书是锁页 → 自动切到 {BASE} 抓正文"
                  + ("（已为新域名续 Cookie）" if auto_cookie else ""))
             return [_rebase_vol(x) for x in vols]
+
+    if v0 in ("error", "other") and _rotate_proxy_node(f"镜像探测均失败({v0})"):
+        v_retry = _probe_verdict(start, probe)
+        if v_retry == "ok":
+            return vols
 
     _switch_base(start)
     _say(f"⚠️ {start} 对这本书是锁页，{len(_ALT_BASES)} 个镜像域名也一样"
@@ -1574,26 +1682,61 @@ def do_download(novel_id: str, out_dir: str, vols=None, limit_chapters=0,
                                  f"每一章的正文位置都只有站点那句「沒有可閱讀的章節：內容可能審核未通過"
                                  f"或需要足夠的權限」。请在浏览器里点一下**第一章**（可能要登录），"
                                  f"点进去后会自动继续；仍不行就换书源。"}
-        for round_no, pause in ((1, 0.8), (2, 3.0), (3, 6.0)):
-            retry = [r for r in results
-                     if r[2] is None and not (r[3] or "").startswith("ChapterLocked")]
-            if not retry:
-                break
-            # ★ 2026-10-02：这里原来是「检测到『站方截断』→ force 续期一次」。
-            #   **已删**（用户定稿「cookie 只保留这一条路径」）。理由：
-            #     · 截断的签名是「(r[3] or "")」里含「站方截断」，而它**同时**也出现在
-            #       "这本书被锁"的情况下 → 于是每次都触发续期，续完还是锁，**无限循环**；
-            #     · 现在真要证，走 `_ask_user_click_first_chapter()`（用户点第一章），
-            #       而且只在"整卷全锁"那一个地方触发，不会在这里反复弹。
-            #   没抓到的章仍然照常串行重试三轮（限流才需要重试，锁页在第 1418 行就收手了）。
-            log(f"    ↩️ {len(retry)} 章没抓到（站点限流），串行重试第 {round_no} 轮（每章间隔 {pause}s，"
-                f"当前请求间隔 {_THROTTLE.delay:.2f}s）…")
-            for idx, ct, _b, _err in list(retry):
-                time.sleep(pause)
-                try:
-                    results[idx - 1] = (idx, ct, chapter_blocks(chs[idx - 1][1]), None)
-                except Exception as exc:
-                    log(f"      ⚠️ {ct} 第 {round_no} 轮仍失败: {type(exc).__name__}: {str(exc)[:50]}")
+        def _pending_retry(res_list):
+            return [r for r in res_list
+                    if r[2] is None and not (r[3] or "").startswith("ChapterLocked")]
+
+        def _rotatable_retry(res_list):
+            return [r for r in _pending_retry(res_list)
+                    if ("內容加載失敗" not in (r[3] or "")) and ("cf_clearance" not in (r[3] or ""))]
+
+        retry = _pending_retry(results)
+        if retry:
+            rotatable = _rotatable_retry(results)
+            heavy_fail = len(rotatable) >= max(2, (len(chs) + 1) // 2) or (len(rotatable) == len(chs) and len(rotatable) > 0)
+            if rotatable and not heavy_fail:
+                log(f"    ↩️ {len(rotatable)} 章没抓到（站点限流），串行补抓第 1 轮（每章间隔 0.8s，"
+                    f"当前请求间隔 {_THROTTLE.delay:.2f}s）…")
+                for idx, ct, _b, _err in list(rotatable):
+                    time.sleep(0.8)
+                    try:
+                        results[idx - 1] = (idx, ct, chapter_blocks(chs[idx - 1][1]), None)
+                    except Exception as exc:
+                        err_s = f"{type(exc).__name__}: {str(exc)[:60]}"
+                        results[idx - 1] = (idx, ct, None, err_s)
+                        log(f"      ⚠️ {ct} 补抓失败: {type(exc).__name__}: {str(exc)[:50]}")
+                retry = _pending_retry(results)
+                rotatable = _rotatable_retry(results)
+
+            rot_round = 0
+            while rotatable and _rotate_proxy_node(f"第{vi}卷 {len(rotatable)} 章网络/节点受阻"):
+                rot_round += 1
+                log(f"    🔄 换用新节点补抓 {len(rotatable)} 章（第 {rot_round} 次切换）…")
+                if len(rotatable) > 3 and ch_workers > 1:
+                    retry_items = [(idx, chs[idx - 1]) for idx, _ct, _b, _err in rotatable]
+                    with ThreadPoolExecutor(max_workers=ch_workers) as ex:
+                        for r in ex.map(_fetch_one, retry_items):
+                            results[r[0] - 1] = r
+                else:
+                    for idx, ct, _b, _err in list(rotatable):
+                        time.sleep(0.3)
+                        try:
+                            results[idx - 1] = (idx, ct, chapter_blocks(chs[idx - 1][1]), None)
+                        except Exception as exc:
+                            err_s = f"{type(exc).__name__}: {str(exc)[:60]}"
+                            results[idx - 1] = (idx, ct, None, err_s)
+                            log(f"      ⚠️ {ct} 新节点抓取失败: {type(exc).__name__}: {str(exc)[:50]}")
+                retry = _pending_retry(results)
+                rotatable = _rotatable_retry(results)
+
+            if rotatable:
+                log(f"    ↩️ 仍有 {len(rotatable)} 章未成功，降速串行兜底一轮（每章间隔 2.5s）…")
+                for idx, ct, _b, _err in list(rotatable):
+                    time.sleep(2.5)
+                    try:
+                        results[idx - 1] = (idx, ct, chapter_blocks(chs[idx - 1][1]), None)
+                    except Exception as exc:
+                        log(f"      ⚠️ {ct} 兜底仍失败: {type(exc).__name__}: {str(exc)[:50]}")
 
         for idx, ct, blocks, err in results:
             if blocks is None:

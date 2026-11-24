@@ -2,153 +2,582 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>帮助中心 · EasyPub</title>
+<link rel="stylesheet" href="parchment-tokens.css" />
 <style>
-  @font-face{font-family:'Inter';src:url('fonts/Inter-VF.ttf') format('truetype');font-weight:100 900;font-display:swap}
-  @font-face{font-family:'Noto Sans SC';src:url('fonts/NotoSansSC-VF.ttf') format('truetype');font-weight:100 900;font-display:swap}
-
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;overflow:hidden}
-  :root{
-    --bg:#0B0D10;--panel:#12151A;--card:#161A20;--card2:#1B2028;--field:#101317;
-    --line:#232A33;--line2:#2C343E;
-    --tx:#E9EBEF;--tx2:#8D97A6;--tx3:#5A6472;
-    --acc:#4FD1C5;--accD:#2AA79C;--accBg:#0F2E2B;
-    --warn:#F0B429;--warnBg:#2E2410;--ok:#34D399;
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--leather-deep);
+    color: var(--ink-primary);
   }
-  body{font-family:'Inter','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
-       background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
-  .app{display:flex;height:100%}
 
-  /* ===== 侧栏（与主程序一致：直角）===== */
-  .side{width:216px;background:#090B0E;border-right:1px solid var(--line);display:flex;
-        flex-direction:column;flex-shrink:0}
-  .logo{display:flex;align-items:center;gap:11px;padding:22px 20px 20px}
-  .logo .mark{width:34px;height:34px;flex-shrink:0;
-    background:linear-gradient(145deg,#4FD1C5,#2AA79C);color:#04211E;display:flex;
-    align-items:center;justify-content:center;font-weight:600;font-size:17px;
-    box-shadow:0 6px 18px rgba(79,209,197,.3)}
-  .logo .name{font-size:14.5px;font-weight:490}
-  .logo .name span{color:var(--acc);font-weight:450}
-  .logo .tag{font-size:9px;color:var(--tx3);letter-spacing:.18em;margin-top:2px}
-  .nav{padding:8px 12px;display:flex;flex-direction:column;gap:3px;flex:1}
-  .nav .grp{font-size:10px;color:#3E4753;letter-spacing:.2em;padding:16px 8px 7px;font-weight:490}
-  .it{display:flex;align-items:center;gap:12px;padding:10px 12px;
-      font-size:13.5px;color:var(--tx2);cursor:default;position:relative}
-  .it svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;
-          stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-  .it .en{font-size:10px;color:#3E4753;margin-left:auto;letter-spacing:.06em}
-  .it.on{background:#141A21;color:#fff;font-weight:450}
-  .it.on svg{stroke:var(--acc)}
-  .it.on::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
-    width:4px;height:22px;background:var(--acc);box-shadow:0 0 10px var(--acc)}
-  .sideFoot{padding:14px 16px 18px;border-top:1px solid var(--line)}
-  .lang{display:flex;background:var(--field);border:1px solid var(--line);padding:3px;gap:3px}
-  .lang div{flex:1;text-align:center;font-size:11.5px;padding:6px 0;
-            color:var(--tx3);font-weight:450;cursor:pointer}
-  .lang div.on{background:var(--card2);color:var(--acc)}
+  .app {
+    display: flex;
+    height: 100%;
+    width: 100%;
+  }
 
-  /* ===== 帮助目录 ===== */
-  .toc{width:224px;background:#0D1014;border-right:1px solid var(--line);flex-shrink:0;
-       display:flex;flex-direction:column;padding:20px 0}
-  .tocHead{padding:0 16px 14px}
-  .tocHead .t{font-size:14px;font-weight:520;display:flex;align-items:center;gap:9px}
-  .tocHead .t .en{font-size:10px;color:var(--tx3);font-weight:400;letter-spacing:.14em}
-  .search{margin-top:13px;display:flex;align-items:center;gap:9px;height:36px;
-    background:var(--field);border:1px solid var(--line);padding:0 12px}
-  .search svg{width:14px;height:14px;stroke:var(--tx3);fill:none;stroke-width:1.9}
-  .search input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--tx);
-    font-size:12px;font-family:inherit}
-  .search input::placeholder{color:#454E5A}
-  .tocList{padding:6px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1}
-  .tocList::-webkit-scrollbar{width:7px}
-  .tocList::-webkit-scrollbar-thumb{background:var(--line2)}
-  .ti{display:flex;align-items:center;gap:10px;padding:9px 11px;
-      font-size:12px;color:var(--tx2);cursor:pointer}
-  .ti:hover{background:var(--card2);color:var(--tx)}
-  .ti .no{width:20px;height:20px;background:var(--card2);color:var(--tx3);
-    font-size:10px;font-weight:490;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .ti.on{background:var(--accBg);color:#fff;font-weight:460}
-  .ti.on .no{background:var(--acc);color:#04211E}
+  /* ===== 1. 左侧深胡桃皮脊目录栏 ===== */
+  .toc {
+    width: 248px;
+    flex-shrink: 0;
+    background-color: var(--leather-bg);
+    background-image:
+      linear-gradient(180deg, rgba(29, 21, 14, 0.90) 0%, rgba(19, 13, 8, 0.96) 100%),
+      url('./assets/tex-leather-spine.webp');
+    background-size: auto, 360px 360px;
+    border-right: 1px solid rgba(189, 159, 112, 0.28);
+    color: var(--leather-text);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0 0;
+  }
 
-  /* ===== 正文 ===== */
-  .doc{flex:1;display:flex;min-width:0}
-  .art{flex:1;padding:24px 34px 40px;min-width:0;overflow-y:auto}
-  .art::-webkit-scrollbar{width:9px}
-  .art::-webkit-scrollbar-thumb{background:var(--line2);border:2px solid transparent;background-clip:content-box}
-  .crumb{font-size:11px;color:var(--tx3);letter-spacing:.06em;display:flex;align-items:center;gap:7px}
-  .crumb b{color:var(--acc);font-weight:450}
-  .art h1{font-size:25px;font-weight:520;margin-top:12px;letter-spacing:-.01em}
-  .art .lede{font-size:12px;color:var(--tx2);line-height:1.85;margin-top:11px;
-    padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .tocHead {
+    padding: 0 18px 16px;
+    border-bottom: 1px solid rgba(189, 159, 112, 0.18);
+  }
 
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
-  .sc{background:var(--card);border:1px solid var(--line);padding:15px}
-  .sc .n{width:25px;height:25px;background:linear-gradient(140deg,#4FD1C5,#2AA79C);
-    color:#04211E;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center}
-  .sc .tt{font-size:13.5px;font-weight:490;margin:11px 0 7px}
-  .sc .dd{font-size:11.5px;color:var(--tx3);line-height:1.8}
+  .brandPlaque {
+    margin-bottom: 14px;
+  }
 
-  .h2{font-size:14px;font-weight:490;margin-top:26px;display:flex;align-items:center;gap:9px}
-  .h2::before{content:"";width:3px;height:15px;background:var(--acc)}
-  .p{font-size:12px;color:var(--tx2);line-height:1.95;margin-top:11px}
-  .p b{color:var(--tx);font-weight:460}
+  .brandPlaque .brand {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    color: #BD9F70;
+    text-transform: uppercase;
+  }
 
-  .tip{display:flex;gap:12px;background:var(--accBg);border:1px solid #1B4744;
-    padding:13px 15px;margin-top:14px}
-  .tip .ic{width:20px;height:20px;background:var(--acc);color:#04211E;
-    font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .tip .tx{font-size:12px;color:#B8E6E1;line-height:1.85}
-  .tip.warn{background:var(--warnBg);border-color:#4A3A12}
-  .tip.warn .ic{background:var(--warn)}
-  .tip.warn .tx{color:#EBD9A8}
+  .brandPlaque .subt {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
 
-  .tb{width:100%;border-collapse:collapse;margin-top:12px;font-size:11.5px}
-  .tb th{text-align:left;font-weight:490;color:var(--tx3);padding:8px 12px;
-    background:var(--field);border:1px solid var(--line);font-size:10.5px;letter-spacing:.06em}
-  .tb td{padding:9px 12px;border:1px solid var(--line);color:var(--tx2);line-height:1.7}
-  .tb td b{color:var(--tx);font-weight:460}
-  .tb code{background:var(--field);border:1px solid var(--line);padding:1px 6px;color:var(--acc);font-size:11px}
+  .brandPlaque .t {
+    font-family: var(--font-editorial);
+    font-size: 17px;
+    font-weight: 600;
+    color: #EAD8B5;
+    letter-spacing: 0.04em;
+  }
 
-  .faq{background:var(--card);border:1px solid var(--line);margin-top:10px}
-  .faq .q{padding:12px 15px;font-size:12.5px;font-weight:460;cursor:pointer;
-    display:flex;align-items:center;gap:10px}
-  .faq .q::before{content:"?";width:18px;height:18px;background:var(--accBg);color:var(--acc);
-    font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .faq .a{padding:0 15px 14px 43px;font-size:11.5px;color:var(--tx3);line-height:1.9;display:none}
-  .faq.open .a{display:block}
+  .brandPlaque .en {
+    font-family: var(--font-display);
+    font-size: 10px;
+    color: #877153;
+    letter-spacing: 0.16em;
+  }
 
-  .onpage{width:180px;flex-shrink:0;padding:26px 20px 0 0}
-  .onpage .t{font-size:10px;color:var(--tx3);letter-spacing:.18em;font-weight:490;margin-bottom:11px}
-  .onpage a{display:block;font-size:11.5px;color:var(--tx3);text-decoration:none;
-    padding:5px 0 5px 11px;border-left:2px solid var(--line);line-height:1.5;cursor:pointer}
-  .onpage a:hover{color:var(--tx2)}
-  .onpage a.on{color:var(--acc);border-left-color:var(--acc);font-weight:460}
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    background: rgba(14, 9, 5, 0.58);
+    border: 1px solid rgba(189, 159, 112, 0.28);
+    border-radius: var(--r-input);
+    padding: 0 11px;
+    transition: border-color var(--dur-fast) ease;
+  }
 
-  .sec{display:none}
-  .sec.on{display:block}
+  .search:focus-within {
+    border-color: #CAA870;
+  }
+
+  .search svg {
+    width: 14px;
+    height: 14px;
+    stroke: #968163;
+    fill: none;
+    stroke-width: 1.7;
+    flex-shrink: 0;
+  }
+
+  .search input {
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: 0;
+    outline: 0;
+    color: #EAD8B5;
+    font-family: var(--font-editorial);
+    font-size: 13px;
+  }
+
+  .search input::placeholder {
+    color: #7B674C;
+  }
+
+  .tocList {
+    padding: 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .ti {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--r-btn);
+    border: 1px solid transparent;
+    font-family: var(--font-editorial);
+    font-size: 13.5px;
+    color: #A69072;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  }
+
+  .ti:hover {
+    background: rgba(215, 195, 158, 0.08);
+    color: #EAD8B5;
+  }
+
+  .ti .no {
+    min-width: 28px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: 4px;
+    background: rgba(189, 159, 112, 0.12);
+    color: #A69072;
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ti.on {
+    background: rgba(197, 162, 103, 0.18);
+    border-color: rgba(197, 162, 103, 0.42);
+    color: #F0DEC0;
+    font-weight: 600;
+  }
+
+  .ti.on .no {
+    background: #C5A267;
+    color: #1D150E;
+  }
+
+  .sideFoot {
+    padding: 14px 16px 18px;
+    border-top: 1px solid rgba(189, 159, 112, 0.18);
+  }
+
+  .lang {
+    display: flex;
+    background: rgba(14, 9, 5, 0.56);
+    border: 1px solid rgba(189, 159, 112, 0.28);
+    border-radius: var(--r-btn);
+    padding: 3px;
+    gap: 3px;
+  }
+
+  .lang div {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-editorial);
+    font-size: 12px;
+    padding: 6px 0;
+    border-radius: 4px;
+    color: #8E795B;
+    font-weight: 540;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+
+  .lang div:hover {
+    color: #EAD8B5;
+  }
+
+  .lang div.on {
+    background: var(--seal-walnut);
+    color: #EAD8B5;
+    border: 1px solid rgba(197, 162, 103, 0.44);
+    font-weight: 600;
+  }
+
+  /* ===== 2. 中栏摊开的小牛皮羊皮卷正文 ===== */
+  .doc {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    background-color: var(--vellum-page);
+    background-image:
+      radial-gradient(ellipse at center, transparent 58%, rgba(102, 76, 40, 0.15) 100%),
+      url('./assets/tex-vellum-seamless.webp');
+    background-size: 100% 100%, 420px 420px;
+  }
+
+  .art {
+    flex: 1;
+    padding: 32px 44px 48px;
+    min-width: 0;
+    overflow-y: auto;
+  }
+
+  .art-inner {
+    max-width: 760px;
+  }
+
+  .crumb {
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.10em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .crumb b {
+    font-family: var(--font-editorial);
+    font-size: 12.5px;
+    color: var(--brass-deep);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .art h1 {
+    font-family: var(--font-editorial);
+    font-size: 26px;
+    font-weight: 650;
+    color: var(--ink-primary);
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .art .lede {
+    font-size: 14px;
+    color: var(--ink-secondary);
+    line-height: 1.85;
+    margin-top: 10px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule-outer);
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 22px;
+  }
+
+  .sc {
+    background: rgba(219, 202, 176, 0.62);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+    padding: 16px 16px 18px;
+  }
+
+  .sc .n {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--seal-walnut);
+    color: #E5D5B8;
+    border: 1px solid var(--brass-bright);
+    box-shadow: 0 0 0 2px rgba(142, 110, 62, 0.16);
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sc .tt {
+    font-size: 14.5px;
+    font-weight: 650;
+    color: var(--ink-primary);
+    margin: 12px 0 6px;
+  }
+
+  .sc .dd {
+    font-size: 12.5px;
+    color: var(--ink-secondary);
+    line-height: 1.75;
+  }
+
+  .h2 {
+    font-size: 16px;
+    font-weight: 650;
+    color: var(--ink-primary);
+    margin-top: 28px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--rule-dashed);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .h2::before {
+    content: "◇";
+    color: var(--brass-gold);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .p {
+    font-size: 13.5px;
+    color: var(--ink-secondary);
+    line-height: 1.9;
+    margin-top: 12px;
+  }
+
+  .p b {
+    color: var(--ink-primary);
+    font-weight: 650;
+  }
+
+  .tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(198, 177, 141, 0.48);
+    border: 1px solid var(--rule-outer);
+    border-left: 3px solid var(--brass-gold);
+    border-radius: var(--r-btn);
+    padding: 12px 16px;
+    margin-top: 14px;
+  }
+
+  .tip .ic {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--seal-walnut);
+    color: #E5D5B8;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .tip .tx {
+    font-size: 13px;
+    color: var(--ink-secondary);
+    line-height: 1.8;
+  }
+
+  .tip.warn {
+    background: var(--warn-ochre-bg);
+    border-color: rgba(107, 75, 30, 0.34);
+    border-left-color: var(--warn-ochre);
+  }
+
+  .tip.warn .ic {
+    background: var(--warn-ochre);
+    color: #EFE4CE;
+  }
+
+  .tip.warn .tx {
+    color: var(--ink-primary);
+  }
+
+  .tb {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 13px;
+    background: rgba(219, 202, 176, 0.36);
+    border: 1px solid var(--rule-outer);
+  }
+
+  .tb th {
+    text-align: left;
+    font-weight: 650;
+    color: var(--ink-primary);
+    padding: 10px 14px;
+    background: rgba(198, 177, 141, 0.62);
+    border: 1px solid var(--rule-outer);
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+  }
+
+  .tb td {
+    padding: 10px 14px;
+    border: 1px solid var(--rule-subtle);
+    color: var(--ink-secondary);
+    line-height: 1.75;
+  }
+
+  .tb td b {
+    color: var(--ink-primary);
+    font-weight: 650;
+  }
+
+  .tb code {
+    font-family: var(--font-italic-mix);
+    background: rgba(142, 110, 62, 0.14);
+    border: 1px solid rgba(142, 110, 62, 0.34);
+    padding: 1px 7px;
+    border-radius: 4px;
+    color: #3A2615;
+    font-size: 12.5px;
+  }
+
+  .faq {
+    background: rgba(219, 202, 176, 0.56);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+    margin-top: 10px;
+    transition: border-color var(--dur-fast) ease;
+  }
+
+  .faq:hover {
+    border-color: var(--rule-strong);
+  }
+
+  .faq .q {
+    padding: 13px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-primary);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .faq .q::before {
+    content: "?";
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(142, 110, 62, 0.16);
+    border: 1px solid rgba(110, 82, 42, 0.36);
+    color: var(--brass-deep);
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .faq .a {
+    padding: 0 18px 15px 47px;
+    font-size: 13px;
+    color: var(--ink-secondary);
+    line-height: 1.85;
+    display: none;
+  }
+
+  .faq.open .a {
+    display: block;
+  }
+
+  .faq.open .q::before {
+    background: var(--seal-walnut);
+    color: #E5D5B8;
+    border-color: var(--seal-walnut);
+  }
+
+  /* ===== 3. 右侧羊皮卷页边眉批导航 ===== */
+  .onpage {
+    width: 184px;
+    flex-shrink: 0;
+    padding: 34px 22px 0 8px;
+  }
+
+  .onpage .t {
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    letter-spacing: 0.18em;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .onpage a {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    text-decoration: none;
+    padding: 5px 0 5px 12px;
+    border-left: 2px solid var(--rule-subtle);
+    line-height: 1.5;
+    cursor: pointer;
+    transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  }
+
+  .onpage a:hover {
+    color: var(--ink-primary);
+  }
+
+  .onpage a.on {
+    color: var(--brass-deep);
+    border-left-color: var(--brass-gold);
+    font-weight: 600;
+  }
+
+  .sec {
+    display: none;
+  }
+
+  .sec.on {
+    display: block;
+  }
+
+  @media (max-width: 960px) {
+    .onpage {
+      display: none;
+    }
+    .art {
+      padding: 26px 28px 40px;
+    }
+  }
 </style>
 </head>
-<body class="resona-popup">
+<body>
 <div class="app">
 
-  <aside class="side">
-    <div class="logo">
-      <div class="mark">S</div>
-      <div>
-        <div class="name">systemo<span>ebook</span></div>
-        <div class="tag">LOCAL TOOLKIT</div>
+  <aside class="toc">
+    <div class="tocHead">
+      <div class="brandPlaque">
+        <div class="brand">SYSTEMO EBOOK</div>
+        <div class="subt">
+          <span class="t" data-i18n="帮助中心">帮助中心</span>
+          <span class="en">MANUAL</span>
+        </div>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="tocSearch" type="text" data-i18n-ph="搜索帮助…" placeholder="搜索帮助…" />
       </div>
     </div>
-    <nav class="nav">
-      <div class="it"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="下载">下载</span><span class="en">DL</span></div>
-      <div class="it"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span data-i18n="制作">制作</span><span class="en">MAKE</span></div>
-      <div class="it"><svg viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg><span data-i18n="传输">传输</span><span class="en">SEND</span></div>
-      <div class="it"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><span data-i18n="书库">书库</span><span class="en">LIB</span></div>
-      <div class="it"><svg viewBox="0 0 24 24"><path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z"/></svg><span data-i18n="一键">一键</span><span class="en">AUTO</span></div>
-      <div class="grp">SYSTEM</div>
-      <div class="it on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1-1.3 1.8v.5"/><path d="M12 17h.01"/></svg><span data-i18n="帮助">帮助</span><span class="en">HELP</span></div>
-    </nav>
+    <div class="tocList" id="tocList">
+      <div class="ti on" data-sec="s1"><span class="no">I</span><span data-i18n="快速上手">快速上手</span></div>
+      <div class="ti" data-sec="s2"><span class="no">II</span><span data-i18n="制作新书">制作新书</span></div>
+      <div class="ti" data-sec="s3"><span class="no">III</span><span data-i18n="下载小说">下载小说</span></div>
+      <div class="ti" data-sec="s4"><span class="no">IV</span><span data-i18n="传输到设备">传输到设备</span></div>
+      <div class="ti" data-sec="s5"><span class="no">V</span><span data-i18n="我的书库">我的书库</span></div>
+      <div class="ti" data-sec="s6"><span class="no">VI</span><span data-i18n="一键模式">一键模式</span></div>
+      <div class="ti" data-sec="s7"><span class="no">VII</span><span data-i18n="文件位置">文件位置</span></div>
+      <div class="ti" data-sec="s8"><span class="no">VIII</span><span data-i18n="常见问题">常见问题</span></div>
+    </div>
     <div class="sideFoot">
       <div class="lang" id="langSwitch">
         <div data-lang="zh" class="on">中文</div>
@@ -157,44 +586,24 @@
     </div>
   </aside>
 
-  <div class="toc">
-    <div class="tocHead">
-      <div class="t"><span data-i18n="帮助中心">帮助中心</span><span class="en">HELP</span></div>
-      <div class="search">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="tocSearch" type="text" data-i18n-ph="搜索帮助…" placeholder="搜索帮助…" />
-      </div>
-    </div>
-    <div class="tocList" id="tocList">
-      <div class="ti on" data-sec="s1"><span class="no">1</span><span data-i18n="快速上手">快速上手</span></div>
-      <div class="ti" data-sec="s2"><span class="no">2</span><span data-i18n="制作新书">制作新书</span></div>
-      <div class="ti" data-sec="s3"><span class="no">3</span><span data-i18n="下载小说">下载小说</span></div>
-      <div class="ti" data-sec="s4"><span class="no">4</span><span data-i18n="传输到设备">传输到设备</span></div>
-      <div class="ti" data-sec="s5"><span class="no">5</span><span data-i18n="我的书库">我的书库</span></div>
-      <div class="ti" data-sec="s6"><span class="no">6</span><span data-i18n="一键模式">一键模式</span></div>
-      <div class="ti" data-sec="s7"><span class="no">7</span><span data-i18n="文件位置">文件位置</span></div>
-      <div class="ti" data-sec="s8"><span class="no">8</span><span data-i18n="常见问题">常见问题</span></div>
-    </div>
-  </div>
-
   <div class="doc">
-    <div class="art" id="art">
+    <div class="art" id="art"><div class="art-inner">
 
       <div class="sec on" id="s1">
         <div class="crumb"><span data-i18n="帮助中心">帮助中心</span> <span>/</span> <b data-i18n="快速上手">快速上手</b></div>
         <h1 data-i18n="快速上手">快速上手</h1>
         <div class="lede" data-i18n="快速上手.引言">三步做出一本能在手机上读的电子书。整个过程完全在本机完成，不上传任何文件，也不需要安装 Python 或 Pandoc。</div>
         <div class="steps">
-          <div class="sc"><div class="n">1</div><div class="tt" data-i18n="拖入 TXT">拖入 TXT</div><div class="dd" data-i18n="快速上手.步骤1">把小说文本拖进「制作」页的虚线框，编码会自动转换。</div></div>
-          <div class="sc"><div class="n">2</div><div class="tt" data-i18n="填书名作者">填书名作者</div><div class="dd" data-i18n="快速上手.步骤2">不确定作者就点「✦ AI 搜索」，会自动联网查。</div></div>
-          <div class="sc"><div class="n">3</div><div class="tt" data-i18n="点转换">点转换</div><div class="dd" data-i18n="快速上手.步骤3">封面会自动搜索并做 4 倍超分，成品存进 export 文件夹。</div></div>
+          <div class="sc"><div class="n">I</div><div class="tt" data-i18n="拖入 TXT">拖入 TXT</div><div class="dd" data-i18n="快速上手.步骤1">把小说文本拖进「II · 制作」页的手稿放置框，编码与章节会自动识别。</div></div>
+          <div class="sc"><div class="n">II</div><div class="tt" data-i18n="核对书名作者">核对书名作者</div><div class="dd" data-i18n="快速上手.步骤2">填写或核对书名与作者，输入书名后程序会自动联网补全或校正作者。</div></div>
+          <div class="sc"><div class="n">III</div><div class="tt" data-i18n="生成 EPUB">生成 EPUB</div><div class="dd" data-i18n="快速上手.步骤3">点击「搜索封面」并自动 4 倍超分，最后点击「生成 EPUB」，成品自动存进 export 文件夹。</div></div>
         </div>
         <div class="h2"><span data-i18n="成品存在哪">成品存在哪</span></div>
-        <div class="p" data-i18n="快速上手.成品">每次转换成功的 EPUB 都会自动存到 export 文件夹，「书库」板块读的就是这个文件夹。所以你不需要手动整理，转换完就能在书库里看到。</div>
-        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="快速上手.提示1">书库会自动同步。如果你手动往 export 里放了 EPUB，点一下书库右上角的刷新就能看到，不用重新转换。</div></div>
+        <div class="p" data-i18n="快速上手.成品">每次转换成功的 EPUB 都会自动存到 export 文件夹，「IV · 书库」板块读的就是这个文件夹。所以你不需要手动整理，转换完就能在书库里看到。</div>
+        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="快速上手.提示1">书库会自动同步。如果你手动往 export 里放了 EPUB，点一下书库工具条里的「刷新」就能看到，不用重新转换。</div></div>
         <div class="h2"><span data-i18n="发送到手机">发送到手机</span></div>
-        <div class="p" data-i18n="快速上手.发送">打开「传输」板块，三种方式任选：苹果图书（经百度网盘中转）、WiFi 直传、Kindle 推送。传之前可以勾选要发的书。</div>
-        <div class="tip warn"><div class="ic">!</div><div class="tx" data-i18n="快速上手.提示2">苹果图书需要先授权。首次使用会弹出百度网盘登录窗口，登录后把授权码粘回去即可。授权一次可以长期使用。</div></div>
+        <div class="p" data-i18n="快速上手.发送">打开「III · 传输」板块，支持苹果图书（经百度网盘中转）、WiFi 直传、Send to Kindle 三条通道。按住顶栏页签拖入左右书页还可开启双页分屏，直接从「IV · 书库」把书籍拖进待传列表。</div>
+        <div class="tip warn"><div class="ic">!</div><div class="tx" data-i18n="快速上手.提示2">苹果图书与 Kindle 通道首次使用需完成一次授权：在传输页底部展开「▸ 授权与说明」即可发起授权，一次授权长期有效。</div></div>
       </div>
 
       <div class="sec" id="s2">
@@ -202,27 +611,27 @@
         <h1 data-i18n="制作新书">制作新书</h1>
         <div class="lede" data-i18n="制作.引言">把一份 TXT 小说变成排版规整、带封面、带目录的 EPUB。全部计算都在你的电脑上完成。</div>
         <div class="h2"><span data-i18n="制作.源文件">源文件</span></div>
-        <div class="p" data-i18n="制作.源文件说明">点击虚线框选择 TXT，或直接把文件拖进去。支持 GBK / UTF-8 / UTF-16 等常见编码，程序会自动识别并转换，不需要你手动改编码。</div>
+        <div class="p" data-i18n="制作.源文件说明">点击手稿放置框选择 TXT，或直接把文件拖进去。支持 GBK / UTF-8 / UTF-16 等常见编码，程序会自动识别并转换，不需要你手动改编码。</div>
         <div class="h2"><span data-i18n="制作.章节">章节划分</span></div>
-        <div class="p" data-i18n="制作.章节说明">程序按内置规则识别章节标题（如「第一章」「第 1 章」「Chapter 1」）。导入后点「预览切分」可以看拆出了多少章；如果结果不对，点「✏️ 章节编辑」手动增删改。</div>
+        <div class="p" data-i18n="制作.章节说明">程序按内置规则自动识别章节标题（如「第一章」「第 1 章」「Chapter 1」），并外露已识别章数与「重新拆分」按钮。若需精修目录，展开「▸ 章节相关设置」可打开「全部章节」或点击「编辑章节」手动增删改。</div>
         <table class="tb">
           <tr><th data-i18n="制作.设置项">设置项</th><th data-i18n="制作.作用">作用</th></tr>
-          <tr><td><b data-i18n="标题最长">标题最长</b></td><td data-i18n="制作.标题最长说明">超过这个长度的一律当作正文，不拆成章节标题</td></tr>
-          <tr><td><b data-i18n="重新拆分">重新拆分</b></td><td data-i18n="制作.重新拆分说明">改完长度后重新按规则拆一次</td></tr>
+          <tr><td><b data-i18n="最大标题长度">最大标题长度</b></td><td data-i18n="制作.标题最长说明">在「▸ 章节相关设置」中调节，超过这个字数的行一律当作正文，不拆成章节标题</td></tr>
+          <tr><td><b data-i18n="重新拆分">重新拆分</b></td><td data-i18n="制作.重新拆分说明">修改规则或长度后直接点击，按当前阈值重新划分全部章节</td></tr>
         </table>
         <div class="h2"><span data-i18n="制作.封面">封面</span></div>
-        <div class="p" data-i18n="制作.封面说明">点封面区域可以上传自己的图片；点「重新搜索封面」会联网找封面。找到的封面会做 4 倍超分处理，让小图在手机上也不糊。</div>
-        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="制作.提示1">书名和作者会显示在 EPUB 的书名页和书库里。填错了也没关系，书库里随时能改。</div></div>
+        <div class="p" data-i18n="制作.封面说明">点击右侧拱券封面框可上传本地图片；点击「搜索封面」会自动联网检索匹配封面。找到的封面默认做 4 倍本地超分处理（可在「▸ 封面相关设置」里调整倍数），让小图在手机上也清晰锐利。</div>
+        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="制作.提示1">书名和作者会显示在 EPUB 的扉页与书库中；即使后续发现有误，也可在「IV · 书库」右键书卡随时修改并写回原文件。</div></div>
         <div class="h2"><span data-i18n="制作.转换">开始转换</span></div>
-        <div class="p" data-i18n="制作.转换说明">在底部选择输出目录（默认与源文件同目录，也可固定到 export 文件夹），然后点「转换」。转换过程中不要关闭窗口，完成后会自动出现在书库。</div>
+        <div class="p" data-i18n="制作.转换说明">可在底部「▸ 输出设置」调整保存目录（默认与源文件同目录，并自动备份一份进 export 书库），确认无误后点击「生成 EPUB」。转换过程中请保持窗口开启，完成后即可在书库直接阅读。</div>
       </div>
 
       <div class="sec" id="s3">
         <div class="crumb"><span data-i18n="帮助中心">帮助中心</span> <span>/</span> <b data-i18n="下载小说">下载小说</b></div>
         <h1 data-i18n="下载小说">下载小说</h1>
-        <div class="lede" data-i18n="下载.引言">从网址直接抓取小说正文，自动合并成一份 TXT，再交给「制作」页转成 EPUB。</div>
+        <div class="lede" data-i18n="下载.引言">输入书名或网址直接检索抓取小说正文，自动合并成一份 TXT，再交给「II · 制作」转成 EPUB。</div>
         <div class="h2"><span data-i18n="下载.怎么用">怎么用</span></div>
-        <div class="p" data-i18n="下载.步骤">把小说目录页的网址粘进输入框，点「开始下载」。程序会逐章抓取正文，实时显示进度。抓完的 TXT 存在 download 文件夹。</div>
+        <div class="p" data-i18n="下载.步骤">在「I · 下载」输入书名（或「书名@作者」精确匹配），点击「开始检索」选择来源，程序会逐章抓取正文并实时显示进度。抓取完成的 TXT 保存在 download 文件夹。如需下载哔哩轻小说分卷与插图，可前往「IV · 书库 → 更多工具 → 轻小说」。</div>
         <div class="tip warn"><div class="ic">!</div><div class="tx" data-i18n="下载.提示1">只支持公开可访问的网页，需要登录或付费的站点抓不到。请自行确认下载内容的合法性。</div></div>
         <div class="h2"><span data-i18n="下载.编码">关于编码</span></div>
         <div class="p" data-i18n="下载.编码说明">抓下来的 TXT 统一保存为 UTF-8。如果原站是 GBK 等编码，程序会自动转好，不需要额外处理。</div>
@@ -231,92 +640,93 @@
       <div class="sec" id="s4">
         <div class="crumb"><span data-i18n="帮助中心">帮助中心</span> <span>/</span> <b data-i18n="传输到设备">传输到设备</b></div>
         <h1 data-i18n="传输到设备">传输到设备</h1>
-        <div class="lede" data-i18n="传输.引言">三种方式把书送到手机上，任选一种即可。都可以批量发送。</div>
+        <div class="lede" data-i18n="传输.引言">三条独立通道将电子书送达手机或阅读器，均支持批量勾选与跨页拖书。</div>
         <div class="steps">
-          <div class="sc"><div class="n">1</div><div class="tt">Apple Books</div><div class="dd" data-i18n="传输.苹果说明">经百度网盘中转，适合 iPhone / iPad 上的「图书」App。</div></div>
-          <div class="sc"><div class="n">2</div><div class="tt">WiFi 直传</div><div class="dd" data-i18n="传输.WiFi说明">手机浏览器打开一个局域网网址直接下载，无需数据线。</div></div>
-          <div class="sc"><div class="n">3</div><div class="tt">Kindle</div><div class="dd" data-i18n="传输.Kindle说明">通过邮箱推送到 Kindle 设备或 App。</div></div>
+          <div class="sc"><div class="n">I</div><div class="tt">Apple Books</div><div class="dd" data-i18n="传输.苹果说明">经百度网盘同步中转，适合 iPhone / iPad 自带「图书」App。</div></div>
+          <div class="sc"><div class="n">II</div><div class="tt">WiFi 直传</div><div class="dd" data-i18n="传输.WiFi说明">局域网内由电脑向阅读器/手机打开的地址直接推送，无需数据线。</div></div>
+          <div class="sc"><div class="n">III</div><div class="tt">Send to Kindle</div><div class="dd" data-i18n="传输.Kindle说明">经 Amazon 官方云端通道推送，约 1 分钟自动同步到 Kindle。</div></div>
         </div>
-        <div class="h2"><span data-i18n="传输.待发送队列">待发送队列</span></div>
-        <div class="p" data-i18n="传输.队列说明">从「书库」勾选后点「批量传输」，或点右下角「+ 添加文件」从本地添加。队列里可以逐本移除，确认无误后点「发送」。</div>
+        <div class="h2"><span data-i18n="传输.待发送队列">待传书籍队列</span></div>
+        <div class="p" data-i18n="传输.队列说明">在「IV · 书库」多选后点「批量传输」、开启分屏直接把书籍拖入右侧「III · 传输」待传列表，或点「+ 添加文件」选取本地 EPUB。确认要发送的书目后，直接点击目标通道右侧的「↑ 发送 N 本」。</div>
         <div class="h2"><span data-i18n="传输.三种方式对比">三种方式对比</span></div>
         <table class="tb">
           <tr><th data-i18n="传输.方式">方式</th><th data-i18n="传输.需要">需要</th><th data-i18n="传输.适合">适合</th></tr>
-          <tr><td><b>Apple Books</b></td><td data-i18n="传输.苹果需要">百度网盘账号（授权一次）</td><td data-i18n="传输.苹果适合">iPhone / iPad</td></tr>
-          <tr><td><b>WiFi 直传</b></td><td data-i18n="传输.WiFi需要">手机和电脑连同一个 WiFi</td><td data-i18n="传输.WiFi适合">任意手机，装了浏览器就行</td></tr>
-          <tr><td><b>Kindle</b></td><td data-i18n="传输.Kindle需要">Kindle 邮箱 + SMTP 配置</td><td data-i18n="传输.Kindle适合">Kindle 设备或 App</td></tr>
+          <tr><td><b>Apple Books</b></td><td data-i18n="传输.苹果需要">百度网盘账号（一次授权长期有效）</td><td data-i18n="传输.苹果适合">iPhone / iPad</td></tr>
+          <tr><td><b>WiFi 直传</b></td><td data-i18n="传输.WiFi需要">手机 / 阅读器与电脑处于同一局域网</td><td data-i18n="传输.WiFi适合">iPad / 安卓阅读器 / 掌阅等</td></tr>
+          <tr><td><b>Send to Kindle</b></td><td data-i18n="传输.Kindle需要">外区 amazon.com 账号（授权一次保存凭证）</td><td data-i18n="传输.Kindle适合">Kindle 设备或官方 App</td></tr>
         </table>
-        <div class="tip warn"><div class="ic">!</div><div class="tx" data-i18n="传输.提示1">苹果图书首次使用需要授权：点「重新授权」登录百度网盘，把授权码粘回来。授权一次可以长期使用。</div></div>
-        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="传输.提示2">WiFi 直传时点「打开传书窗口」，里面会显示一个局域网网址。在手机浏览器里输入这个网址就能下载，传完点关闭即可。</div></div>
+        <div class="tip warn"><div class="ic">!</div><div class="tx" data-i18n="传输.提示1">苹果图书与 Kindle 首次使用需授权：展开页面下方「▸ 授权与说明」，按提示点击「百度网盘授权」或「Kindle 授权」，如需图文教程可点击同区对应的「操作指引」。</div></div>
+        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="传输.提示2">使用 WiFi 直传时，请先在手机阅读器或设备上开启 WiFi 传书并记下局域网网址，点击发送（或在弹窗填入地址）后即可自动逐本传完。</div></div>
       </div>
 
       <div class="sec" id="s5">
         <div class="crumb"><span data-i18n="帮助中心">帮助中心</span> <span>/</span> <b data-i18n="我的书库">我的书库</b></div>
         <h1 data-i18n="我的书库">我的书库</h1>
-        <div class="lede" data-i18n="书库.引言">书库读取的是 export 文件夹里的 EPUB。转换完成的书会自动出现在这里。</div>
+        <div class="lede" data-i18n="书库.引言">书库读取的是 export 文件夹里的 EPUB。转换完成的书会自动出现在这里，单击即可用内置阅读器打开。</div>
         <div class="h2"><span data-i18n="书库.能做什么">能做什么</span></div>
         <table class="tb">
           <tr><th data-i18n="书库.操作">操作</th><th data-i18n="书库.说明">说明</th></tr>
-          <tr><td><b data-i18n="书库.搜索">搜索</b></td><td data-i18n="书库.搜索说明">按书名或作者筛选</td></tr>
-          <tr><td><b data-i18n="书库.排序">排序</b></td><td data-i18n="书库.排序说明">按书名 / 大小 / 时间</td></tr>
-          <tr><td><b data-i18n="书库.多选">多选</b></td><td data-i18n="书库.多选说明">勾选多本后批量传输或导出</td></tr>
-          <tr><td><b data-i18n="书库.导出">导出</b></td><td data-i18n="书库.导出说明">把选中的 EPUB 复制到指定文件夹</td></tr>
-          <tr><td><b data-i18n="书库.详情">详情</b></td><td data-i18n="书库.详情说明">点封面看章节列表，可改书名 / 作者 / 封面</td></tr>
-          <tr><td><b data-i18n="书库.删除">删除</b></td><td data-i18n="书库.删除说明">从磁盘彻底删除，不可恢复</td></tr>
+          <tr><td><b data-i18n="书库.阅读">阅读与详情</b></td><td data-i18n="书库.详情说明">单击书卡直接进入内置羊皮卷阅读器；右键点击可查看章节目录并修改书名 / 作者 / 封面</td></tr>
+          <tr><td><b data-i18n="书库.搜索">搜索与排序</b></td><td data-i18n="书库.搜索说明">按书名或作者即时筛选，支持按时间、大小或书名排序</td></tr>
+          <tr><td><b data-i18n="书库.多选">多选操作</b></td><td data-i18n="书库.多选说明">点击「多选」勾选多本书籍后可「批量传输」「导出」或删除</td></tr>
+          <tr><td><b data-i18n="书库.拖书">跨页拖书</b></td><td data-i18n="书库.拖书说明">在双页分屏模式下，按住书库卡片可直接拖入另一侧「III · 传输」待传列表</td></tr>
+          <tr><td><b data-i18n="书库.工具">更多工具</b></td><td data-i18n="书库.工具说明">点击工具条「更多工具」可执行「导入书籍」「换封面」及「轻小说分卷下载」</td></tr>
+          <tr><td><b data-i18n="书库.删除">删除</b></td><td data-i18n="书库.删除说明">从磁盘彻底删除文件（不进回收站），删前请确认已备份</td></tr>
         </table>
         <div class="h2"><span data-i18n="书库.刷新">为什么要手动刷新</span></div>
-        <div class="p" data-i18n="书库.刷新说明">书库不会一直盯着文件夹看，所以你手动往 export 里丢的 EPUB 需要点一下「刷新」才会出现。程序自己转换出来的书会自动同步。</div>
-        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="书库.提示1">书库只认 EPUB 格式。TXT 不会显示在这里，请先到「制作」页转成 EPUB。</div></div>
+        <div class="p" data-i18n="书库.刷新说明">为节省后台磁盘占用，书库不会持续轮询文件夹。如果你手动往 export 里放入新 EPUB，点一下「刷新」即可重新扫描同步。</div>
+        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="书库.提示1">书库主要面向成书 EPUB 阅读与管理；TXT 原稿请先在「II · 制作」转换后再入库。</div></div>
       </div>
 
       <div class="sec" id="s6">
         <div class="crumb"><span data-i18n="帮助中心">帮助中心</span> <span>/</span> <b data-i18n="一键模式">一键模式</b></div>
         <h1 data-i18n="一键模式">一键模式</h1>
-        <div class="lede" data-i18n="一键.引言">把「制作」页的整套流程自动跑一遍，你只需要拖一个 TXT 进来。</div>
+        <div class="lede" data-i18n="一键.引言">把检索下载、章节划分、匹配封面与 EPUB 转换串联起来，输入书名或点击「TXT 一键成书」即可自动跑完。</div>
         <div class="h2"><span data-i18n="一键.它做了什么">它做了什么</span></div>
-        <div class="p" data-i18n="一键.步骤">拖入 TXT 后，程序会依次：识别编码 → 自动拆分章节 → 联网搜索书名和作者 → 搜索封面并超分 → 生成 EPUB。每一步都有实时进度提示。</div>
-        <div class="tip warn"><div class="ic">!</div><div class="tx" data-i18n="一键.提示1">自动识别的结果不一定准。跑完后建议到「书库」核对一下书名和封面，不满意可以改。</div></div>
+        <div class="p" data-i18n="一键.步骤">输入书名点击「一键制作」或导入 TXT，程序会依次完成：检索下载（或读取本地 TXT）→ 自动识别章节 → 联网补全书名作者 → 搜索封面并超分 → 生成 EPUB，并在下方提供三通道快速发送。</div>
+        <div class="tip warn"><div class="ic">!</div><div class="tx" data-i18n="一键.提示1">自动匹配的作者或封面偶有偏差。完成后可在「IV · 书库」右键打开书籍详情随时校订封面和元数据。</div></div>
         <div class="h2"><span data-i18n="一键.和普通制作的区别">和普通制作的区别</span></div>
         <table class="tb">
-          <tr><th></th><th data-i18n="一键.普通">普通制作</th><th data-i18n="一键.一键">一键模式</th></tr>
-          <tr><td data-i18n="一键.控制">控制</td><td data-i18n="一键.逐项">逐项确认，可随时调整</td><td data-i18n="一键.自动">全自动，省事</td></tr>
-          <tr><td data-i18n="一键.适用">适用</td><td data-i18n="一键.适用普通">排版复杂、需要精修的书</td><td data-i18n="一键.适用一键">格式规整的常规小说</td></tr>
+          <tr><th></th><th data-i18n="一键.普通">手工精校（II · 制作）</th><th data-i18n="一键.一键">一键模式（V · 一键）</th></tr>
+          <tr><td data-i18n="一键.控制">控制</td><td data-i18n="一键.逐项">每步参数可见、可微调编辑章节与封面</td><td data-i18n="一键.自动">全自动串联推进，省心省力</td></tr>
+          <tr><td data-i18n="一键.适用">适用</td><td data-i18n="一键.适用普通">排版特殊或需自定义章节封面</td><td data-i18n="一键.适用一键">格式规整的常规网络小说</td></tr>
         </table>
       </div>
 
       <div class="sec" id="s7">
         <div class="crumb"><span data-i18n="帮助中心">帮助中心</span> <span>/</span> <b data-i18n="文件位置">文件位置</b></div>
         <h1 data-i18n="文件位置">文件位置</h1>
-        <div class="lede" data-i18n="文件.引言">程序用到的几个文件夹，都在安装目录下。</div>
+        <div class="lede" data-i18n="文件.引言">程序用到的工作目录与配置文件，均位于软件根目录同级，方便随时拷贝备份。</div>
         <table class="tb">
-          <tr><th data-i18n="文件.文件夹">文件夹</th><th data-i18n="文件.用途">用途</th></tr>
-          <tr><td><code>download</code></td><td data-i18n="文件.download">「下载」板块抓下来的 TXT。程序退出时会自动清空，需要保留请及时转成 EPUB 或另存。</td></tr>
-          <tr><td><code>export</code></td><td data-i18n="文件.export">转换成功的 EPUB。书库读的就是这里，请勿随意清空。</td></tr>
-          <tr><td><code>fonts</code></td><td data-i18n="文件.fonts">内置字体（Inter + 思源黑体 / 宋体），EPUB 里会嵌入，保证手机上显示一致。</td></tr>
-          <tr><td><code>models</code></td><td data-i18n="文件.models">封面超分用的本地 AI 模型，不联网。</td></tr>
-          <tr><td><code>settings.json</code></td><td data-i18n="文件.settings">你改过的设置（输出目录、标题长度、WiFi 延时等）。删掉就恢复默认。</td></tr>
+          <tr><th data-i18n="文件.文件夹">文件夹 / 文件</th><th data-i18n="文件.用途">用途</th></tr>
+          <tr><td><code>download</code></td><td data-i18n="文件.download">「下载」板块抓下来的临时 TXT。程序退出时会自动清空，需要保留请及时转成 EPUB 或另存。</td></tr>
+          <tr><td><code>export</code></td><td data-i18n="文件.export">转换成功的 EPUB 成品目录。「书库」直接读取该目录，请勿随意清空。</td></tr>
+          <tr><td><code>sendqueue</code></td><td data-i18n="文件.sendqueue">「传输」发出前的统一暂存目录，确保仅将待传书籍安全投递到对应通道。</td></tr>
+          <tr><td><code>fonts / typefaces</code></td><td data-i18n="文件.fonts">内置中文字体（思源宋体 / 思源黑体）与古典西文字体，同步供 EPUB 嵌入与内置阅读器渲染。</td></tr>
+          <tr><td><code>models</code></td><td data-i18n="文件.models">封面超分用的本地 AI 模型，完全离线运行。</td></tr>
+          <tr><td><code>settings.json</code></td><td data-i18n="文件.settings">保存语言、输出目录、超分倍数、标题长度上限等全局设置。</td></tr>
         </table>
-        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="文件.提示1">想备份作品，直接复制 export 文件夹即可。整个程序不需要联网也能完成转换。</div></div>
+        <div class="tip"><div class="ic">✦</div><div class="tx" data-i18n="文件.提示1">想迁移或备份个人书库，直接备份 export 文件夹即可；转换与本地阅读全流程可离线运行。</div></div>
       </div>
 
       <div class="sec" id="s8">
         <div class="crumb"><span data-i18n="帮助中心">帮助中心</span> <span>/</span> <b data-i18n="常见问题">常见问题</b></div>
         <h1 data-i18n="常见问题">常见问题</h1>
-        <div class="lede" data-i18n="问题.引言">遇到问题先看这里。点问题展开答案。</div>
-        <div class="faq"><div class="q" data-i18n="问题.1问">转换出来的书章节全乱了怎么办？</div><div class="a" data-i18n="问题.1答">到「制作」页的章节划分卡片，点「✏️ 章节编辑」手动增删章节。也可以调整「标题最长」的字数上限后点「重新拆分」。如果原文本身没有统一的章节格式，建议先手动整理 TXT。</div></div>
-        <div class="faq"><div class="q" data-i18n="问题.2问">封面搜不到 / 搜错了怎么办？</div><div class="a" data-i18n="问题.2答">点封面区域直接上传自己的图片。或者在「书库」里选中这本书，点进详情页换封面。</div></div>
-        <div class="faq"><div class="q" data-i18n="问题.3问">WiFi 传书手机打不开网址？</div><div class="a" data-i18n="问题.3答">确认手机和电脑连的是同一个 WiFi。如果电脑装了防火墙或安全软件，可能会拦截局域网连接，需要放行。另外部分公共 WiFi 开启了「AP 隔离」，设备之间无法互访。</div></div>
-        <div class="faq"><div class="q" data-i18n="问题.4问">Kindle 推送失败？</div><div class="a" data-i18n="问题.4答">先在「传输」页的 Kindle 通道点「邮箱配置」，填好发件邮箱的 SMTP 信息。注意：Kindle 只接受来自「已批准发件人」的邮件，需要把你的发件邮箱加到亚马逊账户的已批准列表里。</div></div>
-        <div class="faq"><div class="q" data-i18n="问题.5问">苹果图书一直显示未授权？</div><div class="a" data-i18n="问题.5答">点当前通道下方的「重新授权」，会打开百度网盘登录页。登录成功后页面会显示一串授权码，复制它粘回程序里即可。授权有效期较长，不需要每次都授权。</div></div>
-        <div class="faq"><div class="q" data-i18n="问题.6问">下载的小说乱码？</div><div class="a" data-i18n="问题.6答">程序会自动识别常见编码。如果还是乱码，说明源站用了少见的编码，可以先用记事本另存为 UTF-8 再拖进制作页。</div></div>
-        <div class="faq"><div class="q" data-i18n="问题.7问">书库里的书删了还能找回吗？</div><div class="a" data-i18n="问题.7答">不能。书库的删除是直接从磁盘移除文件，不进回收站。删之前请确认已经备份。</div></div>
-        <div class="faq"><div class="q" data-i18n="问题.8问">需要联网吗？会偷偷上传我的书吗？</div><div class="a" data-i18n="问题.8答">转换、封面超分、书库管理全部在本机完成，不上传任何文件。只有两个功能需要联网：联网搜索书名作者、搜索封面。下载小说和传输当然也需要网络。</div></div>
+        <div class="lede" data-i18n="问题.引言">遇到问题先看这里，点击任意问题展开解答。</div>
+        <div class="faq"><div class="q" data-i18n="问题.1问">转换出来的书章节全乱了怎么办？</div><div class="a" data-i18n="问题.1答">在「II · 制作」展开「▸ 章节相关设置」，可调小或调大「最大标题长度」后点击「重新拆分」，也可直接点「编辑章节」手动增删或修复异常章节行。</div></div>
+        <div class="faq"><div class="q" data-i18n="问题.2问">封面搜不到 / 搜错了怎么办？</div><div class="a" data-i18n="问题.2答">点击右侧拱券封面框可直接上传自己的图片；已生成的书籍可在「IV · 书库」右键点击书卡打开详情弹窗，随时更换封面。</div></div>
+        <div class="faq"><div class="q" data-i18n="问题.3问">WiFi 传书手机打不开或连不上？</div><div class="a" data-i18n="问题.3答">请确认手机阅读器与电脑在同一 WiFi 局域网，并且地址栏已开启 WiFi 传书服务页面。如电脑防火墙拦截或公共 WiFi 开启了 AP 隔离，需放行或切换网络。</div></div>
+        <div class="faq"><div class="q" data-i18n="问题.4问">Kindle 推送提示未授权或失败？</div><div class="a" data-i18n="问题.4答">在「III · 传输」下方展开「▸ 授权与说明」，点击「Kindle 授权」使用外区 amazon.com 账号登录一次即可（amazon.cn 已停服）。详细注册步骤可点击同区「操作指引」。</div></div>
+        <div class="faq"><div class="q" data-i18n="问题.5问">苹果图书一直显示未授权？</div><div class="a" data-i18n="问题.5答">展开「III · 传输 → ▸ 授权与说明」，点击「百度网盘授权」后点「获取授权码 ↗」，在浏览器登录百度账号并把页面上的授权码粘回弹窗提交即可，一次授权长期有效。</div></div>
+        <div class="faq"><div class="q" data-i18n="问题.6问">下载的小说乱码？</div><div class="a" data-i18n="问题.6答">程序会自动识别常见编码（UTF-8 / GBK / UTF-16）。如果极少数旧站依然乱码，建议先用记事本另存为 UTF-8 编码后再拖入「II · 制作」。</div></div>
+        <div class="faq"><div class="q" data-i18n="问题.7问">书库里的书删了还能找回吗？</div><div class="a" data-i18n="问题.7答">不能。书库删除会直接从 export 磁盘目录永久移除文件，不进回收站，操作前请确认已经备份重要书籍。</div></div>
+        <div class="faq"><div class="q" data-i18n="问题.8问">需要联网吗？会偷偷上传我的书吗？</div><div class="a" data-i18n="问题.8答">TXT 转 EPUB、章节切分、封面 4 倍超分与本地书库阅读全部在你的电脑离线完成，绝不私自上传文件。仅「联网检索书名/封面」以及「网络下载/云端通道发送」时会按需连接网络。</div></div>
       </div>
 
-    </div>
+    </div></div>
 
     <div class="onpage">
-      <div class="t" data-i18n="本页目录">本 页 目 录</div>
+      <div class="t" data-i18n="本页目录">ON THIS PAGE</div>
       <div id="onpageList"></div>
     </div>
   </div>
@@ -329,109 +739,109 @@
   var cur = 'zh';
 
   var EN = {
-    '下载':'Download','制作':'Make','传输':'Send','书库':'Library','一键':'One-click',
-    '帮助':'Help','帮助中心':'Help Center','搜索帮助…':'Search help…',
-    '快速上手':'Quick Start','制作新书':'Making a Book','下载小说':'Downloading',
-    '传输到设备':'Transfer to Device','我的书库':'My Library','一键模式':'One-click Mode',
+    '帮助中心':'Help Center','搜索帮助…':'Search manual…',
+    '快速上手':'Quick Start','制作新书':'Making a Book','下载小说':'Downloading Novels',
+    '传输到设备':'Send to Device','我的书库':'My Library','一键模式':'One-Click Mode',
     '文件位置':'File Locations','常见问题':'FAQ','本页目录':'ON THIS PAGE',
 
-    '快速上手.引言':'Three steps to an ebook you can read on your phone. Everything happens locally — nothing is uploaded, and you do not need Python or Pandoc.',
-    '拖入 TXT':'Drop a TXT','填书名作者':'Title & author','点转换':'Convert',
-    '快速上手.步骤1':'Drag your novel into the dashed box on the Make page. Encoding is converted automatically.',
-    '快速上手.步骤2':'Not sure about the author? Hit "✦ AI Lookup" and it searches online.',
-    '快速上手.步骤3':'The cover is found automatically and upscaled 4×. The result goes into the export folder.',
-    '成品存在哪':'Where files go',
-    '快速上手.成品':'Every successful conversion is saved into the export folder — that is exactly what the Library reads. No manual sorting needed.',
-    '快速上手.提示1':'The library syncs automatically. If you drop an EPUB into export yourself, hit Refresh in the library and it shows up.',
-    '发送到手机':'Sending to your phone',
-    '快速上手.发送':'Open the Send section and pick one of three ways: Apple Books (via Baidu Netdisk), WiFi Direct, or Kindle.',
-    '快速上手.提示2':'Apple Books needs authorization first. A Baidu Netdisk login window appears — paste the code back. One authorization lasts a long time.',
+    '快速上手.引言':'Create a phone-ready EPUB in three steps. All conversion happens locally on your computer with no Python or Pandoc required.',
+    '拖入 TXT':'Drop a TXT','核对书名作者':'Title & Author','生成 EPUB':'Build EPUB',
+    '快速上手.步骤1':'Drag a novel manuscript into the scroll drop zone on II · Make; encoding and chapters are detected automatically.',
+    '快速上手.步骤2':'Enter or check title and author — the app looks up and fills in missing author details automatically.',
+    '快速上手.步骤3':'Click Search Cover for 4× local upscaling, then click Build EPUB. Output is archived into your export folder.',
+    '成品存在哪':'Where Books Go',
+    '快速上手.成品':'Every generated EPUB is automatically archived into the export folder, which powers IV · Library without manual sorting.',
+    '快速上手.提示1':'If you manually copy EPUBs into the export folder, click Refresh in IV · Library to sync them immediately.',
+    '发送到手机':'Sending to Your Device',
+    '快速上手.发送':'Open III · Send to transfer via Apple Books (Baidu Netdisk), WiFi Direct, or Send to Kindle. Drag any header tab downward to split view and drag books straight from Library.',
+    '快速上手.提示2':'Apple Books and Kindle require a one-time sign-in under ▸ Auth & Options at the bottom of III · Send.',
 
-    '制作.引言':'Turn a TXT novel into a properly typeset EPUB with cover and table of contents. All processing stays on your machine.',
-    '制作.源文件':'Source file',
-    '制作.源文件说明':'Click the dashed box to pick a TXT, or drag one in. GBK / UTF-8 / UTF-16 are detected and converted automatically.',
-    '制作.章节':'Chapters',
-    '制作.章节说明':'Titles like "第一章", "第 1 章" or "Chapter 1" are detected by built-in rules. Hit "Preview split" to see the result; if it looks wrong, use "✏️ Edit chapters".',
+    '制作.引言':'Turn any TXT novel into a clean, well-typeset EPUB with cover art and chapter navigation, processed completely offline.',
+    '制作.源文件':'Source Manuscript',
+    '制作.源文件说明':'Drop a TXT file into the scroll box or click to browse. Common encodings (GBK / UTF-8 / UTF-16) are converted automatically.',
+    '制作.章节':'Chapter Detection',
+    '制作.章节说明':'Detected chapter counts and Re-split appear directly below the title/author fields. Expand ▸ Chapter Settings to inspect All Chapters or manually Edit Chapters.',
     '制作.设置项':'Setting','制作.作用':'Effect',
-    '标题最长':'Max title length',
-    '制作.标题最长说明':'Anything longer is treated as body text, not a chapter title.',
+    '最大标题长度':'Max Title Length',
+    '制作.标题最长说明':'Adjusted inside ▸ Chapter Settings; lines exceeding this character limit stay part of body text.',
     '重新拆分':'Re-split',
-    '制作.重新拆分说明':'Re-split using the current rules after changing the length.',
-    '制作.封面':'Cover',
-    '制作.封面说明':'Click the cover area to upload your own image, or hit "Search cover again". Found covers are upscaled 4× so they stay sharp on a phone.',
-    '制作.提示1':'Title and author appear on the EPUB title page and in the library. Mistakes are fine — editable in the library.',
-    '制作.转换':'Start converting',
-    '制作.转换说明':'Pick an output folder at the bottom (same as source by default, or a fixed export folder), then hit Convert. Do not close the window while it runs.',
+    '制作.重新拆分说明':'Re-runs chapter detection immediately with the updated rules or length threshold.',
+    '制作.封面':'Cover Artwork',
+    '制作.封面说明':'Click the arched frame on the right to upload an image, or click Search Cover. Upscale factor (4× default) can be adjusted under ▸ Cover Settings.',
+    '制作.提示1':'Title and author are written into EPUB metadata and your library. Right-click any book card in IV · Library anytime to edit them later.',
+    '制作.转换':'Building the EPUB',
+    '制作.转换说明':'Pick the output directory under ▸ Output Settings, then click Build EPUB. Keep the window open until building finishes.',
 
-    '下载.引言':'Fetch novel text straight from a URL, merge it into one TXT, then convert it on the Make page.',
-    '下载.怎么用':'How to use',
-    '下载.步骤':'Paste the index page URL and hit Download. Chapters are fetched one by one with live progress. The TXT lands in the download folder.',
-    '下载.提示1':'Only publicly accessible pages work. Login-only or paid sites cannot be fetched. Please make sure you have the right to download the content.',
-    '下载.编码':'Encoding',
-    '下载.编码说明':'Downloaded TXT files are saved as UTF-8. GBK and other encodings are converted for you.',
+    '下载.引言':'Search by title or URL, fetch chapters in sequence, and merge them into a clean TXT manuscript ready for II · Make.',
+    '下载.怎么用':'Workflow',
+    '下载.步骤':'Enter a book title (or title@author) on I · Download and click Search. Fetched TXTs go to download/. For light novel volumes and illustrations, open IV · Library → More Tools → Light Novel.',
+    '下载.提示1':'Only publicly accessible sites are supported; paywalled or login-protected pages cannot be scraped.',
+    '下载.编码':'Text Encoding',
+    '下载.编码说明':'Fetched chapters are normalized to UTF-8 automatically regardless of source site encoding.',
 
-    '传输.引言':'Three ways to get books onto your phone — pick whichever suits you. All support batch sending.',
-    '传输.苹果说明':'Relayed through Baidu Netdisk. Good for the Books app on iPhone / iPad.',
-    '传输.WiFi说明':'Download from your phone browser over the local network — no cable needed.',
-    '传输.Kindle说明':'Delivered to your Kindle device or app by email.',
-    '传输.待发送队列':'Send queue',
-    '传输.队列说明':'Pick books in the Library and hit "Batch send", or use "+ Add files" at the bottom right. Remove items individually, then hit Send.',
-    '传输.三种方式对比':'Comparison',
-    '传输.方式':'Method','传输.需要':'Requires','传输.适合':'Best for',
-    '传输.苹果需要':'Baidu Netdisk account (authorize once)','传输.苹果适合':'iPhone / iPad',
-    '传输.WiFi需要':'Phone and PC on the same WiFi','传输.WiFi适合':'Any phone with a browser',
-    '传输.Kindle需要':'Kindle address + SMTP setup','传输.Kindle适合':'Kindle device or app',
-    '传输.提示1':'Apple Books needs authorization the first time: hit "Re-authorize", log in to Baidu Netdisk, paste the code back. One authorization lasts.',
-    '传输.提示2':'For WiFi Direct hit "Open transfer window" — it shows a local address. Enter it in your phone browser to download, then close the window.',
+    '传输.引言':'Three independent channels deliver EPUBs to your phone or e-reader, with batch queue and cross-folio drag-and-drop support.',
+    '传输.苹果说明':'Synced via Baidu Netdisk for Apple Books on iPhone and iPad.',
+    '传输.WiFi说明':'Direct LAN push to the IP address shown on your phone or e-reader.',
+    '传输.Kindle说明':'Delivered via Amazon Send to Kindle cloud in roughly one minute.',
+    '传输.待发送队列':'Transfer Queue',
+    '传输.队列说明':'Select multiple books in IV · Library → Batch Send, drag cards across split folios, or click Add Files, then click Send beside your chosen channel.',
+    '传输.三种方式对比':'Channel Comparison',
+    '传输.方式':'Channel','传输.需要':'Requirements','传输.适合':'Best For',
+    '传输.苹果需要':'Baidu Netdisk account (one-time OAuth)','传输.苹果适合':'iPhone / iPad',
+    '传输.WiFi需要':'PC & device on the same local WiFi','传输.WiFi适合':'Android / iPad readers',
+    '传输.Kindle需要':'Non-CN amazon.com account (one-time login)','传输.Kindle适合':'Kindle devices & apps',
+    '传输.提示1':'Expand ▸ Auth & Options at the bottom of III · Send to authorize Baidu Netdisk or Kindle, or open their illustrated step-by-step guides.',
+    '传输.提示2':'For WiFi transfer, turn on WiFi upload in your reader app first, copy the shown LAN URL into EasyPub, and send cleanly over your local network.',
 
-    '书库.引言':'The library reads EPUB files from the export folder. Converted books show up here automatically.',
-    '书库.能做什么':'What you can do',
+    '书库.引言':'IV · Library displays EPUBs from export/. Click any book card to read it directly in the built-in parchment reader.',
+    '书库.能做什么':'Capabilities',
     '书库.操作':'Action','书库.说明':'Description',
-    '书库.搜索':'Search','书库.搜索说明':'Filter by title or author',
-    '书库.排序':'Sort','书库.排序说明':'By title / size / time',
-    '书库.多选':'Multi-select','书库.多选说明':'Select several, then batch send or export',
-    '书库.导出':'Export','书库.导出说明':'Copy selected EPUBs to a folder you choose',
-    '书库.详情':'Details','书库.详情说明':'Click a cover to see chapters; edit title / author / cover',
-    '书库.删除':'Delete','书库.删除说明':'Removes the file from disk permanently',
-    '书库.刷新':'Why refresh manually',
-    '书库.刷新说明':'The library does not watch the folder continuously, so EPUBs you drop in manually need a Refresh. Books the app converts sync automatically.',
-    '书库.提示1':'The library only handles EPUB. TXT files will not appear — convert them on the Make page first.',
+    '书库.阅读':'Read & Inspect','书库.详情说明':'Click to open in the built-in EPUB reader; right-click to inspect chapters or edit title, author, and cover',
+    '书库.搜索':'Search & Sort','书库.搜索说明':'Filter instantaneously by title or author and sort by date, size, or title',
+    '书库.多选':'Multi-Select','书库.多选说明':'Enable Select mode to batch send, export copies, or delete selected books',
+    '书库.拖书':'Cross-Folio Drop','书库.拖书说明':'In split view, drag any book card directly into the III · Send transfer queue',
+    '书库.工具':'More Tools','书库.工具说明':'Import local books, batch change covers, or open Light Novel volume downloader',
+    '书库.删除':'Delete','书库.删除说明':'Permanently deletes files from disk (not sent to Recycle Bin)',
+    '书库.刷新':'Manual Refresh',
+    '书库.刷新说明':'To avoid continuous disk polling, manually dropped files in export/ appear after clicking Refresh.',
+    '书库.提示1':'The library indexes finished EPUB books. Convert raw TXT files on II · Make first.',
 
-    '一键.引言':'Runs the whole Make workflow for you — you only drop in a TXT.',
-    '一键.它做了什么':'What it does',
-    '一键.步骤':'After you drop a TXT it will: detect encoding → split chapters → look up title and author → find and upscale a cover → build the EPUB. Progress is shown at every step.',
-    '一键.提示1':'Automatic detection is not always right. After it finishes, check the title and cover in the library and adjust if needed.',
-    '一键.和普通制作的区别':'Difference from manual mode',
-    '一键.普通':'Manual','一键.一键':'One-click',
-    '一键.控制':'Control','一键.逐项':'Confirm each step, adjust freely','一键.自动':'Fully automatic',
-    '一键.适用':'Best for','一键.适用普通':'Complex layouts needing fine-tuning','一键.适用一键':'Regular, well-formed novels',
+    '一键.引言':'Automate search, chapter splitting, cover lookup, upscaling, and EPUB building in one uninterrupted run.',
+    '一键.它做了什么':'What Happens Automatically',
+    '一键.步骤':'Enter a book title and click Start One-Click (or pick One-Click from TXT). The pipeline downloads or reads text, splits chapters, fetches cover art, builds the EPUB, and presents one-click send targets.',
+    '一键.提示1':'If automated metadata or cover lookup picks an unexpected edition, right-click the book in IV · Library to refine it.',
+    '一键.和普通制作的区别':'Manual vs One-Click',
+    '一键.普通':'Manual (II · Make)','一键.一键':'One-Click (V · One-Click)',
+    '一键.控制':'Control','一键.逐项':'Inspect and tweak every parameter freely','一键.自动':'Hands-free end-to-end execution',
+    '一键.适用':'Ideal For','一键.适用普通':'Books with irregular formatting or custom covers','一键.适用一键':'Standard web novels and quick batches',
 
-    '文件.引言':'The folders the app uses, all inside the install directory.',
-    '文件.文件夹':'Folder','文件.用途':'Purpose',
-    '文件.download':'TXT files fetched by the Download section. Cleared automatically on exit — convert or save them if you want to keep them.',
-    '文件.export':'Converted EPUBs. This is what the library reads — do not clear it carelessly.',
-    '文件.fonts':'Bundled fonts (Inter + Noto Sans/Serif SC), embedded into EPUBs so phones render identically.',
-    '文件.models':'Local AI model for cover upscaling. Never goes online.',
-    '文件.settings':'Your settings (output folder, title length, WiFi delay…). Delete it to restore defaults.',
-    '文件.提示1':'To back up your work, just copy the export folder. Conversion works fully offline.',
+    '文件.引言':'Working folders and configuration live right beside the executable for effortless backup.',
+    '文件.文件夹':'Folder / File','文件.用途':'Purpose',
+    '文件.download':'Temporary TXT files from I · Download. Cleaned automatically when EasyPub exits.',
+    '文件.export':'Archived final EPUBs indexed by IV · Library. Back up this folder to keep your collection.',
+    '文件.sendqueue':'Isolated staging area ensuring clean, deduplicated channel uploads.',
+    '文件.fonts':'Bundled Noto Serif/Sans CJK and classical serif typefaces for EPUB embedding and built-in reader display.',
+    '文件.models':'Local AI super-resolution models for offline 4× cover upscaling.',
+    '文件.settings':'Persisted preferences including language, output path, and split thresholds.',
+    '文件.提示1':'Copy the export folder anytime to back up your entire finished library.',
 
-    '问题.引言':'Check here first. Click a question to expand it.',
-    '问题.1问':'The chapters came out wrong. What now?',
-    '问题.1答':'On the Make page, hit "✏️ Edit chapters" to add or remove chapters manually. You can also raise the "Max title length" and hit "Re-split". If the source text has no consistent chapter format, tidy the TXT first.',
-    '问题.2问':'No cover found, or the wrong one?',
-    '问题.2答':'Click the cover area to upload your own image, or open the book in the library and change the cover there.',
-    '问题.3问':'The WiFi URL will not open on my phone.',
-    '问题.3答':'Make sure the phone and PC are on the same WiFi. Firewalls or security suites may block local connections — allow them. Some public WiFi has AP isolation, which stops devices talking to each other.',
-    '问题.4问':'Kindle delivery fails.',
-    '问题.4答':'Open the Kindle channel and hit "Email settings" to fill in your SMTP details. Note: Kindle only accepts mail from approved senders — add your sending address to the approved list in your Amazon account.',
-    '问题.5问':'Apple Books keeps showing as unauthorized.',
-    '问题.5答':'Hit "Re-authorize" under the current channel. A Baidu Netdisk login page opens; copy the authorization code back into the app. It stays valid for a long time.',
-    '问题.6问':'Downloaded novel shows garbled text.',
-    '问题.6答':'Common encodings are detected automatically. If it is still garbled the site uses an unusual encoding — re-save the file as UTF-8 and drop it into the Make page.',
+    '问题.引言':'Click any question below to reveal its answer.',
+    '问题.1问':'Chapter splits look messy or incomplete?',
+    '问题.1答':'Expand ▸ Chapter Settings on II · Make to adjust Max Title Length and click Re-split, or click Edit Chapters to add, remove, or reorder entries manually.',
+    '问题.2问':'Wrong cover found or none detected?',
+    '问题.2答':'Click the arched cover frame on II · Make to upload your own image, or right-click the finished book in IV · Library to replace its cover.',
+    '问题.3问':'Phone cannot reach WiFi transfer URL?',
+    '问题.3答':'Ensure both PC and phone share the same WiFi network (disable AP isolation on public WiFi) and allow local LAN connections in your firewall.',
+    '问题.4问':'Send to Kindle says unauthorized or fails?',
+    '问题.4答':'Open ▸ Auth & Options under III · Send and click Authorize Kindle using an active amazon.com account (amazon.cn Kindle service is discontinued).',
+    '问题.5问':'Apple Books channel shows Not Authorized?',
+    '问题.5答':'Open ▸ Auth & Options under III · Send, click Baidu Netdisk Auth → Get Auth Code ↗, sign in on Chrome, and paste back the code.',
+    '问题.6问':'Downloaded text shows garbled characters?',
+    '问题.6答':'Common encodings convert automatically. If an unusual legacy site appears garbled, re-save the TXT as UTF-8 first before importing into II · Make.',
     '问题.7问':'Can I recover a book deleted from the library?',
-    '问题.7答':'No. Deletion removes the file from disk and does not go to the recycle bin. Back up first.',
-    '问题.8问':'Does it need the internet? Does it upload my books?',
-    '问题.8答':'Converting, cover upscaling and library management all run locally — nothing is uploaded. Only two features go online: the AI title/author lookup and cover search. Downloading and transferring obviously need a network too.'
+    '问题.7答':'No. Deleting removes the file directly from disk rather than sending it to the Recycle Bin.',
+    '问题.8问':'Does EasyPub upload my books when converting?',
+    '问题.8答':'Never. Parsing, splitting, AI cover upscaling, and library reading run 100% locally. Network access is used only when you explicitly request online lookup, novel downloading, or device transfer.'
   };
 
   var ZH = {}, ZHPH = {};
@@ -443,7 +853,7 @@
     ZHPH[el.getAttribute('data-i18n-ph')] = el.getAttribute('placeholder') || '';
   });
 
-  function setLang(lang) {
+  function setLang(lang, isLocal) {
     cur = (lang === 'en') ? 'en' : 'zh';
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       var k = el.getAttribute('data-i18n');
@@ -460,10 +870,14 @@
     document.documentElement.lang = (cur === 'en') ? 'en' : 'zh-CN';
     var on = document.querySelector('.sec.on');
     if (on) buildOnPage(on.id);
+
+    if (!isLocal && window.pageLang && typeof window.pageLang.set === 'function') {
+      try { window.pageLang.set(cur); } catch (_) {}
+    }
   }
 
   document.querySelectorAll('#langSwitch div').forEach(function (el) {
-    el.addEventListener('click', function () { setLang(el.dataset.lang); });
+    el.addEventListener('click', function () { setLang(el.dataset.lang, false); });
   });
 
   function buildOnPage(sec) {
@@ -522,16 +936,26 @@
     if (e.key === 'Escape' && window.close) window.close();
   });
 
-  // 跟随主程序的语言设置
-  if (window.electronAPI && window.electronAPI.settings) {
+  // 双向跟随主程序语言设置（兼容 window.pageLang 与 electronAPI.settings）
+  if (window.pageLang) {
+    if (typeof window.pageLang.onChange === 'function') {
+      window.pageLang.onChange(function (lang) { setLang(lang, true); });
+    }
+    if (typeof window.pageLang.get === 'function') {
+      Promise.resolve(window.pageLang.get()).then(function (r) {
+        if (r && r.success && r.settings && r.settings.language) {
+          setLang(r.settings.language, true);
+        }
+      }).catch(function () {});
+    }
+  } else if (window.electronAPI && window.electronAPI.settings) {
     window.electronAPI.settings.get().then(function (r) {
-      if (r && r.success && r.settings && r.settings.language === 'en') setLang('en');
+      if (r && r.success && r.settings && r.settings.language === 'en') setLang('en', true);
     }).catch(function () {});
   }
+
   buildOnPage('s1');
 })();
 </script>
-    <link rel="stylesheet" href="resona-theme.css?v=1021175721" />
 </body>
 </html>
-

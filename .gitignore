@@ -45,3 +45,8 @@ desktop.ini
 __pycache__/
 *.pyc
 *.bak
+tools/mihomo/
+library-history.json
+chrome_profile*/
+*_profile/
+_report_work/

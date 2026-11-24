@@ -235,13 +235,72 @@ SOURCES = [
 # 基础工具
 # ══════════════════════════════════════════════════════════════════════════
 def log(msg: str) -> None:
-    """进度走 **stdout**（不是 stderr）。
-
-    ★ 2026-09-29 踩的坑：一开始把进度打到 stderr，结果 main.js 的 UI 只订阅 stdout 的流，
-      界面在整本书下载的十几分钟里毫无动静 → 用户以为卡死，直接把窗口关了
-      （实测缓存里其实已经下了 40 章）。进度行不带 `{`，不会干扰 main.js 的 JSON 契约扫描。
-    """
+    """进度走 **stdout**（不是 stderr）。"""
     print(msg, flush=True)
+
+
+def _bridge_post(path_suffix: str, payload: dict, timeout: float = 15.0):
+    import urllib.request
+    ctl = (os.environ.get("EASYPUB_PROXY_CTL") or "").strip().rstrip("/")
+    tok = (os.environ.get("EASYPUB_PROXY_TOKEN") or "").strip()
+    if not ctl:
+        return None
+    ctl_base = ctl[:-7] if ctl.endswith("/switch") else ctl
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        f"{ctl_base}{path_suffix}",
+        data=data,
+        headers={"Content-Type": "application/json", "X-EasyPub-Token": tok},
+        method="POST",
+    )
+    with opener.open(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8", "ignore") or "{}")
+
+
+def _set_proxy(enabled: bool, reason: str = "", mode: str = "") -> None:
+    """动态通知主进程切换可用节点开关，并更新本进程及子进程 EASYPUB_PROXY。"""
+    if not (os.environ.get("EASYPUB_PROXY_CTL") or "").strip():
+        if not enabled:
+            os.environ["EASYPUB_PROXY"] = "DIRECT"
+        return
+    payload = {"enabled": bool(enabled), "reason": reason}
+    if mode:
+        payload["mode"] = mode
+    try:
+        obj = _bridge_post("/switch", payload, timeout=15.0) or {}
+        if obj.get("ok"):
+            px = (obj.get("proxyUrl") or "").strip()
+            os.environ["EASYPUB_PROXY"] = px if (enabled and px) else "DIRECT"
+    except Exception:
+        if not enabled:
+            os.environ["EASYPUB_PROXY"] = "DIRECT"
+
+
+def _rotate_proxy_node(tried: set, reason: str = "ln-lookup") -> bool:
+    """向主进程请求轮换至下一个未试过的可用节点（轻小说优先 TW/HK -> 其余节点）。"""
+    try:
+        obj = _bridge_post("/rotate", {
+            "mode": "lightnovel",
+            "exclude": sorted(tried),
+            "reason": str(reason or "ln-lookup")[:80],
+        }, timeout=16.0)
+    except Exception:
+        return False
+    if not obj:
+        return False
+    prev = str(obj.get("prevNode") or "").strip()
+    if prev:
+        tried.add(prev)
+    nxt = str(obj.get("activeNode") or "").strip()
+    if not obj.get("rotated") or not nxt:
+        return False
+    tried.add(nxt)
+    px = str(obj.get("proxyUrl") or "").strip()
+    if px:
+        os.environ["EASYPUB_PROXY"] = px
+    log(f"  🔄 [轻小说] 当前节点受限（{reason}），自动切换至「{nxt}」重试…")
+    return True
 
 
 def fetch_text(url: str, *, timeout: float = 20.0, tries: int = 3, referer: str = "") -> str:
@@ -814,32 +873,51 @@ def download(title: str, *, out_dir: str = "", limit: int = 0, sources=None, aut
         pt = [s for s in srcs if getattr(s, "crawler", "") == "xbiquzw"]
         if pt:
             srcs = pt + [s for s in srcs if s not in pt]
-            log("  🔀 已按选择把【普通源·笔趣阁爬虫】排到最前（后面源仍作兜底）")
+            log("  已按选择把【普通源·笔趣阁爬虫】排到最前（后面源仍作兜底）")
+
+    # 搜书源开始：先开启可用节点（如果用户选普通源则直接切 OFF 走笔趣阁）
+    if ordinary_first:
+        _set_proxy(False, "ordinary-first-xbiquzw")
+    else:
+        _set_proxy(True, "search-start")
+
     if ask_jx:
         uu = next((s for s in srcs if getattr(s, "crawler", "") == "uukanshu"), None)
         if uu is None:
             ask_jx = False
         else:
-            log(f"  🔎 先用 [{uu.name}] 探一下有没有这本书（只查不下）…")
+            _set_proxy(True, "probe-uukanshu")
+            log(f"  先用 [{uu.name}] 探一下有没有这本书（只查不下）…")
             try:
                 found = find_book(title, author=author, sources=[uu], timeout=timeout)
             except Exception as exc:  # noqa: BLE001
-                log(f"  ⚠️ 探测失败：{type(exc).__name__}: {str(exc)[:80]} → 直接按原顺序下载")
+                log(f"  探测失败：{type(exc).__name__}: {str(exc)[:80]} → 直接按原顺序下载")
                 found = None
             finally:
                 _crawler_close(uu)
             if found:
                 n_ch = len(found["chapters"])
-                log(f"  ✅ 精校源（UU看書）有《{found['book']['title']}》（{n_ch} 章）→ 交界面问要不要用精校源")
+                log(f"  精校源（UU看書）有《{found['book']['title']}》（{n_ch} 章）→ 交界面问要不要用精校源")
                 return {"ok": False, "needJingxiao": True,
                         "title": found["book"]["title"], "chapters": n_ch,
                         "source": uu.name, "query": title}
-            log("  ⚪ UU看書 没有这本书 → 按原顺序继续（会用其它源兜底）")
+            log("  UU看書 没有这本书 → 按原顺序继续（会用其它源兜底）")
+            srcs = [s for s in srcs if s is not uu]
 
     if author:
-        log(f"  ℹ️ 作者提示：{author}（用于同名书消歧）")
+        log(f"  作者提示：{author}（用于同名书消歧）")
     for idx, src in enumerate(srcs, 1):
         kind = getattr(src, "kind", "chapter")
+        crawler_name = getattr(src, "crawler", "")
+        if crawler_name == "uukanshu":
+            _set_proxy(True, "source-uukanshu")
+        elif crawler_name == "xbiquzw":
+            _set_proxy(False, "source-xbiquzw")
+        elif kind == "txt":
+            _set_proxy(True, "source-ijjx")
+        else:
+            _set_proxy(True, f"source-{crawler_name or kind}")
+
         log(f"\n  ── [{idx}/{len(srcs)}] {src.name}"
             + ("（TXT 直链型：整本一次拿）" if kind == "txt"
                else ("（站专用爬虫：逐章拿）" if kind == "crawler" else "（逐章型）")))
@@ -851,17 +929,17 @@ def download(title: str, *, out_dir: str = "", limit: int = 0, sources=None, aut
             continue
         found = find_book(title, author=author, sources=[src], timeout=timeout)
         if not found:
+            _crawler_close(src)
             continue
         try:
             return _download_chapters(found, out_dir=out_dir, limit=limit, gap=gap,
                                       resume=resume, workers=workers, timeout=timeout)
         finally:
-            # ★★ 2026-10-10：浏览器型源用完**必须收摊** —— 否则那几个 headless Edge
-            #   会一直挂着（用户看不到窗口，但进程/内存一直在）。
             _crawler_close(src)
 
-    # ★ 网文源全没命中 → 再给轻小说一次机会（这次允许站内搜索 + 必应反查）
+    # ★ 网文源全没命中 → 再给轻小说一次机会（开启节点）
     if linovelib:
+        _set_proxy(True, "source-linovelib")
         log("\n  ── [轻小说] 网文源（爬虫源 / 久久）都没命中，再用哔哩轻小说站内搜索试一次")
         ln = download_linovelib(title, out_dir=out_dir, timeout=max(timeout, 25.0), index_only=False,
                                 auto_cookie=ln_auto_cookie, cookie_file=ln_cookie_file,
@@ -935,38 +1013,42 @@ def _linovelib_lookup(title: str, *, timeout: float = 15.0, index_only: bool = F
     except ImportError as exc:
         log(f"  ⚠️ 轻小说源不可用（novelmeta 导入失败）：{exc}")
         return None
-    try:
-        # ★★★ 2026-09-30（用户要求「这一步不要了，不然网文的速度会慢很多」）：
-        #   这里是"先快速判一下是不是轻小说"的预检，必须**真的只查本地目录**：
-        #     · `allow_index_build=False` → 本地索引缓存不在时**立刻返回**，
-        #       绝不再现爬那 178 页目录（几十分钟级别的坑，用户实测网文被拖死）；
-        #     · `exact_only=True` → 只做精确命中，**不做站内搜索**（也不走必应）。
-        #   代价：本地索引没缓存时，这一步永远判不出轻小说 —— 这正是用户要的
-        #   （轻小说请用【轻小说】按钮，或先预热索引再从这里下）。
-        #
-        # ★★★ 2026-10-01（接回模块化 linovelib.py 时发现的**真接口分歧**）：
-        #   `allow_index_build` 这个参数**只有随包的那份 novelmeta 有** ——
-        #     · C:\work\epubui\EasyPub-New\novelmeta\sources.py : 有（def … allow_index_build=True）
-        #     · C:\work\novelmeta\novelmeta\sources.py        : **没有**（只有 timeout/exact_only/allow_bing）
-        #   两份是同一个库的两个副本，签名已经漂了。而 `novelmeta` 取哪一份**由 sys.path 顺序决定**
-        #   （见本文件顶部：`_HERE` 在前，所以开发/打包都命中随包那份；但 linovelib.py 是从
-        #    `C:\work\novelmeta` 那份开发出来的，它的注释里就记着"传了直接 TypeError"）。
-        #   一旦哪次把开发主仓库同步进来 / NOVELMETA_HOME 指过去，这里就会 TypeError ——
-        #   而它**被下面的 except Exception 吞掉**，表现为"轻小说源永远查不到"，
-        #   用户只会看到"网文源都没命中"，很难联想到是签名问题。
-        #   所以这里按**真实签名**调用：有就用，没有就走老签名。
+    _tried_nodes: set[str] = set()
+    if not index_only:
+        _set_proxy(True, "novel-dl-ln-lookup", mode="lightnovel")
+    while True:
+        cand = None
+        last_exc = None
         try:
-            cand = resolve_bilinovel(clean, timeout=max(timeout, 15.0),
-                                     exact_only=index_only, allow_bing=not index_only,
-                                     allow_index_build=False)
-        except TypeError:
-            log("  ℹ️ [轻小说] 这份 novelmeta 没有 allow_index_build 参数 → 用老签名调用")
-            cand = resolve_bilinovel(clean, timeout=max(timeout, 15.0),
-                                     exact_only=index_only, allow_bing=not index_only)
-    except Exception as exc:  # noqa: BLE001 —— 轻小说只是"多一层"，绝不能拖垮网文下载
-        log(f"  ⚠️ [轻小说] 查询异常：{type(exc).__name__}: {str(exc)[:80]}")
-        return None
-    if cand is None or not cand.extra.get("novelId"):
+            try:
+                cand = resolve_bilinovel(clean, timeout=max(timeout, 15.0),
+                                         exact_only=index_only, allow_bing=not index_only,
+                                         allow_index_build=False)
+            except TypeError:
+                log("  ℹ️ [轻小说] 这份 novelmeta 没有 allow_index_build 参数 → 用老签名调用")
+                cand = resolve_bilinovel(clean, timeout=max(timeout, 15.0),
+                                         exact_only=index_only, allow_bing=not index_only)
+        except Exception as exc:  # noqa: BLE001 —— 轻小说只是"多一层"，绝不能拖垮网文下载
+            last_exc = exc
+
+        if cand is not None and cand.extra.get("novelId"):
+            break
+
+        if not index_only:
+            site_blocked = last_exc is not None
+            if not site_blocked:
+                try:
+                    from novelmeta.net import fetch as _nm_fetch
+                    pr = _nm_fetch("https://www.bilinovel.com/", timeout=8.0, verify_tls=False)
+                    if getattr(pr, "status", 0) >= 400:
+                        site_blocked = True
+                except Exception:  # noqa: BLE001
+                    site_blocked = True
+            if site_blocked and _rotate_proxy_node(_tried_nodes, "站内查书受阻"):
+                continue
+
+        if last_exc is not None:
+            log(f"  ⚠️ [轻小说] 查询异常：{type(last_exc).__name__}: {str(last_exc)[:80]}")
         return None
     log(f"  ✅ [轻小说] 命中：《{cand.title}》 书号={cand.extra['novelId']}"
         f"（{cand.extra.get('matchedBy') or 'title'} / {cand.extra.get('resolvedBy') or ''}）")
@@ -1075,6 +1157,7 @@ def download_linovelib(title: str, *, out_dir: str = "", timeout: float = 15.0,
         return {"ok": False, "needPick": True, "novelId": str(hit["novelId"]),
                 "title": hit["title"], "author": hit.get("author") or "",
                 "vol": hit["vol"], "query": hit.get("query") or title}
+    _set_proxy(True, "novel-dl-ln-get", mode="lightnovel")
     args = [sys.executable, "-X", "utf8", script, "--get", str(hit["novelId"]),
             "--vol", str(hit["vol"]), "--json",
             "--out", out_dir or os.path.join(_HERE, "download")]

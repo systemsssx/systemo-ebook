@@ -244,13 +244,42 @@ def enhance_image(image_path, magnify=4):
     log('📷 封面超分: %s  %dx%d  目标 %dx'
         % (os.path.basename(image_path), w0, h0, target))
 
+    def _fallback_convert_if_needed(src_path, reason_msg):
+        ext = os.path.splitext(src_path)[1].lower()
+        if ext in ('.jpg', '.jpeg', '.png'):
+            return None
+        conv_path = os.path.splitext(src_path)[0] + '_conv.jpg'
+        tmp_conv = conv_path + '.tmp'
+        try:
+            img.save(tmp_conv, 'JPEG', quality=JPEG_QUALITY, subsampling=0,
+                     optimize=True, icc_profile=icc if icc else None)
+            os.replace(tmp_conv, conv_path)
+            result['success'] = True
+            result['output_path'] = conv_path
+            result['size_after'] = os.path.getsize(conv_path)
+            result['message'] = reason_msg + '（已转 JPEG）'
+            return result
+        except Exception:
+            try:
+                if os.path.exists(tmp_conv):
+                    os.remove(tmp_conv)
+            except OSError:
+                pass
+            return None
+
     if target <= 1:
+        conv_res = _fallback_convert_if_needed(image_path, '尺寸已足够（%dx%d），无需超分' % (w0, h0))
+        if conv_res is not None:
+            return conv_res
         result['success'] = True
         result['message'] = '尺寸已足够（%dx%d），无需超分' % (w0, h0)
         return result
 
     model_path = find_model()
     if not model_path:
+        conv_res = _fallback_convert_if_needed(image_path, '未找到超分模型')
+        if conv_res is not None:
+            return conv_res
         result['message'] = '找不到超分模型 %s' % MODEL_FILENAME
         log('❌ %s' % result['message'])
         return result

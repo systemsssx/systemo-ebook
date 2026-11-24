@@ -432,10 +432,19 @@ def rank_candidates(
         # ★ 2026-09-30 追加 'site'：哔哩轻小说**站内搜索**给出"单本精确命中"页时
         #   （页面里自带「别名」栏，实测「败犬女主太多了」→ 3095），站点自己已经认定
         #   是同一部作品 —— 证据比"页面里出现过查询词"更硬，同样抬到 0.99。
+        _exact_author = bool(
+            author_hint and cand.author and author_similarity(author_hint, cand.author) >= 0.85
+        )
+        _trusted_weread = (
+            cand.source == "weread"
+            and cand.position == 0
+            and str((cand.extra or {}).get("bookId") or "").isdigit()
+        )
         if cand.extra.get("matchedBy") in ("content", "site"):
             cand.title_score = max(cand.title_score, 0.99)
         elif (fanfic_suspect and nq and _bare_text(cand.title) == _bare_text(query_title)
-              and cand.source not in _TRUSTED_FOR_EXACT):
+              and cand.source not in _TRUSTED_FOR_EXACT
+              and not _exact_author and not _trusted_weread):
             # 光名同名 + 同人簇 + 非权威源 → 同人嫌疑（见上）
             cand.extra["fanficSuspect"] = True
             cand.title_score = min(cand.title_score, _FANFIC_DEMOTE_TO)

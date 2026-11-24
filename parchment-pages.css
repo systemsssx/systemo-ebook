@@ -1,0 +1,1665 @@
+/* ==========================================================================
+   parchment-pages.css (V3) — 西洋古典羊皮卷五大业务卷页 · 松弛留白 · 铜版画与双页自适应
+   ========================================================================== */
+
+/* ===== 页眉右端状态切换（6px 微圆角分节器） ===== */
+.head-tools-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.demo-pill-group {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-btn);
+    overflow: hidden;
+    background: rgba(118, 90, 50, 0.08);
+}
+
+.demo-pill {
+    border: none;
+    background: transparent;
+    padding: 4px 12px;
+    font-family: var(--font-editorial);
+    font-size: 12px;
+    color: var(--ink-muted);
+    transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.demo-pill + .demo-pill {
+    border-left: 1px solid var(--rule-outer);
+}
+
+.demo-pill:hover {
+    color: var(--ink-primary);
+}
+
+.demo-pill.is-active {
+    background: var(--seal-walnut);
+    color: var(--seal-walnut-text);
+    font-weight: 600;
+}
+
+/* ===== 空闲状态提示自动隐藏（保留 DOM ID，有内容时才显现） ===== */
+#dnStatus:empty,
+#autoStatus:empty,
+#splitHint:empty,
+#searchHint:empty,
+#searchStatus:empty,
+#mkFileBadge:empty,
+#mkChapBadge:empty,
+#lnStatus:empty,
+#lmNote:empty,
+.tool-status:empty,
+.field-hint:empty,
+.chapter-live-hint:empty {
+    display: none !important;
+}
+
+/* ==========================================================================
+   III · 传输页 (#page-applebooks) — 待传书籍 + 卷草菱花隔线 + 三大圆形徽章通道
+   ========================================================================== */
+
+.tx-queue-card {
+    padding: 0;
+    margin-bottom: 0;
+    position: relative;
+}
+
+.tx-queue-card.is-drop-target {
+    background: rgba(110, 82, 42, 0.12);
+    outline: 1px dashed var(--ink-primary);
+    outline-offset: 6px;
+    border-radius: var(--r-box);
+}
+
+.tx-queue-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule-outer);
+}
+
+.tx-queue-title-group {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    min-width: 0;
+}
+
+.tx-sec-title {
+    font-family: var(--font-editorial);
+    font-size: var(--fs-card-title);
+    font-weight: var(--fw-serif-bold);
+    color: var(--ink-primary);
+    letter-spacing: 0.04em;
+}
+
+.tx-queue-chip {
+    font-size: var(--fs-meta);
+    color: var(--ink-muted);
+}
+
+.qlist {
+    max-height: 256px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.qempty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 16px 14px;
+}
+
+.qempty-art {
+    width: 152px;
+    height: auto;
+    margin-bottom: 10px;
+    opacity: 0.90;
+    pointer-events: none;
+    user-select: none;
+}
+
+.qempty-title {
+    font-family: var(--font-editorial);
+    font-size: 14.5px;
+    font-weight: var(--fw-serif-bold);
+    color: var(--ink-primary);
+    letter-spacing: 0.04em;
+}
+
+.qempty-sub {
+    margin-top: 3px;
+    font-size: var(--fs-meta);
+    color: var(--ink-muted);
+}
+
+/* 单条书目行：松弛内距 13px 10px */
+.qrow {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 66px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 10px;
+    border-bottom: 1px dashed var(--rule-dashed);
+    background: transparent;
+    transition: background-color var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.qrow:hover {
+    background: var(--vellum-hover);
+}
+
+.qrow.is-excluded {
+    opacity: 0.48;
+}
+
+/* 4px 微圆角铁胆墨勾选方格 */
+.qchk {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 1px solid var(--ink-secondary);
+    border-radius: 4px;
+    background: var(--seal-walnut);
+    color: var(--seal-walnut-text);
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.qchk.off {
+    background: transparent;
+    border-color: var(--rule-strong);
+    color: transparent;
+}
+
+/* 微缩烫金皮脊书封 */
+.qcov {
+    width: 32px;
+    height: 42px;
+    flex-shrink: 0;
+    border: 1px solid rgba(58, 40, 20, 0.48);
+    border-radius: 3px;
+    background-color: #BFA578;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 1px 2px 4px rgba(32, 20, 8, 0.22);
+}
+
+.qrow .m {
+    flex: 1;
+    min-width: 0;
+}
+
+.qrow .m .n {
+    font-family: var(--font-editorial);
+    font-size: 14px;
+    font-weight: var(--fw-serif-mid);
+    color: var(--ink-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qrow .m .s {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 椭圆封蜡状态签 (999px) */
+.qst {
+    flex-shrink: 0;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    font-family: var(--font-editorial);
+    font-size: 11.5px;
+    border: 1px solid var(--rule-outer);
+    color: var(--ink-secondary);
+}
+
+.qst.wait {
+    border-style: dashed;
+}
+
+.qst.run {
+    border-color: rgba(107, 75, 30, 0.45);
+    background: var(--warn-ochre-bg);
+    color: var(--warn-ochre);
+}
+
+.qst.done {
+    border-color: rgba(59, 75, 43, 0.45);
+    background: var(--ok-olive-bg);
+    color: var(--ok-olive);
+}
+
+/* ----- 2. 中段：三大传输通道（正圆双圈铜版徽章 + 清爽单行） ----- */
+.tx-dest-stack {
+    display: flex;
+    flex-direction: column;
+    margin-top: 2px;
+}
+
+.way.dest-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--rule-outer);
+    border-radius: 0;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color var(--dur-fast) ease;
+}
+
+.way.dest-card:hover {
+    background: var(--vellum-hover);
+}
+
+.way.dest-card.on {
+    background: rgba(112, 84, 42, 0.085);
+    box-shadow: inset 3px 0 0 var(--seal-walnut);
+}
+
+/* 38x38px 正圆双圈铜版徽章 (50% 圆弧破方) */
+.dest-emblem {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--brass-gold);
+    box-shadow:
+        inset 0 0 0 2px var(--vellum-page),
+        inset 0 0 0 3px rgba(142, 110, 62, 0.52);
+    background: radial-gradient(circle at 35% 30%, #DECFA9 0%, #C6B18D 100%);
+    color: var(--ink-secondary);
+    transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.way.dest-card.on .dest-emblem {
+    color: var(--ink-primary);
+    border-color: var(--seal-walnut);
+    box-shadow:
+        inset 0 0 0 2px var(--vellum-page),
+        inset 0 0 0 3px rgba(50, 34, 21, 0.55);
+}
+
+.dest-emblem svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.45;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dest-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dest-top-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dest-main .n {
+    font-family: var(--font-editorial);
+    font-size: var(--fs-card-title);
+    font-weight: var(--fw-serif-bold);
+    color: var(--ink-primary);
+    letter-spacing: 0.03em;
+}
+
+.dest-sub-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-secondary);
+}
+
+.dest-sub-line:not(:has(.tx-status:not([hidden]):not([data-state="idle"]))) {
+    display: none;
+}
+
+.tx-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--ink-secondary);
+}
+
+.tx-status .ts-i {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tx-status .ts-i:empty {
+    display: none;
+}
+
+.tx-status .ts-i svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+}
+
+.tx-status .ts-t {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tx-status[hidden],
+.tx-status[data-state="idle"] {
+    display: none !important;
+}
+
+.tx-status[data-state="ok"] {
+    color: var(--ok-olive);
+}
+
+.tx-status[data-state="run"],
+.tx-status[data-state="warn"] {
+    color: var(--warn-ochre);
+}
+
+.tx-status[data-state="run"] .ts-i svg {
+    animation: txStatusSpin 1.15s linear infinite;
+    transform-origin: 50% 50%;
+}
+
+@keyframes txStatusSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.tx-status[data-state="err"] {
+    color: var(--err-umber);
+}
+
+.dest-cta {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.dest-cta .btn-seal {
+    min-width: 112px;
+}
+
+.tx-send-bridge-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* ----- 3. 底部「授权与说明」折叠内部排印（无等宽、宽松间距） ----- */
+.auth-drawer-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.auth-btn-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-group-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.auth-group-label {
+    width: 76px;
+    flex-shrink: 0;
+    font-family: var(--font-editorial);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+}
+
+.auth-kv-box {
+    padding-left: 18px;
+    border-left: 1px solid var(--rule-outer);
+}
+
+.auth-kv-title {
+    font-family: var(--font-editorial);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    margin-bottom: 6px;
+}
+
+/* ==========================================================================
+   II · 制作页 (#page-books) — 铜版卷轴放置框 + 竖向栏线 + 拱券书封
+   ========================================================================== */
+
+.make-steps {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--rule-subtle);
+    flex-wrap: wrap;
+}
+
+.make-step {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--font-editorial);
+    font-size: 12.5px;
+    color: var(--ink-muted);
+}
+
+.make-step + .make-step::before {
+    content: "—";
+    margin-right: 10px;
+    color: var(--rule-outer);
+}
+
+.make-step .num {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--brass-gold);
+}
+
+.make-step.done,
+.make-step.is-done {
+    color: var(--ink-primary);
+    font-weight: 600;
+}
+
+.make-step.done .num,
+.make-step.is-done .num {
+    color: var(--ok-olive);
+}
+
+/* 顶部 TXT 手稿放置框（8px 微圆角 + 四角铜版花饰 + 卷轴蚀刻插画） */
+.drop-card {
+    margin-bottom: 24px;
+}
+
+.drop-well {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 22px;
+    border: 1px dashed var(--rule-strong);
+    border-radius: var(--r-box);
+    background: var(--vellum-tint);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.drop-well:hover,
+.drop-well.dragover {
+    border-style: solid;
+    border-color: var(--ink-primary);
+    background: var(--vellum-hover);
+}
+
+.drop-corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    color: var(--brass-gold);
+    opacity: 0.72;
+    pointer-events: none;
+}
+
+.drop-corner.tl { top: 5px; left: 5px; }
+.drop-corner.tr { top: 5px; right: 5px; transform: scaleX(-1); }
+.drop-corner.bl { bottom: 5px; left: 5px; transform: scaleY(-1); }
+.drop-corner.br { bottom: 5px; right: 5px; transform: scale(-1); }
+
+.txt-scroll-illu {
+    width: 68px;
+    height: auto;
+    flex-shrink: 0;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.92;
+}
+
+.drop-well .fmeta {
+    flex: 1;
+    min-width: 0;
+}
+
+.drop-well .fname {
+    font-family: var(--font-editorial);
+    font-size: 14.5px;
+    font-weight: var(--fw-serif-bold);
+    color: var(--ink-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.drop-well .fname .ok {
+    color: var(--ok-olive);
+}
+
+.drop-well .fsub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.drop-well .fsub:empty,
+.drop-well .fsub:not(:has(> *:not(:empty))) {
+    display: none;
+}
+
+/* 核心中段：左文右图（竖向分栏线隔开） */
+.make-core-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) 208px;
+    gap: 28px;
+    padding: 4px 0 24px;
+    border-bottom: 1px solid var(--rule-outer);
+    align-items: start;
+}
+
+.make-meta-card {
+    padding-right: 28px;
+    border-right: 1px solid var(--rule-outer);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.field-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field-label {
+    font-family: var(--font-editorial);
+    font-size: 13.5px;
+    font-weight: var(--fw-serif-bold);
+    color: var(--ink-primary);
+}
+
+.field-label .req {
+    color: var(--brass-deep);
+    margin-left: 3px;
+}
+
+#inputTitle.vellum-input {
+    font-family: var(--font-editorial);
+    font-size: 14.5px;
+    font-weight: var(--fw-serif-mid);
+}
+
+.author-input-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.author-input-group .vellum-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.author-input-group #btnAiAuthor {
+    height: 40px;
+}
+
+.field-hint {
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+
+/* 左栏底部：外露章节数 + 外露「重新拆分」(#btnResplit) */
+.chapter-core-bar {
+    padding-top: 16px;
+    border-top: 1px dashed var(--rule-dashed);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.chapter-stat-inline {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+
+.chapter-stat-inline .chapter-total {
+    font-size: 22px;
+    line-height: 1;
+    color: var(--ink-primary);
+}
+
+.chapter-stat-inline .chapter-unit {
+    font-family: var(--font-editorial);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+}
+
+.chapter-live-hint {
+    width: 100%;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+
+/* 右栏：西洋古典拱券顶 3:4 书封画框 (76px 拱顶) */
+.make-cover-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.cover-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    padding: 5px;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-arch);
+    background: var(--vellum-well);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 1px 3px rgba(36, 25, 17, 0.14);
+}
+
+.cover-placeholder {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border: 1px solid rgba(90, 66, 34, 0.35);
+    border-radius: 71px 71px 5px 5px;
+    overflow: hidden;
+}
+
+.cover-placeholder img,
+#coverPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 71px 71px 5px 5px;
+}
+
+.cover-edit-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 5px 8px;
+    background: rgba(29, 21, 14, 0.86);
+    color: var(--seal-walnut-text);
+    font-size: 11.5px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity var(--dur-fast) ease;
+}
+
+.cover-frame:hover .cover-edit-caption {
+    opacity: 1;
+}
+
+.ctag {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    z-index: 4;
+    padding: 2px 8px;
+    border-radius: var(--r-pill);
+    background: var(--seal-walnut);
+    color: var(--seal-walnut-text);
+    font-size: 11px;
+}
+
+.cover-caption-mini {
+    text-align: center;
+    line-height: 1.4;
+}
+
+.cover-caption-mini strong {
+    display: block;
+    font-family: var(--font-editorial);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cover-caption-mini small {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#btnSearchCover {
+    width: 100%;
+}
+
+.search-status {
+    font-size: 12px;
+    color: var(--ink-muted);
+    text-align: center;
+}
+
+/* 三道短名折叠内部控件 */
+.make-folds-wrap {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chapter-drawer-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.diagnosis-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--ink-secondary);
+}
+
+.diagnosis-bar .dot.green {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok-olive);
+    margin-right: 5px;
+}
+
+.chapter-threshold-ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-secondary);
+}
+
+.chapter-threshold-ctrl input {
+    width: 58px;
+    height: 30px;
+    padding: 0 6px;
+    text-align: center;
+    border: 1px solid var(--rule-strong);
+    border-radius: 5px;
+    background: var(--vellum-focus);
+}
+
+.chapter-list {
+    max-height: 164px;
+    overflow-y: auto;
+    padding: 8px 12px;
+    background: rgba(213, 195, 163, 0.55);
+    border: 1px solid var(--rule-outer);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chapter-preview-item,
+.ch-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 4px;
+    border-bottom: 1px dashed var(--rule-subtle);
+    font-size: 12.5px;
+    color: var(--ink-primary);
+}
+
+.chapter-drawer-actions {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cover-drawer-row,
+.outdir-drawer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cover-kv-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--ink-secondary);
+}
+
+.cover-kv-group b {
+    color: var(--ink-primary);
+    margin-left: 4px;
+    font-family: var(--font-italic-mix);
+    font-size: 12.5px;
+}
+
+.outdir-code {
+    padding: 3px 10px;
+    background: rgba(213, 195, 163, 0.58);
+    border: 1px solid var(--rule-outer);
+    border-radius: 5px;
+    font-family: var(--font-italic-mix);
+    font-size: 12.5px;
+    color: var(--ink-primary);
+}
+
+.make-foot {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule-outer);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+#convertBtn {
+    min-width: 152px;
+}
+
+/* ==========================================================================
+   I · 下载 (#page-download) & V · 一键 (#page-auto) — 铜版拱券画框图文页
+   ========================================================================== */
+.studio-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1.42fr) 220px;
+    gap: 28px;
+    align-items: center;
+}
+
+.studio-compose {
+    padding-right: 28px;
+    border-right: 1px solid var(--rule-outer);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.tool-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tool-form .vellum-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.tool-status {
+    font-size: 12.5px;
+    color: var(--ink-secondary);
+    padding: 8px 12px;
+    background: var(--vellum-tint);
+    border-left: 2px solid var(--brass-gold);
+    border-radius: 0 6px 6px 0;
+}
+
+.dn-progress-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dn-progress-bar {
+    height: 6px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.dn-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--seal-walnut);
+    transition: width 200ms ease;
+}
+
+.dn-progress-text {
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+
+.studio-artifact {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* 西洋古典拱券画框（专衬 18 世纪铜版蚀刻画） */
+.studio-book-frame {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    padding: 14px 12px 10px;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-arch);
+    background: radial-gradient(ellipse at 50% 42%, #E1D3B9 0%, #C6B18D 100%);
+    box-shadow:
+        inset 0 0 0 3px var(--vellum-page),
+        inset 0 0 0 4px rgba(142, 110, 62, 0.42);
+    overflow: hidden;
+}
+
+.studio-book-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.studio-flow {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.studio-flow li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border: 1px solid var(--rule-outer);
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.studio-flow li span {
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--brass-gold);
+}
+
+/* ==========================================================================
+   IV · 书库页 (#page-library) — 西洋精装皮脊书架
+   ========================================================================== */
+.lib-seg {
+    display: inline-flex;
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-btn);
+    overflow: hidden;
+    background: rgba(118, 90, 50, 0.08);
+}
+
+.lib-seg-btn {
+    border: none;
+    background: transparent;
+    padding: 5px 14px;
+    font-family: var(--font-editorial);
+    font-size: 12.5px;
+    color: var(--ink-muted);
+}
+
+.lib-seg-btn + .lib-seg-btn {
+    border-left: 1px solid var(--rule-outer);
+}
+
+.lib-seg-btn.active {
+    background: var(--seal-walnut);
+    color: var(--seal-walnut-text);
+    font-weight: 600;
+}
+
+.lib-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--rule-outer);
+}
+
+.lib-search {
+    flex: 1;
+    min-width: 190px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-input);
+    box-shadow:
+        inset 0 1px 3px rgba(36, 25, 17, 0.12),
+        0 1px 0 rgba(238, 226, 205, 0.38);
+}
+
+.lib-search svg {
+    width: 14px;
+    height: 14px;
+    color: var(--ink-muted);
+    flex-shrink: 0;
+}
+
+.lib-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13.5px;
+    color: var(--ink-primary);
+}
+
+.lib-count {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    padding: 0 4px;
+}
+
+.lib-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+    gap: 22px 18px;
+    margin-top: 14px;
+    padding-bottom: 16px;
+}
+
+.lib-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 210px;
+    cursor: grab;
+}
+
+.lib-card:active {
+    cursor: grabbing;
+}
+
+.lib-cover {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    border: 1px solid var(--rule-strong);
+    border-radius: 5px;
+    background-color: #BEA374;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px;
+    box-shadow: 2px 4px 10px rgba(28, 18, 8, 0.26);
+    transition: transform var(--dur-fast) ease;
+}
+
+.lib-card:hover .lib-cover {
+    transform: translateY(-2px);
+}
+
+.lib-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(24, 16, 8, 0.84) 100%);
+    pointer-events: none;
+}
+
+.lib-cover .ct {
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: 600;
+    color: #E7D5B3;
+    line-height: 1.35;
+}
+
+.lib-cover .ca {
+    position: relative;
+    z-index: 2;
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: #C2AC84;
+}
+
+.lib-fmt {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    z-index: 3;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(29, 21, 14, 0.86);
+    color: #DFC89D;
+    font-size: 9.5px;
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+}
+
+.lib-chk {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    z-index: 3;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: var(--vellum-sheet);
+    border: 1px solid var(--ink-primary);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: transparent;
+}
+
+.lib-grid.multi .lib-chk,
+.lib-grid.multiselect .lib-chk,
+.lib-card.sel .lib-chk {
+    display: inline-flex;
+}
+
+.lib-card.sel .lib-chk {
+    background: var(--seal-walnut);
+    color: var(--seal-walnut-text);
+}
+
+.lib-meta {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.lib-meta .n {
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lib-meta .lib-author {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lib-meta .s {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-family: var(--font-italic-mix);
+}
+
+.lib-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 16px;
+    text-align: center;
+    color: var(--ink-muted);
+}
+
+.lib-toast {
+    position: fixed;
+    bottom: 44px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 260;
+    padding: 8px 18px;
+    border-radius: var(--r-btn);
+    background: var(--seal-walnut);
+    color: var(--seal-walnut-text);
+    border: 1px solid #1E130A;
+    font-size: 12.5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
+
+.lib-toast.show {
+    opacity: 1;
+}
+
+.lib-bulk {
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-top: 10px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+}
+
+.lib-bulk.on,
+.lib-bulk.show {
+    display: flex;
+}
+
+/* 章节编辑器表格 */
+.ce-body {
+    max-height: 44vh;
+    overflow-y: auto;
+    border: 1px solid var(--rule-outer);
+    border-radius: 6px;
+    background: var(--vellum-page);
+}
+
+.ce-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.ce-table th,
+.ce-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--rule-subtle);
+    text-align: left;
+}
+
+.ce-table th {
+    background: var(--vellum-well);
+    font-family: var(--font-editorial);
+    font-weight: 600;
+    color: var(--ink-secondary);
+}
+
+.ch-body {
+    max-height: 52vh;
+    overflow-y: auto;
+    padding: 16px 20px;
+}
+
+/* ===== 主程序动态生成元素兼容样式（章节列表 / 编辑器 / 精选推荐 / 多候选 / 轻小说） ===== */
+.chapter-preview-item {
+    padding: 6px 8px;
+    border-bottom: 1px dashed var(--rule-subtle);
+    gap: 10px;
+    align-items: center;
+}
+
+.chapter-preview-item .idx {
+    font-family: var(--font-italic-mix);
+    color: var(--ink-muted);
+    min-width: 28px;
+    flex-shrink: 0;
+}
+
+.chapter-preview-item .title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chapter-preview-item .info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+}
+
+.chapter-preview-item .status-badge {
+    cursor: pointer;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    border: 1px solid var(--rule-outer);
+    background: var(--vellum-sheet);
+    color: var(--ink-secondary);
+}
+
+.ch-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--rule-subtle);
+    font-size: 12.5px;
+}
+
+.ch-item.dropped {
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+.ch-item .no {
+    font-family: var(--font-italic-mix);
+    color: var(--ink-muted);
+}
+
+.ch-item .ti {
+    flex: 1;
+}
+
+.ch-item .ln {
+    font-family: var(--font-italic-mix);
+    color: var(--ink-muted);
+    font-size: 11.5px;
+}
+
+.ce-tinput {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid var(--rule-outer);
+    border-radius: 4px;
+    background: var(--vellum-sheet);
+    color: var(--ink-primary);
+}
+
+.ce-linehint {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-left: 6px;
+}
+
+.ce-act-b {
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 1px solid var(--rule-strong);
+    background: var(--vellum-well);
+    color: var(--ink-primary);
+    font-size: 11.5px;
+    margin-right: 4px;
+}
+
+.ce-act-b.danger {
+    color: var(--err-umber);
+}
+
+.ce-del {
+    opacity: 0.52;
+}
+
+.rec-card-item {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rec-thumb {
+    aspect-ratio: 3 / 4;
+    border: 1px solid var(--rule-strong);
+    border-radius: 5px;
+    background: var(--vellum-well) center/cover no-repeat;
+    overflow: hidden;
+    box-shadow: 2px 4px 10px rgba(28, 18, 8, 0.22);
+}
+
+.rec-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rec-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rec-author {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rec-pg {
+    padding: 4px 10px;
+    border: 1px solid var(--rule-outer);
+    border-radius: 4px;
+    background: var(--vellum-well);
+    font-size: 12px;
+    margin-right: 6px;
+}
+
+.rec-pg.active,
+.rec-board.active {
+    background: var(--seal-walnut);
+    color: var(--seal-walnut-text);
+    border-color: #1E130A;
+}
+
+.meta-choice-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.meta-choice-cover {
+    width: 40px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 1px solid var(--rule-outer);
+    flex-shrink: 0;
+}
+
+.ln-vol {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-bottom: 1px dashed var(--rule-subtle);
+    font-size: 12.5px;
+    cursor: pointer;
+}
+
+.batch-badge {
+    margin-top: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--vellum-well);
+    border: 1px solid var(--rule-outer);
+    font-size: 12px;
+    color: var(--ink-secondary);
+}
+
+/* ==========================================================================
+   ★ 容器查询 (@container folio)：双页对开分屏半宽书页自适应排版 ★
+   ========================================================================== */
+@container folio (max-width: 680px) {
+    .page {
+        padding: 22px 24px 28px;
+    }
+
+    .view-head {
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .view-title {
+        font-size: 18px;
+    }
+
+    .make-core-grid {
+        grid-template-columns: minmax(0, 1fr) 164px;
+        gap: 18px;
+    }
+
+    .make-meta-card {
+        padding-right: 18px;
+    }
+
+    .way.dest-card {
+        padding: 15px 10px;
+        gap: 12px;
+    }
+
+    .auth-drawer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-kv-box {
+        padding-left: 0;
+        padding-top: 12px;
+        border-left: none;
+        border-top: 1px dashed var(--rule-dashed);
+    }
+
+    .studio-stage {
+        grid-template-columns: minmax(0, 1fr) 170px;
+        gap: 18px;
+    }
+
+    .studio-compose {
+        padding-right: 18px;
+    }
+}
+
+@container folio (max-width: 500px) {
+    .make-core-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .make-meta-card {
+        padding-right: 0;
+        border-right: none;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--rule-outer);
+    }
+
+    .make-cover-card {
+        max-width: 200px;
+        margin: 0 auto;
+    }
+
+    .studio-stage {
+        grid-template-columns: 1fr;
+    }
+
+    .studio-compose {
+        padding-right: 0;
+        border-right: none;
+    }
+
+    .studio-artifact {
+        max-width: 200px;
+        margin: 0 auto;
+    }
+
+    .way.dest-card {
+        flex-wrap: wrap;
+    }
+
+    .dest-cta {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

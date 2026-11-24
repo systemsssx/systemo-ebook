@@ -52,6 +52,7 @@
       "!_ln_tmp/**",
       "!settings.json",
       "!kindle_config.json",
+      "!library-history.json",
       "!export/**",
       "!sendqueue/**",
       "!download/**",
@@ -62,7 +63,8 @@
     "asarUnpack": [
       "**/*.py",
       "novelmeta/**",
-      "opencc/**"
+      "opencc/**",
+      "tools/mihomo/**"
     ],
     "extraResources": [
       {

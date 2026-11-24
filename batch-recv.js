@@ -28,7 +28,7 @@
         if (old) old.remove();
         var el = document.createElement('div');
         el.className = 'batch-badge';
-        el.innerHTML = '<span>📚 来自书库：本次将' + text + ' <b>' + count + '</b> 本</span>';
+        el.innerHTML = '<span>来自书库：本次将' + text + ' <b>' + count + '</b> 本</span>';
         host.appendChild(el);
         return el;
     }
@@ -87,15 +87,10 @@
             var right = page && page.querySelector('.books-right');
             var el = badge(right, files.length, '上传');
 
-            console.log('📚 苹果图书：复制', files.length, '本到下载目录');
-            E.applebooks.copyFiles(files).then(function (res) {
-                if (el) {
-                    var ok = res && res.success;
-                    el.innerHTML = ok
-                        ? '<span>📚 已从书库复制 <b>' + files.length + '</b> 本 · 点「上传」走网盘流程</span>'
-                        : '<span>⚠️ 复制失败：' + ((res && res.error) || '未知错误') + '</span>';
-                }
-            });
+            console.log('苹果图书：已接收来自书库的', files.length, '本（直传队列）');
+            if (el) {
+                el.innerHTML = '<span>已从书库加入 <b>' + files.length + '</b> 本 · 点「上传」直接发送</span>';
+            }
         });
     }
 

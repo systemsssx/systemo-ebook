@@ -258,34 +258,46 @@ def _strip_tags(text: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
-_COVER_SIZE_PREFIXES = ("t9_", "t7_", "b_", "m_", "s_", "t_")
+_COVER_SIZE_PREFIXES = ("t9_", "t8_", "t7_", "t6_", "b_", "m_", "s_", "t_")
+_YUEWEN_COVER_RE = re.compile(
+    r"^(https?://bookcover\.yuewen\.com/qdbimg/\d+/\d+)/(?:\d+)(?:\?.*)?$",
+    re.I,
+)
+_DOUBAN_COVER_RE = re.compile(
+    r"^(https?://img\d+\.doubanio\.com/view/subject/)(?:s|m|l|raw)(/public/[^?#]+(?:\?.*)?)$",
+    re.I,
+)
 
 
 def cover_variants(url: str) -> list[str]:
-    """Return the same cover at descending sizes, best first.
+    """Return candidate URLs for the same cover (highest-resolution variants + original).
 
-    ★★ 2026-10-09 实测补档（用户：「这个封面好拉跨，不能知道了平台后去官方平台爬吗」）★★
-      微信读书 CDN 把尺寸编在文件名前缀里。**同一张图 480068 逐档实测**：
-
-          s_ = 70x100 (6.3KB)      m_ = 84x120 (8.7KB)     b_ = 140x200 (17KB)
-          t7_ = 285x411 (41KB)     t9_ = 428x616 (72KB)   ← ★ 原来只试到 b_
-          t_ / 不带前缀 = HTTP 404（这台 host 上没有）
-
-      → 现在按 **t9_ → t7_ → b_ → m_ → 原样** 试（download_cover 取第一个真图片），
-        微读来源的封面从 140x200(17KB) 直接变成 428x616(72KB)，像素多了约 6 倍。
-
-    ⚠️ 这个前缀**只对微读那台 CDN 有效**，别的平台别照搬（都实测过，2026-10-09）：
-      · 番茄（`*-novel-sign.byteimg.com`）：URL 带 `~tplv-resize:225:300.image` + **签名**，
-        改尺寸模板 / 去掉模板 / 换 host 一律 **403**；官方书页里也只有同一张 225x300
-        → 番茄封面**拿不到更大的**，只能靠 Real-ESRGAN 超分。
-      · 起点（`bookcover.yuewen.com/qdbimg/…/180`）：宽度尾巴换成 300/600/900 **全部**
-        返回同一张 180x240 → 也换不到大图。
-      · `cdn.weread.qq.com/weread/cover/…`（另一种微读 URL）：换前缀**返回同一张图**
-        （服务器忽略前缀）→ 无害也没收益。
-      · 不是"带尺寸前缀"的 URL 原样返回，调用方照样能试。
+    Supports:
+      1) WeRead Tencent COS covers (`wfqqreader-*.myqcloud.com/cover/.../<prefix><id>.jpg`):
+         expands `t9_` > `t8_` > `t7_` > `t6_` > `b_` > `m_` > `s_` > original,
+         and for 6-8 digit Qidian-synced WeRead IDs also includes Yuewen `/0` & `/600`
+         (validated later by dHash inside `download_cover()` so non-Qidian IDs never mismatch).
+      2) Qidian / Yuewen (`bookcover.yuewen.com/qdbimg/<app>/<bid>/<size>`):
+         expands `/0` (uncompressed 600x800) > `/600` > `/300` > `/180` > original.
+      3) Douban (`doubanio.com/view/subject/<sz>/public/...`):
+         expands `/l/` > `/raw/` > `/m/` > original.
     """
     if not url:
         return []
+    out: list[str] = []
+
+    my = _YUEWEN_COVER_RE.match(url)
+    if my:
+        prefix = my.group(1)
+        out.extend([f"{prefix}/0", f"{prefix}/600", f"{prefix}/300", f"{prefix}/180", url])
+        return list(dict.fromkeys(out))
+
+    md = _DOUBAN_COVER_RE.match(url)
+    if md:
+        pre, post = md.group(1), md.group(2)
+        out.extend([f"{pre}l{post}", f"{pre}raw{post}", f"{pre}m{post}", url])
+        return list(dict.fromkeys(out))
+
     head, sep, name = url.rpartition("/")
     if not sep:
         return [url]
@@ -296,13 +308,23 @@ def cover_variants(url: str) -> list[str]:
             break
     if not base:
         return [url]                          # 不是"尺寸前缀 + 文件名"的形态 → 不动它
-    out: list[str] = [f"{head}/{prefix}{base}" for prefix in ("t9_", "t7_", "b_", "m_")]
+
+    for prefix in ("t9_", "t8_", "t7_", "t6_", "b_", "m_", "s_"):
+        out.append(f"{head}/{prefix}{base}")
     out.append(url)
-    deduped: list[str] = []
-    for item in out:
-        if item not in deduped:
-            deduped.append(item)
-    return deduped
+
+    # 微信读书与阅文/起点封面打通：7~8位纯数字 WeRead bookId + 990000000 对应起点图床 /0 原图 (600x800)
+    # 实测 46010291(乱世书) / 20868264(诡秘之主) / 41794030(道诡异仙) / 29664125(大奉打更人) 全部 1:1 对应；
+    # download_cover() 会用 dHash 感知指纹核对确系同一张图后才采纳，防止串图或误取空白底图。
+    stem = os.path.splitext(base)[0]
+    if ("myqcloud.com" in head or "weread.qq.com" in head) and stem.isdigit():
+        num = int(stem)
+        if 100_000 <= num < 100_000_000:
+            q_bid = num + 990_000_000
+            out.append(f"https://bookcover.yuewen.com/qdbimg/349573/{q_bid}/0")
+            out.append(f"https://bookcover.yuewen.com/qdbimg/349573/{q_bid}/600")
+
+    return list(dict.fromkeys(out))
 
 
 def _looks_blocked(resp: Response) -> bool:
@@ -355,12 +377,14 @@ class WeReadSource:
             if not title_text:
                 continue
             book_id = str(info.get("bookId") or "").strip()
-            cover = _abs_url(info.get("cover") or "")
+            raw_cover = _abs_url(info.get("cover") or "")
+            variants = cover_variants(raw_cover)
+            display_cover = variants[0] if variants else raw_cover
             out.append(
                 Candidate(
                     title=title_text,
                     author=(info.get("author") or "").strip(),
-                    cover=cover,
+                    cover=display_cover,
                     source=self.name,
                     url=f"https://weread.qq.com/web/bookDetail/{book_id}" if book_id else "",
                     intro=(info.get("intro") or "").strip(),
@@ -370,9 +394,8 @@ class WeReadSource:
                         "publisher": info.get("publisher") or "",
                         "newRating": info.get("newRating"),
                         "readingCount": item.get("readingCount"),
-                        # WeRead serves the same artwork at several sizes:
-                        # s_ = 70x100, m_ = 84x120, b_ = 140x200 (measured).
-                        "coverVariants": cover_variants(cover),
+                        "rawCover": raw_cover,
+                        "coverVariants": variants,
                     },
                 )
             )

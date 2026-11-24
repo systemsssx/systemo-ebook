@@ -123,66 +123,19 @@ _PLACEHOLDER_SEEN = False
 
 
 def create_driver():
-    """创建 Selenium 驱动（反爬增强）。默认无头（HEADLESS=True，见上）。"""
+    """创建 Selenium 驱动（反爬增强 + ChromeDriver 自动热更 + Edge 兜底）。默认无头。"""
     try:
-        from selenium import webdriver
         from selenium.webdriver.chrome.options import Options
-        from selenium.webdriver.chrome.service import Service
     except ImportError:
         print('⚠️ 请安装依赖: pip install selenium', file=sys.stderr)
         return None
 
-    # ★ 2026-09-25：以前这里无条件 `ChromeDriverManager().install()`（联网现下 driver）。
-    #   开发机上 ~\.wdm 早有缓存，所以「npmstart 能找封面」；打包版一到别人电脑上就
-    #   可能下不动、被墙、或版本与对方 Chrome 不匹配 → 表现为「找不到封面」。
-    #   现在优先用调用方（main.js）通过 CHROMEDRIVER_PATH 传进来的随包 chromedriver.exe，
-    #   取不到才回落到 webdriver_manager 现下。诊断一律走 stderr（main.js 记进
-    #   COVER-STDERR）；**绝不能用以 '{' 开头的行** —— main.js 靠「第一条以 { 开头的行」
-    #   解析封面的结果 JSON。
+    _script_dir = os.path.dirname(os.path.abspath(__file__))
+    if _script_dir not in sys.path:
+        sys.path.insert(0, _script_dir)
+    import chromedriver_helper
+
     _env_driver = (os.environ.get('CHROMEDRIVER_PATH') or '').strip()
-    _env_ok = bool(_env_driver) and os.path.isfile(_env_driver)
-    _wdm_dir = os.path.join(os.path.expanduser('~'), '.wdm')
-    _chosen = None
-    _source = 'none'
-
-    if _env_ok:
-        _chosen = _env_driver
-        _source = 'env:CHROMEDRIVER_PATH'
-    else:
-        try:
-            from webdriver_manager.chrome import ChromeDriverManager
-            _chosen = ChromeDriverManager().install()
-            _source = 'webdriver_manager(现下)'
-        except Exception as _e:
-            print('COVER-DRIVER ' + json.dumps({
-                'source': 'none',
-                'env': _env_driver,
-                'env_exists': _env_ok,
-                'wdm_dir': _wdm_dir,
-                'wdm_dir_exists': os.path.isdir(_wdm_dir),
-                'error': str(_e)[:300],
-            }, ensure_ascii=False), file=sys.stderr)
-
-    print('COVER-DRIVER ' + json.dumps({
-        'source': _source,
-        'chosen': _chosen,
-        'env': _env_driver,
-        'env_exists': _env_ok,
-        'wdm_dir': _wdm_dir,
-        'wdm_dir_exists': os.path.isdir(_wdm_dir),
-        'frozen': bool(getattr(sys, 'frozen', False)),
-        'executable': sys.executable,
-        'chrome_paths': [p for p in [
-            os.path.join(os.environ.get('PROGRAMFILES', ''), 'Google', 'Chrome', 'Application', 'chrome.exe'),
-            os.path.join(os.environ.get('PROGRAMFILES(X86)', ''), 'Google', 'Chrome', 'Application', 'chrome.exe'),
-            os.path.join(os.environ.get('PROGRAMFILES', ''), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-        ] if p and os.path.isfile(p)],
-    }, ensure_ascii=False), file=sys.stderr)
-
-    if not _chosen:
-        print('⚠️ 找不到可用的 chromedriver：CHROMEDRIVER_PATH 指向的文件不存在，'
-              'webdriver_manager 也没能提供。', file=sys.stderr)
-        return None
 
     chrome_options = Options()
     # ★ 2026-10-01：默认无头（静默，不弹窗口）—— 用户：「获取封面不是可以静默吗」
@@ -205,19 +158,35 @@ def create_driver():
     chrome_options.page_load_strategy = 'eager'
 
     try:
-        service = Service(_chosen)
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver, browser_kind, _source = chromedriver_helper.create_resilient_chrome_or_edge(
+            chrome_options,
+            preferred_driver=_env_driver or None,
+            log_fn=lambda m: print(m, file=sys.stderr),
+            edge_fallback=True,
+        )
     except Exception as e:
-        print(f'⚠️ ChromeDriver 初始化失败（driver={_chosen}, 来源={_source}）: {e}', file=sys.stderr)
+        print(f'⚠️ 浏览器初始化失败（env={_env_driver}）: {e}', file=sys.stderr)
         return None
 
+    print('COVER-DRIVER ' + json.dumps({
+        'source': _source,
+        'browser': browser_kind,
+        'env': _env_driver,
+        'env_exists': bool(_env_driver) and os.path.isfile(_env_driver),
+        'frozen': bool(getattr(sys, 'frozen', False)),
+        'executable': sys.executable,
+    }, ensure_ascii=False), file=sys.stderr)
+
     # 反爬：执行CDP命令隐藏webdriver
-    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
-        'source': '''
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            window.chrome = { runtime: {} };
-        '''
-    })
+    try:
+        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            'source': '''
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                window.chrome = { runtime: {} };
+            '''
+        })
+    except Exception:
+        pass
     return driver
 
 
@@ -276,7 +245,33 @@ def download_cover(cover_url):
         session = requests.Session()
         session.headers.update(headers)
 
-        response = session.get(cover_url, timeout=30)
+        # 自动尝试同一图床的更高清版本（起点 /0 > /600 > 原 URL；微读 t9_ > t7_ > 原 URL）
+        try_urls = [cover_url]
+        _ym = re.match(r'^(https?://bookcover\.yuewen\.com/qdbimg/\d+/\d+)/(\d+)(\?.*)?$', cover_url, re.I)
+        if _ym:
+            _yp, _ys = _ym.group(1), (_ym.group(3) or '')
+            try_urls = list(dict.fromkeys([f'{_yp}/0{_ys}', f'{_yp}/600{_ys}', f'{_yp}/300{_ys}', cover_url]))
+        else:
+            _wm = re.match(r'^(.*/)(?:s_|m_|b_|t6_|t7_|t8_|t9_)([^/]+)$', cover_url)
+            if _wm and ('myqcloud.com' in cover_url or 'weread' in cover_url):
+                try_urls = list(dict.fromkeys([f'{_wm.group(1)}t9_{_wm.group(2)}', f'{_wm.group(1)}t7_{_wm.group(2)}', cover_url]))
+
+        response = None
+        for _cu in try_urls:
+            try:
+                _r = session.get(_cu, timeout=20)
+                if _r.status_code == 200 and 'image' in _r.headers.get('Content-Type', '').lower() and 'gif' not in _r.headers.get('Content-Type', '').lower():
+                    if 'yuewen.com' in _cu and len(_r.content) < 8000:
+                        continue
+                    if len(_r.content) >= 3000:
+                        response = _r
+                        cover_url = _cu
+                        break
+            except Exception:
+                continue
+
+        if response is None:
+            response = session.get(cover_url, timeout=30)
 
         if response.status_code != 200:
             print(f'⚠️ 下载失败: HTTP {response.status_code}', file=sys.stderr)
@@ -1220,8 +1215,8 @@ def _dispatch_cover(title, author, platform):
         print(f'📤 走晋江分支 -> 晋江文学城', file=sys.stderr)
         return search_cover_jjwxc(title, author)
     else:
-        print(f'⚠️ 未知类型: {book_type}', file=sys.stderr)
-        return None
+        print(f'📤 未命中已知作者分类 ({book_type}) → 兜底走起点/通用搜图', file=sys.stderr)
+        return search_cover_qidian(title, author)
 
 
 def search_cover(title, author='', platform=''):

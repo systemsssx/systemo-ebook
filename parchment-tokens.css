@@ -1,0 +1,348 @@
+/* ==========================================================================
+   parchment-tokens.css (V3) — 18 世纪西洋鞣制小牛皮羊皮卷 · 古典排印基石
+   --------------------------------------------------------------------------
+   V3 美学与性能准则：
+   1. 纯正西洋羊皮色盘（零纯白、零刺眼红）：#D5C3A3 小牛皮书页 / #C6B18D 凹槽底 / #241911 铁胆墨 / #8E6E3E 古铜暗金。
+   2. 无死角艺术排印：西文与数字走 Cormorant Garamond（size-adjust: 112% 与中文齐平），
+      碑刻标题/罗马数字走 Cinzel，中文走 Noto Serif SC；全站禁绝 Consolas / 微软雅黑。
+   3. 方圆相济器物比例：6px 皮签按钮与输入框、8~10px 抽屉与信笺弹窗、50% 双圈徽章、999px 封蜡签、76px 拱券画框。
+   4. 极致流畅：离线烘焙无接缝 WebP 贴图，禁用 backdrop-filter 与实时 SVG 滤镜，输入框 contain 隔离。
+   ========================================================================== */
+
+/* ----- Cormorant Garamond 正体（Variable WOFF2 · latin & latin-ext） ----- */
+@font-face {
+    font-family: 'Cormorant Garamond';
+    src: url('./typefaces/CormorantGaramond-VF-latin-ext.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+    size-adjust: 112%;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Cormorant Garamond';
+    src: url('./typefaces/CormorantGaramond-VF-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+    size-adjust: 112%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ----- Cormorant Garamond 斜体（font-style: italic 标准配对） ----- */
+@font-face {
+    font-family: 'Cormorant Garamond';
+    src: url('./typefaces/CormorantGaramond-Italic-VF-latin-ext.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: italic;
+    font-display: swap;
+    size-adjust: 112%;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Cormorant Garamond';
+    src: url('./typefaces/CormorantGaramond-Italic-VF-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: italic;
+    font-display: swap;
+    size-adjust: 112%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ----- 中西混排斜体专用族（西文斜体优雅倾斜，中文回退 Noto Serif SC 保持端正不畸变） ----- */
+@font-face {
+    font-family: 'Cormorant Garamond Italic';
+    src: url('./typefaces/CormorantGaramond-Italic-VF-latin-ext.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+    size-adjust: 112%;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Cormorant Garamond Italic';
+    src: url('./typefaces/CormorantGaramond-Italic-VF-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+    size-adjust: 112%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ----- Cinzel 古罗马碑刻大写体（用于罗马数字、FOLIO 眉批与品牌铭文） ----- */
+@font-face {
+    font-family: 'Cinzel';
+    src: url('./typefaces/Cinzel-VF-latin-ext.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Cinzel';
+    src: url('./typefaces/Cinzel-VF-latin.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ----- 本地只读复用的 Noto Serif SC（严禁写入 fonts/ 目录） ----- */
+@font-face {
+    font-family: 'Noto Serif SC';
+    src: url('./fonts/NotoSerifSC-VF.ttf') format('truetype');
+    font-weight: 200 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    /* ----- 统一古典衬线字体族分工（全站零无衬线/零等宽漏网） ----- */
+    --font-editorial:  'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
+    --font-italic-mix: 'Cormorant Garamond Italic', 'Noto Serif SC', Georgia, serif;
+    --font-display:    'Cinzel', 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
+    --font-serif:      var(--font-editorial);
+    --font-sans:       var(--font-editorial);
+    --font-num:        var(--font-editorial);
+
+    /* ----- 舒朗耐看的西洋古典字阶 ----- */
+    --fs-page-title: 20px;
+    --fs-card-title: 15px;
+    --fs-sec-title:  13.5px;
+    --fs-btn-main:   13px;
+    --fs-body:       13.5px;
+    --fs-meta:       12px;
+
+    /* ----- 可变字重 ----- */
+    --fw-serif-bold: 650;
+    --fw-serif-mid:  560;
+    --fw-sans-med:   520;
+    --fw-sans-reg:   500;
+
+    /* ----- 18 世纪西洋鞣制小牛皮羊皮卷色盘（零纯白、零刺眼红） ----- */
+    --leather-bg:        #1D150E;
+    --leather-deep:      #140E09;
+    --leather-line:      rgba(176, 143, 90, 0.24);
+    --leather-text:      #D7C39E;
+    --leather-muted:     #968163;
+
+    --vellum-page:       #D5C3A3;   /* 主书页：温润欧洲鞣制小牛皮色 */
+    --vellum-page-edge:  #C5B08C;   /* 书页四周自然氧化微深色 */
+    --vellum-sheet:      #DBCAB0;   /* 信笺弹窗底色 */
+    --vellum-tint:       rgba(112, 86, 52, 0.055);
+    --vellum-well:       #C6B18D;   /* 输入栏与折叠抽屉凹槽底色 */
+    --vellum-focus:      #DFD1BA;   /* 输入聚焦时温和提亮半度 */
+    --vellum-hover:      rgba(110, 82, 42, 0.09);
+
+    /* ----- 铁胆墨色阶（深焦茶褐） ----- */
+    --ink-primary:       #241911;
+    --ink-secondary:     #463322;
+    --ink-muted:         #6B533B;
+    --ink-faint:         #866C50;
+
+    /* ----- 焦点印记色：深烘焙胡桃木墨印 + 古铜暗金 ----- */
+    --seal-walnut:       #322215;
+    --seal-walnut-top:   #402C1C;
+    --seal-walnut-bot:   #24170D;
+    --seal-walnut-hover: #4C3522;
+    --seal-walnut-text:  #E5D5B8;
+
+    --brass-gold:        #8E6E3E;
+    --brass-deep:        #6E522A;
+    --brass-bright:      #BFA06D;
+
+    /* ----- 西洋盲压线与铜版分隔线 ----- */
+    --rule-outer:        #9A805A;
+    --rule-strong:       #7F6540;
+    --rule-subtle:       rgba(112, 86, 52, 0.25);
+    --rule-dashed:       rgba(112, 86, 52, 0.38);
+
+    /* ----- 同色系低饱和状态墨色 ----- */
+    --ok-olive:          #3B4B2B;
+    --ok-olive-bg:       rgba(59, 75, 43, 0.13);
+    --warn-ochre:        #6B4B1E;
+    --warn-ochre-bg:     rgba(107, 75, 30, 0.13);
+    --err-umber:         #5E3320;
+    --err-umber-bg:      rgba(94, 51, 32, 0.14);
+
+    /* ----- 方圆相济器物圆角令牌 ----- */
+    --r-btn:   6px;
+    --r-input: 6px;
+    --r-box:   8px;
+    --r-modal: 10px;
+    --r-pill:  999px;
+    --r-arch:  76px 76px 8px 8px;
+
+    /* ----- 动效时序 ----- */
+    --dur-fast: 140ms;
+    --dur-mid:  200ms;
+    --ease-paper: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* ----- 主程序动态组件旧令牌兼容映射（严守零白零红羊皮色盘） ----- */
+    --ok:       var(--ok-olive);
+    --danger:   var(--err-umber);
+    --err:      var(--err-umber);
+    --warn:     #7A541C;
+    --acc:      var(--brass-gold);
+    --card:     var(--vellum-page);
+    --card2:    var(--vellum-sheet);
+    --field:    var(--vellum-well);
+    --line:     var(--rule-outer);
+    --line2:    var(--rule-strong);
+    --tx:       var(--ink-primary);
+    --tx2:      var(--ink-secondary);
+    --tx3:      var(--ink-muted);
+    --tx4:      var(--ink-muted);
+    --font-ui:  var(--font-editorial);
+    --r:        var(--r-box);
+    --dur:      180ms;
+    --ease:     var(--ease-paper);
+    --ease-out: var(--ease-paper);
+}
+
+/* ===== 全局基础重置（全部继承古典衬线体，零无衬线漏网） ===== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--leather-deep);
+    color: var(--ink-primary);
+    font-family: var(--font-editorial);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-sans-reg);
+    line-height: 1.68;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+button, input, select, textarea {
+    font-family: var(--font-editorial);
+    font-size: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* 全局古典选中高亮（彻底替代系统默认刺眼蓝底） */
+::selection {
+    background: rgba(142, 110, 62, 0.28);
+    color: var(--ink-primary);
+}
+
+/* 界面壳层与控件防误选（拖拽分屏 / 拖书时绝不泛蓝），输入框与日志保持可复制 */
+.window.app,
+.folio-header,
+.bottom-bar,
+.bookmark-tab,
+.slot-folio-badge,
+.folio-drop-layer,
+.qempty,
+.inline-empty,
+.dest-card,
+.lib-card,
+.etch-frame,
+.txt-dropzone,
+.fold-trigger,
+.stt,
+.qst {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"],
+pre,
+code,
+.selectable,
+.stk-log,
+#dnLog,
+#autoLog {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+body.is-dragging-folio,
+body.is-dragging-folio * {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
+/* ★★★ 输入框性能囚笼：打字重绘严格锁死在输入框内部 ★★★ */
+input, textarea, select {
+    contain: layout style paint;
+    isolation: isolate;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 1.5px solid var(--brass-deep);
+    outline-offset: 2px;
+}
+
+/* 古典衬线数字 */
+.num-serif,
+#detectChapterCount,
+#txSendCount,
+.tx-card-send-count,
+#totalChapterCount,
+#deletedChapterCount,
+#sendCount,
+#libSelNum {
+    font-family: var(--font-editorial);
+    font-weight: 600;
+}
+
+/* 极细茶褐书页滚动条 */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(96, 72, 40, 0.28);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(96, 72, 40, 0.48);
+}
+
+/* 纯纸模式（关闭贴图，保留同色系小牛皮羊皮底色与中缝光影） */
+body[data-background-mode="simple"] .folio-slot,
+body[data-background-mode="plain"] .folio-slot {
+    background-image: radial-gradient(ellipse at center, transparent 58%, rgba(102, 76, 40, 0.14) 100%) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+body.effect-paused *,
+body.effect-paused *::before,
+body.effect-paused *::after {
+    animation-play-state: paused !important;
+    transition: none !important;
+}

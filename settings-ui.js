@@ -78,12 +78,18 @@
 
         // —— 制作页底部：输出目录
         var disp = $('outDirDisplay');
+        var _curOutDir = (S.outputDir || '').trim();
         if (disp) {
-            var d = (S.outputDir || '').trim();
-            disp.textContent = d || '与源文件同目录';
-            disp.title = d || '';
-            disp.classList.toggle('is-default', !d);
+            var _tr = (window.__i18n && window.__i18n.t) ? window.__i18n.t : function (s) { return s; };
+            disp.textContent = _curOutDir || _tr('默认 (export)');
+            disp.title = _curOutDir || '';
+            disp.classList.toggle('is-default', !_curOutDir);
         }
+        if (apply._lastOutDir !== undefined && apply._lastOutDir !== _curOutDir) {
+            try { window.dispatchEvent(new CustomEvent('output-dir-changed', { detail: { outputDir: _curOutDir } })); } catch (e) {}
+            try { if (window.__lib && window.__lib.load) window.__lib.load(true); } catch (e) {}
+        }
+        apply._lastOutDir = _curOutDir;
 
         // —— 传输 · 苹果图书：网盘目录 / 重名策略
         var rd = $('abRemoteDir');

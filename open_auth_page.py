@@ -26,6 +26,11 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException, InvalidSessionIdException
 
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+import chromedriver_helper
+
 # --- 解析 chromedriver 路径 ---
 # ★ 修复空格路径 bug：优先从 sys.argv 读取 --chromedriver-path 参数
 # 回退到环境变量 CHROMEDRIVER_PATH
@@ -196,22 +201,7 @@ def open_browser():
     profile_dir = None
     keep_profile = False
     try:
-        if not os.path.exists(CHROME_DRIVER_PATH):
-            print(f"❌ chromedriver.exe 不存在: {CHROME_DRIVER_PATH}")
-            print("   → 浏览器无法启动。请确认 chromedriver.exe 与程序主体在同一目录。")
-            # ★ 修复：原来直接 return（退出码 0），Electron 侧拿到 error=null，
-            #   判定为「授权流程正常结束」，把失败静默吞掉。
-            sys.exit(2)
-
-        # ★ 关键修复：手动指定 Chrome 二进制路径，避免 0xC000007B
         chrome_options = Options()
-        chrome_paths = find_chrome_binary()
-        if chrome_paths:
-            chrome_options.binary_location = chrome_paths[0]
-            print(f"📁 Chrome 二进制: {chrome_paths[0]}")
-        else:
-            print("⚠️ 没找到 Chrome 二进制路径，尝试用默认设置")
-
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
@@ -248,28 +238,15 @@ def open_browser():
         chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
         chrome_options.add_experimental_option('useAutomationExtension', False)
 
-        # ★ 2026-09-23 新增：打开网络层日志。
-        #   理由：授权码原本只靠"用正则从页面 HTML 里抠"来拿，抠错了完全没有痕迹 ——
-        #   用户只看到一句「invalid code, expired or revoked」，谁也不知道那个码是
-        #   从哪段文字里出来的、还是页面根本没给出真正的码。
-        #   Network.* 事件会带上真实的请求 URL，Baidu 的 OAuth 回调里如果带 code
-        #   就能原样看到。它同时也让我能打印「这个码是从页面 HTML 还是网络层来的」。
         chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
 
-        # ★ 关键修复（2026-09-23，这条是真凶之一）：chromedriver 的 stderr 是
-        #   **系统区域编码（这台机器是 GBK）**，而 Python 3 的 subprocess 按 UTF-8
-        #   解码它 → 在 _readerthread 里抛
-        #       UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd0 …
-        #   （实测报错文本就是中文「未知错误」之类被 GBK 编码出来的 0xd0 开头字节）
-        #   结果：浏览器刚起来，授权进程就整个崩掉，退出码非 0，界面显示
-        #   「Authorization process error」。旧注释以为 creation_flags 就能
-        #   「不读输出」，其实子进程的 stdout/stderr 仍是 PIPE、仍会被解码。
-        #   修法：把这两个流指向 DEVNULL —— 没有任何字节需要解码，就不会崩。
-        # 使用 Selenium 公共日志接口，避免覆盖私有启动逻辑。
-        service = Service(executable_path=CHROME_DRIVER_PATH, log_output=subprocess.DEVNULL)
-        service.creation_flags = 0x08000000  # CREATE_NO_WINDOW
-        # 创建 driver 时不 capture stdout（避免读 chromedriver 输出触发解码错误）
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver, browser_kind, drv_src = chromedriver_helper.create_resilient_chrome_or_edge(
+            chrome_options,
+            preferred_driver=CHROME_DRIVER_PATH,
+            log_fn=print,
+            edge_fallback=True,
+        )
+        print(f"🌐 授权浏览器就绪: {browser_kind} (来源={drv_src})")
         driver.get(AUTH_URL)
         print("✅ 浏览器已自动打开，请完成登录并授权。")
         print("🔎 授权成功后页面会显示一串【授权码】，请把它复制下来，")

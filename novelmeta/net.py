@@ -174,6 +174,56 @@ def _split_url(url: str) -> tuple[str, str, int, str]:
     return scheme, host, port, path
 
 
+def _proxy_connect_https(
+    phost: str,
+    pport: int,
+    target_host: str,
+    target_port: int,
+    timeout: float,
+    context: ssl.SSLContext,
+) -> ssl.SSLSocket:
+    sock = socket.create_connection((phost, pport), timeout=timeout)
+    try:
+        sock.settimeout(timeout)
+        req = (
+            f"CONNECT {target_host}:{target_port} HTTP/1.1\r\n"
+            f"Host: {target_host}:{target_port}\r\n"
+            f"Proxy-Connection: keep-alive\r\n\r\n"
+        ).encode("ascii")
+        sock.sendall(req)
+        buf = b""
+        while b"\r\n\r\n" not in buf:
+            chunk = sock.recv(4096)
+            if not chunk:
+                raise OSError("Proxy closed during CONNECT")
+            buf += chunk
+            if len(buf) > 32768:
+                raise OSError("Proxy CONNECT header too large")
+        status_line = buf.split(b"\r\n", 1)[0].decode("latin1", "ignore")
+        if " 200 " not in status_line:
+            raise OSError(f"Proxy CONNECT rejected: {status_line}")
+        tls_sock = context.wrap_socket(sock, server_hostname=target_host)
+        tls_sock.settimeout(timeout)
+        return tls_sock
+    except Exception:
+        try:
+            sock.close()
+        except OSError:
+            pass
+        raise
+
+
+def _parse_proxy_env() -> tuple[str, int] | None:
+    raw = (os.environ.get("EASYPUB_PROXY") or "").strip()
+    if not raw or raw.upper() == "DIRECT":
+        return None
+    from urllib.parse import urlsplit
+    u = urlsplit(raw if "://" in raw else "http://" + raw)
+    if u.hostname and u.port:
+        return u.hostname, int(u.port)
+    return None
+
+
 def fetch_once(
     url: str,
     *,
@@ -211,42 +261,37 @@ def fetch_once(
 
     current = url
     errors: list[str] = []
+    proxy_cfg = _parse_proxy_env()
     for _hop in range(MAX_REDIRECTS + 1):
         scheme, host, port, path = _split_url(current)
         if not host:
             raise FetchError(url, [f"bad url: {current}"])
 
-        addrs = _addresses(host, port)
-        if not addrs:
-            errors.append(f"{host}: DNS failure")
-            raise FetchError(url, errors)
-
         resp: Response | None = None
-        for family, sockaddr in addrs:
-            # Prefer shorter per-address timeouts so a black-holed address
-            # cannot eat the whole budget.
-            addr_timeout = per_address_timeout or min(timeout, 8.0)
+        if proxy_cfg is not None:
+            phost, pport = proxy_cfg
+            pt = per_address_timeout or min(timeout, 12.0)
             try:
                 if scheme == "https":
                     ctx = ssl.create_default_context()
                     if not verify_tls:
                         ctx.check_hostname = False
                         ctx.verify_mode = ssl.CERT_NONE
-                    conn = _ForcedHTTPSConnection(
-                        host, sockaddr, family, port=port, timeout=addr_timeout, context=ctx
-                    )
+                    tls_sock = _proxy_connect_https(phost, pport, host, port, pt, ctx)
+                    conn = http.client.HTTPSConnection(host, port=port, timeout=pt, context=ctx)
+                    conn.sock = tls_sock
+                    req_target = path
                 else:
-                    conn = _ForcedHTTPConnection(
-                        host, sockaddr, family, port=port, timeout=addr_timeout
-                    )
+                    conn = http.client.HTTPConnection(phost, port=pport, timeout=pt)
+                    req_target = current
+                    merged_proxy = dict(merged)
+                    merged_proxy.setdefault("Host", f"{host}:{port}" if port != 80 else host)
                 try:
-                    # ★ 保持 GET 的调用形状不变（不传 body=None），
-                    #   否则任何包装了连接对象的代码/测试都会被打穿（实测踩过：
-                    #   test_cover.py 的 FakeConnection 不接受 body 参数）。
+                    req_hdrs = merged if scheme == "https" else merged_proxy
                     if cur_body is None:
-                        conn.request(cur_method, path, headers=merged)
+                        conn.request(cur_method, req_target, headers=req_hdrs)
                     else:
-                        conn.request(cur_method, path, body=cur_body, headers=merged)
+                        conn.request(cur_method, req_target, body=cur_body, headers=req_hdrs)
                     raw = conn.getresponse()
                     body = _decode_body(raw.read(), raw.getheader("Content-Encoding"))
                     resp = Response(
@@ -257,11 +302,56 @@ def fetch_once(
                     )
                 finally:
                     conn.close()
-            except Exception as exc:  # noqa: BLE001 - try the next address
-                fam = "v6" if family == socket.AF_INET6 else "v4"
-                errors.append(f"{host}[{fam} {sockaddr[0]}]: {type(exc).__name__}: {exc}")
-                continue
-            break  # first address that answered wins
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{host}[via-proxy {phost}:{pport}]: {type(exc).__name__}: {exc}")
+                resp = None
+
+        if resp is None and proxy_cfg is None:
+            addrs = _addresses(host, port)
+            if not addrs:
+                errors.append(f"{host}: DNS failure")
+                raise FetchError(url, errors)
+
+            for family, sockaddr in addrs:
+                # Prefer shorter per-address timeouts so a black-holed address
+                # cannot eat the whole budget.
+                addr_timeout = per_address_timeout or min(timeout, 8.0)
+                try:
+                    if scheme == "https":
+                        ctx = ssl.create_default_context()
+                        if not verify_tls:
+                            ctx.check_hostname = False
+                            ctx.verify_mode = ssl.CERT_NONE
+                        conn = _ForcedHTTPSConnection(
+                            host, sockaddr, family, port=port, timeout=addr_timeout, context=ctx
+                        )
+                    else:
+                        conn = _ForcedHTTPConnection(
+                            host, sockaddr, family, port=port, timeout=addr_timeout
+                        )
+                    try:
+                        # ★ 保持 GET 的调用形状不变（不传 body=None），
+                        #   否则任何包装了连接对象的代码/测试都会被打穿（实测踩过：
+                        #   test_cover.py 的 FakeConnection 不接受 body 参数）。
+                        if cur_body is None:
+                            conn.request(cur_method, path, headers=merged)
+                        else:
+                            conn.request(cur_method, path, body=cur_body, headers=merged)
+                        raw = conn.getresponse()
+                        body = _decode_body(raw.read(), raw.getheader("Content-Encoding"))
+                        resp = Response(
+                            url=current,
+                            status=raw.status,
+                            headers={k: v for k, v in raw.getheaders()},
+                            body=body,
+                        )
+                    finally:
+                        conn.close()
+                except Exception as exc:  # noqa: BLE001 - try the next address
+                    fam = "v6" if family == socket.AF_INET6 else "v4"
+                    errors.append(f"{host}[{fam} {sockaddr[0]}]: {type(exc).__name__}: {exc}")
+                    continue
+                break  # first address that answered wins
 
         if resp is None:
             raise FetchError(url, errors)

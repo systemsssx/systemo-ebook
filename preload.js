@@ -179,11 +179,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
         onSendDone: (callback) => ipcRenderer.on('kindle-send-done', (event, data) => callback(data))
     },
 
-    // ====== 传输通道各自的状态检测（三合一传输页） ======
-    //   applebooks → 百度授权 / wifi → 本地传书服务+局域网地址 / kindle → SMTP 邮箱配置
-    //   ★ 三个通道各查各的，不共用百度网盘那套结论。
+    // ====== 传输通道各自的状态检测（四合一传输页） ======
+    //   applebooks → 百度授权 / wifi → 本地传书服务 / kindle → Amazon 授权 / cloud → 本机云盘同步目录
     tx: {
         channelStatus: (channel) => ipcRenderer.invoke('tx-channel-status', channel)
+    },
+
+    // ====== 云盘本地同步（iCloud Drive / OneDrive / Google Drive / 自定义） ======
+    cloud: {
+        detect: () => ipcRenderer.invoke('cloud-detect'),
+        selectDir: () => ipcRenderer.invoke('cloud-select-dir'),
+        setProvider: (provider) => ipcRenderer.invoke('cloud-set-provider', provider),
+        openDir: () => ipcRenderer.invoke('cloud-open-dir'),
+        sync: (options) => ipcRenderer.invoke('cloud-sync', options || {}),
+        onLog: (callback) => ipcRenderer.on('cloud-sync-log', (event, data) => callback(data)),
+        onDone: (callback) => ipcRenderer.on('cloud-sync-done', (event, data) => callback(data))
     },
 
     // ====== 书库批量传输：三通道共用的待传清单 ======
@@ -221,7 +231,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
         exportFiles: (paths) => ipcRenderer.invoke('library-export', paths),
         getDir: () => ipcRenderer.invoke('library-dir'),
         importBooks: () => ipcRenderer.invoke('library-import'),
+        getEpubCover: (filePath) => ipcRenderer.invoke('epub-cover', filePath),
         // 双击书本 → 用内置阅读窗口打开
         openReader: (filePath) => ipcRenderer.invoke('reader-open', filePath)
-    }
+    },
+
+    // ====== 内置代理节点引擎 & 清理下载目录 ======
+    proxy: {
+        getStatus: () => ipcRenderer.invoke('proxy-get-status'),
+        toggle: (enabled, reason) => ipcRenderer.invoke('proxy-toggle', enabled, reason),
+        selectNode: (name) => ipcRenderer.invoke('proxy-select-node', name),
+        ensureMode: (mode, reason) => ipcRenderer.invoke('proxy-ensure-mode', mode, reason),
+        rotate: (opts) => ipcRenderer.invoke('proxy-rotate', opts),
+        retest: () => ipcRenderer.invoke('proxy-retest'),
+        onStateChanged: (cb) => ipcRenderer.on('proxy-state-changed', (e, st) => cb(st))
+    },
+    clearDownloadDir: () => ipcRenderer.invoke('clear-download-dir')
 });

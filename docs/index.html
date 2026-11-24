@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-skin="paper">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>systemo ebook v2.0.0 — Windows 本地电子书工作台</title>
+  <meta name="description" content="把网文与本地 TXT 整理成规范 EPUB 并送到常用阅读设备，全程在本地完成。Parchment V3 界面、对开双页分屏、四通道传输（含本地云盘同步）与内置三主题阅读器。" />
+  <meta property="og:title" content="systemo ebook v2.0.0 — Windows 本地电子书工作台" />
+  <meta property="og:description" content="下载、分章、高清封面、四通道传输与内置三主题阅读器，全程本地完成。" />
+  <meta property="og:image" content="https://systemsssx.github.io/systemo-ebook/social-preview.png" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ==========================================================================
+       1. 黄金衬线三剑客（本地离线 Cinzel / Cormorant Garamond + Noto Serif SC）
+       ========================================================================== */
+    @font-face {
+      font-family: 'Cinzel';
+      src: url('./fonts/Cinzel-VF-latin.woff2') format('woff2');
+      font-weight: 400 700;
+      font-display: swap;
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: 'Cinzel';
+      src: url('./fonts/Cinzel-VF-latin-ext.woff2') format('woff2');
+      font-weight: 400 700;
+      font-display: swap;
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+    @font-face {
+      font-family: 'Cormorant Garamond';
+      src: url('./fonts/CormorantGaramond-VF-latin.woff2') format('woff2');
+      font-weight: 400 700;
+      font-style: normal;
+      size-adjust: 112%;
+      font-display: swap;
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: 'Cormorant Garamond';
+      src: url('./fonts/CormorantGaramond-VF-latin-ext.woff2') format('woff2');
+      font-weight: 400 700;
+      font-style: normal;
+      size-adjust: 112%;
+      font-display: swap;
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+    @font-face {
+      font-family: 'Cormorant Garamond Italic';
+      src: url('./fonts/CormorantGaramond-Italic-VF-latin.woff2') format('woff2');
+      font-weight: 400 700;
+      font-style: italic;
+      size-adjust: 112%;
+      font-display: swap;
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    /* ==========================================================================
+       2. 三套克制阅读皮肤（素纸 Paper 默认 · 羊皮 Parchment · 夜读 Walnut）
+       ========================================================================== */
+    :root,
+    :root[data-skin="paper"] {
+      --bg: #FAF8F4;
+      --bg-bar: #F5F1EA;
+      --surface: #F3EFE8;
+      --surface-alt: #ECE6DC;
+      --surface-active: #E7DFD2;
+      --ink: #22170F;
+      --ink-body: #34251A;
+      --ink-muted: #5C4631;
+      --ink-soft: #7E664D;
+      --accent: #8E6E3E;
+      --accent-deep: #73552B;
+      --stamp-bg: #3A291B;
+      --stamp-ink: #F7F3EC;
+      --line: #E3DDD3;
+      --line-soft: #ECE7DF;
+      --line-strong: #D3C9BA;
+      --btn-grad-top: #442F1E;
+      --btn-grad-bot: #2A1B10;
+      --btn-ink: #F4EAD9;
+      --sel-bg: rgba(142, 110, 62, 0.24);
+      --frame-shadow: 0 18px 44px rgba(34, 23, 15, 0.11), 0 3px 10px rgba(34, 23, 15, 0.06);
+      --ok-ink: #3B4B2B;
+      --ok-bg: rgba(59, 75, 43, 0.10);
+      --font-body: 'Cormorant Garamond', 'Noto Serif SC', 'Songti SC', Georgia, serif;
+      --font-italic: 'Cormorant Garamond Italic', 'Noto Serif SC', Georgia, serif;
+      --font-roman: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+      --r: 5px;
+    }
+
+    :root[data-skin="parchment"] {
+      --bg: #E6D9C1;
+      --bg-bar: #DCCBA9;
+      --surface: #DFCFAF;
+      --surface-alt: #D6C3A0;
+      --surface-active: #CDB890;
+      --ink: #241911;
+      --ink-body: #3B2B1E;
+      --ink-muted: #5D4631;
+      --ink-soft: #7B6247;
+      --accent: #7A5A2D;
+      --accent-deep: #5E431E;
+      --stamp-bg: #342316;
+      --stamp-ink: #EFE3CE;
+      --line: #C7B390;
+      --line-soft: #D1BF9D;
+      --line-strong: #B09872;
+      --btn-grad-top: #402C1C;
+      --btn-grad-bot: #24170D;
+      --btn-ink: #EFE2CC;
+      --sel-bg: rgba(142, 110, 62, 0.30);
+      --frame-shadow: 0 20px 48px rgba(36, 25, 17, 0.18), 0 4px 12px rgba(36, 25, 17, 0.09);
+      --ok-ink: #354726;
+      --ok-bg: rgba(53, 71, 38, 0.14);
+    }
+
+    :root[data-skin="walnut"] {
+      --bg: #18120C;
+      --bg-bar: #130E09;
+      --surface: #211912;
+      --surface-alt: #281F16;
+      --surface-active: #31261B;
+      --ink: #EFE2CC;
+      --ink-body: #D6C5A9;
+      --ink-muted: #A99374;
+      --ink-soft: #857054;
+      --accent: #C9A66B;
+      --accent-deep: #DFBF86;
+      --stamp-bg: #C9A66B;
+      --stamp-ink: #1B130C;
+      --line: #34281C;
+      --line-soft: #2A2016;
+      --line-strong: #4A3A29;
+      --btn-grad-top: #B89357;
+      --btn-grad-bot: #8F6D39;
+      --btn-ink: #17100A;
+      --sel-bg: rgba(201, 166, 107, 0.30);
+      --frame-shadow: 0 24px 56px rgba(0, 0, 0, 0.55), 0 4px 14px rgba(0, 0, 0, 0.35);
+      --ok-ink: #A6BC8C;
+      --ok-bg: rgba(166, 188, 140, 0.14);
+    }
+
+    /* ==========================================================================
+       3. 基础复位、选区、自定义极细滚动条与顶部进度线
+       ========================================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 64px;
+      font-size: 16px;
+      background: var(--bg);
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink-body);
+      font-family: var(--font-body);
+      font-weight: 500;
+      line-height: 1.82;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+    ::selection {
+      background: var(--sel-bg);
+      color: var(--ink);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--line-strong);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    ::-webkit-scrollbar-button { display: none; }
+
+    a { color: var(--accent-deep); text-decoration: none; transition: color 0.16s ease; }
+    a:hover { color: var(--ink); }
+    img { display: block; max-width: 100%; }
+    button { font-family: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+
+    .read-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-deep));
+      z-index: 200;
+      pointer-events: none;
+      will-change: width;
+    }
+
+    /* ==========================================================================
+       4. 40px 单行锁死顶栏
+       ========================================================================== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 44px;
+      background: var(--bg-bar);
+      border-bottom: 1px solid var(--line);
+      contain: layout style;
+    }
+    .topbar-inner {
+      max-width: 1200px;
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      white-space: nowrap;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .brand img {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid var(--line-strong);
+    }
+    .brand-name {
+      font-family: var(--font-roman);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      color: var(--ink);
+    }
+    .brand-ver {
+      font-family: var(--font-roman);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      padding: 1px 7px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .skin-group {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r);
+      padding: 2px;
+      background: var(--surface);
+    }
+    .skin-btn {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      padding: 2px 9px;
+      border-radius: 3px;
+      transition: background-color 0.16s ease, color 0.16s ease;
+    }
+    .skin-btn:hover { color: var(--ink); }
+    .skin-btn[aria-pressed="true"] {
+      background: var(--stamp-bg);
+      color: var(--stamp-ink);
+    }
+    .top-sep {
+      width: 1px;
+      height: 14px;
+      background: var(--line-strong);
+    }
+    .top-link {
+      font-size: 13px;
+      color: var(--ink-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .top-link:hover { color: var(--ink); }
+    .top-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+
+    /* ==========================================================================
+       5. 双栏骨架：左侧无框导轨目录 + 主文黄金阅读列
+       ========================================================================== */
+    .page-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 96px;
+      display: grid;
+      grid-template-columns: 204px minmax(0, 840px);
+      gap: 52px;
+      align-items: start;
+    }
+
+    .rail-toc {
+      position: sticky;
+      top: 76px;
+      padding-top: 16px;
+    }
+    .rail-label {
+      font-family: var(--font-roman);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      color: var(--ink-soft);
+      margin-bottom: 14px;
+      padding-left: 14px;
+    }
+    .rail-list {
+      list-style: none;
+      border-left: 1px solid var(--line);
+    }
+    .rail-list li { position: relative; }
+    .rail-list a {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      padding: 7px 0 7px 14px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      border-left: 2px solid transparent;
+      margin-left: -1.5px;
+      transition: color 0.16s ease, border-color 0.16s ease;
+    }
+    .rail-list a:hover { color: var(--ink); }
+    .rail-list a.active {
+      color: var(--ink);
+      font-weight: 600;
+      border-left-color: var(--accent);
+    }
+    .rail-roman {
+      font-family: var(--font-roman);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      min-width: 22px;
+    }
+
+    .rail-meta {
+      margin-top: 28px;
+      padding: 14px 0 0 14px;
+      border-top: 1px solid var(--line-soft);
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      line-height: 1.75;
+    }
+    .rail-meta div { display: flex; justify-content: space-between; gap: 8px; }
+    .rail-meta span:last-child { color: var(--ink-muted); font-variant-numeric: lining-nums tabular-nums; }
+
+    /* Mobile inline nav */
+    .mobile-toc {
+      display: none;
+      overflow-x: auto;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      white-space: nowrap;
+    }
+    .mobile-toc a {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+
+    /* ==========================================================================
+       6. Hero 卷首（无框裸排 + 印版指标标尺 + 交互式实景舞台）
+       ========================================================================== */
+    .hero {
+      padding-top: 52px;
+      padding-bottom: 44px;
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-roman);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .hero-eyebrow::before {
+      content: "";
+      width: 22px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .hero-title {
+      font-size: clamp(32px, 4.4vw, 44px);
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.2;
+      letter-spacing: 0.015em;
+    }
+    .hero-subtitle {
+      margin-top: 12px;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      line-height: 1.65;
+      max-width: 680px;
+    }
+    .hero-actions {
+      margin-top: 26px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--r);
+      background: linear-gradient(180deg, var(--btn-grad-top), var(--btn-grad-bot));
+      color: var(--btn-ink);
+      font-size: 14.5px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      border: 1px solid rgba(197, 162, 103, 0.35);
+      transition: transform 0.16s ease, filter 0.16s ease;
+    }
+    .btn-primary:hover {
+      color: var(--btn-ink);
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--r);
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 14.5px;
+      font-weight: 500;
+      border: 1px solid var(--line-strong);
+      transition: background-color 0.16s ease, border-color 0.16s ease;
+    }
+    .btn-secondary:hover {
+      background: var(--surface-alt);
+      border-color: var(--accent);
+      color: var(--ink);
+    }
+    .btn-primary svg, .btn-secondary svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.7;
+    }
+
+    /* 印版四格指标标尺 */
+    .metrics-strip {
+      margin-top: 34px;
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .metric-item {
+      padding-right: 12px;
+      border-right: 1px solid var(--line-soft);
+    }
+    .metric-item:last-child { border-right: none; padding-right: 0; }
+    .metric-val {
+      font-family: var(--font-roman);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.25;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    .metric-val small {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-left: 3px;
+    }
+    .metric-label {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    /* 交互式实景预览舞台 */
+    .stage-box {
+      margin-top: 32px;
+    }
+    .stage-frame {
+      position: relative;
+      border-radius: var(--r);
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      background: #18110B;
+      box-shadow: var(--frame-shadow);
+      cursor: zoom-in;
+      aspect-ratio: 16 / 9.6;
+    }
+    .stage-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: opacity 0.2s ease;
+    }
+    .stage-zoom-hint {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      padding: 5px 11px;
+      border-radius: var(--r);
+      background: rgba(24, 17, 11, 0.84);
+      border: 1px solid rgba(201, 166, 107, 0.42);
+      color: #EFE2CC;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+    .stage-bar {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .stage-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .stage-tab {
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      background: var(--surface);
+      transition: all 0.16s ease;
+    }
+    .stage-tab:hover {
+      border-color: var(--accent);
+      color: var(--ink);
+    }
+    .stage-tab.active {
+      background: var(--stamp-bg);
+      color: var(--stamp-ink);
+      border-color: var(--stamp-bg);
+    }
+    .stage-caption {
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    /* ==========================================================================
+       7. 汇报级章节通用排印（I–VI 罗马章头 · 舒朗呼吸 · 零碎盒堆砌）
+       ========================================================================== */
+    .report-section {
+      padding-top: 56px;
+      contain: layout style;
+    }
+    .chapter-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    .chapter-roman {
+      font-family: var(--font-roman);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      min-width: 28px;
+    }
+    .chapter-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.02em;
+    }
+    .prose {
+      font-size: 16px;
+      line-height: 1.86;
+      color: var(--ink-body);
+    }
+    .prose + .prose { margin-top: 16px; }
+
+    /* 独立无框「项目定位」 */
+    .positioning {
+      margin-top: 34px;
+      margin-bottom: 8px;
+      font-size: 18.5px;
+      line-height: 1.78;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .positioning strong {
+      color: var(--accent-deep);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       8. 单行交互式五步任务闭环 + 01–05 统一深色微倒角方章
+       ========================================================================== */
+    .loop-strip {
+      margin: 24px 0 28px;
+      padding: 14px 16px;
+      border-radius: var(--r);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .loop-node {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: var(--r);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: background-color 0.16s ease, color 0.16s ease;
+    }
+    .loop-node:hover,
+    .loop-node.active {
+      background: var(--stamp-bg);
+      color: var(--stamp-ink);
+    }
+    .loop-node .ln-num {
+      font-family: var(--font-roman);
+      font-size: 11.5px;
+      opacity: 0.78;
+    }
+    .loop-arrow {
+      color: var(--accent);
+      font-size: 13px;
+      user-select: none;
+    }
+
+    /* 01–05 / 01–04 舒朗无框细线列表（跨页 100% 同色同形序号方章） */
+    .step-list {
+      list-style: none;
+      border-top: 1px solid var(--line-soft);
+    }
+    .step-item {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 18px;
+      padding: 18px 10px;
+      border-bottom: 1px solid var(--line-soft);
+      align-items: start;
+      border-radius: var(--r);
+      transition: background-color 0.18s ease;
+    }
+    .step-item.highlight {
+      background: var(--surface);
+    }
+    .step-stamp {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--r);
+      background: var(--stamp-bg);
+      color: var(--stamp-ink);
+      font-family: var(--font-roman);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-body h3 {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.45;
+      margin-bottom: 4px;
+    }
+    .step-body p {
+      font-size: 15.5px;
+      line-height: 1.8;
+      color: var(--ink-body);
+    }
+
+    /* ==========================================================================
+       9. 第 III 章：三大核心升级模块（左侧 3.5px 导轨 + 极淡复合面板）
+       ========================================================================== */
+    .module-block {
+      padding: 22px 24px;
+      border-radius: var(--r);
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .module-block + .module-block { margin-top: 20px; }
+    .module-title {
+      font-size: 18.5px;
+      font-weight: 700;
+      color: var(--ink);
+      padding-left: 12px;
+      border-left: 3.5px solid var(--accent);
+      line-height: 1.35;
+      margin-bottom: 16px;
+    }
+    .module-points {
+      list-style: none;
+    }
+    .module-points li {
+      padding: 10px 0;
+      border-top: 1px solid var(--line-soft);
+      font-size: 15.5px;
+      line-height: 1.8;
+      color: var(--ink-body);
+    }
+    .module-points li:first-child { border-top: none; padding-top: 0; }
+    .module-points li:last-child { padding-bottom: 0; }
+    .module-points strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       10. 第 IV 章：实景画廊 + 分类筛选 + Lightbox 灯箱
+       ========================================================================== */
+    .gallery-head-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .filter-group {
+      display: inline-flex;
+      gap: 6px;
+    }
+    .filter-btn {
+      padding: 4px 12px;
+      font-size: 13px;
+      border-radius: var(--r);
+      border: 1px solid var(--line);
+      color: var(--ink-muted);
+      background: var(--surface);
+      transition: all 0.16s ease;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--ink); }
+    .filter-btn.active {
+      background: var(--stamp-bg);
+      color: var(--stamp-ink);
+      border-color: var(--stamp-bg);
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      content-visibility: auto;
+    }
+    .shot-card {
+      border-radius: var(--r);
+      border: 1px solid var(--line);
+      background: var(--surface);
+      overflow: hidden;
+      cursor: zoom-in;
+      transition: border-color 0.18s ease, transform 0.18s ease;
+    }
+    .shot-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .shot-card.hidden { display: none; }
+    .shot-thumb {
+      aspect-ratio: 16 / 9.95;
+      overflow: hidden;
+      background: #18110B;
+      border-bottom: 1px solid var(--line);
+    }
+    .shot-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.28s ease;
+    }
+    .shot-card:hover .shot-thumb img { transform: scale(1.02); }
+    .shot-meta {
+      padding: 11px 14px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .shot-name {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .shot-tag {
+      font-family: var(--font-roman);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       11. 第 V 章：Before/After 圆角外壳表格 + 批注框 + 四细节阵列
+       ========================================================================== */
+    .table-shell {
+      margin-top: 28px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r);
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+    .compare-table thead th {
+      background: var(--stamp-bg);
+      color: var(--stamp-ink);
+      font-weight: 600;
+      text-align: left;
+      padding: 12px 16px;
+      border-right: 1px solid rgba(247, 243, 236, 0.16);
+      font-size: 14.5px;
+      letter-spacing: 0.02em;
+    }
+    .compare-table thead th:last-child { border-right: none; }
+    .compare-table tbody td {
+      padding: 14px 16px;
+      vertical-align: top;
+      border-top: 1px solid var(--line);
+      border-right: 1px solid var(--line-soft);
+      color: var(--ink-body);
+    }
+    .compare-table tbody td:last-child { border-right: none; }
+    .compare-table tbody tr:nth-child(even) td { background: var(--surface-alt); }
+    .compare-table tbody td:first-child {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .callout-note {
+      margin-top: 16px;
+      padding: 13px 16px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 4px 4px 0;
+      background: var(--surface);
+      font-size: 14.5px;
+      line-height: 1.78;
+      color: var(--ink-muted);
+    }
+    .callout-note strong { color: var(--ink); }
+
+    .sub-heading {
+      margin-top: 34px;
+      margin-bottom: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      padding-left: 12px;
+      border-left: 3.5px solid var(--accent);
+      line-height: 1.35;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 28px;
+      border-top: 1px solid var(--line-soft);
+    }
+    .detail-item {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .detail-item h4 {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+    .detail-item p {
+      font-size: 14.5px;
+      line-height: 1.78;
+      color: var(--ink-body);
+    }
+
+    /* ==========================================================================
+       12. 第 VI 章：三步获取、SHA256 一键校验卡与免责声明
+       ========================================================================== */
+    .verify-panel {
+      margin-top: 22px;
+      padding: 20px 22px;
+      border-radius: var(--r);
+      border: 1px solid var(--line-strong);
+      background: var(--surface);
+    }
+    .verify-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px 16px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line-soft);
+      font-size: 14.5px;
+    }
+    .verify-row:first-child { padding-top: 0; }
+    .verify-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .verify-key {
+      color: var(--ink-soft);
+      min-width: 96px;
+    }
+    .verify-val {
+      color: var(--ink);
+      font-variant-numeric: lining-nums tabular-nums;
+      word-break: break-all;
+      flex: 1;
+    }
+    .verify-val.italic-term {
+      font-family: var(--font-italic);
+      font-size: 15.5px;
+    }
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: var(--r);
+      border: 1px solid var(--line-strong);
+      background: var(--bg);
+      color: var(--ink-muted);
+      font-size: 12.5px;
+      transition: all 0.16s ease;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--ink); }
+    .copy-btn.copied {
+      background: var(--ok-bg);
+      color: var(--ok-ink);
+      border-color: var(--ok-ink);
+    }
+    .copy-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+
+    .disclaimer-box {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+    .disclaimer-box h3 {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .disclaimer-list {
+      list-style: none;
+    }
+    .disclaimer-list li {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--ink-muted);
+      margin-bottom: 8px;
+    }
+    .disclaimer-list strong { color: var(--ink); }
+
+    .site-footer {
+      margin-top: 56px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    /* ==========================================================================
+       13. 全屏画廊 Lightbox 灯箱（零实时模糊，深沉半透明暗幕）
+       ========================================================================== */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(16, 11, 7, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    }
+    .lightbox.open { display: flex; }
+    .lb-inner {
+      position: relative;
+      max-width: 1180px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .lb-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #EFE2CC;
+      font-size: 14px;
+    }
+    .lb-counter {
+      font-family: var(--font-roman);
+      letter-spacing: 0.14em;
+      color: #C9A66B;
+      font-size: 12.5px;
+    }
+    .lb-close {
+      padding: 5px 12px;
+      border-radius: var(--r);
+      border: 1px solid rgba(201, 166, 107, 0.4);
+      color: #EFE2CC;
+      font-size: 13px;
+    }
+    .lb-close:hover { background: rgba(201, 166, 107, 0.16); }
+    .lb-stage {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lb-stage img {
+      max-height: 78vh;
+      width: auto;
+      border-radius: var(--r);
+      border: 1px solid rgba(201, 166, 107, 0.45);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+    }
+    .lb-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r);
+      background: rgba(24, 17, 11, 0.85);
+      border: 1px solid rgba(201, 166, 107, 0.42);
+      color: #EFE2CC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lb-nav:hover { background: #3A291B; }
+    .lb-prev { left: 12px; }
+    .lb-next { right: 12px; }
+    .lb-nav svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+
+    /* ==========================================================================
+       14. 响应式适配
+       ========================================================================== */
+    @media (max-width: 980px) {
+      .page-shell {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .rail-toc { display: none; }
+      .mobile-toc { display: flex; }
+      .metrics-strip { grid-template-columns: repeat(2, 1fr); }
+      .metric-item:nth-child(2) { border-right: none; }
+    }
+    @media (max-width: 680px) {
+      .topbar-inner { padding: 0 14px; }
+      .brand-ver, .top-link span { display: none; }
+      .page-shell { padding: 0 16px 72px; }
+      .gallery-grid, .detail-grid { grid-template-columns: 1fr; }
+      .loop-arrow { display: none; }
+      .compare-table { font-size: 14px; }
+      .compare-table thead th, .compare-table tbody td { padding: 11px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="read-progress" id="readProgress" aria-hidden="true"></div>
+
+  <!-- 顶栏（单行锁死，三套阅读皮肤即时切换） -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">
+        <img src="icon.png" alt="systemo ebook" />
+        <span class="brand-name">SYSTEMO EBOOK</span>
+        <span class="brand-ver">V2.0.0</span>
+      </a>
+      <div class="topbar-right">
+        <div class="skin-group" role="group" aria-label="阅读皮肤切换">
+          <button class="skin-btn" data-skin-set="paper" aria-pressed="true" type="button">素纸</button>
+          <button class="skin-btn" data-skin-set="parchment" aria-pressed="false" type="button">羊皮</button>
+          <button class="skin-btn" data-skin-set="walnut" aria-pressed="false" type="button">夜读</button>
+        </div>
+        <span class="top-sep" aria-hidden="true"></span>
+        <a class="top-link" href="https://github.com/systemsssx/systemo-ebook" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a class="top-link" href="https://github.com/systemsssx/systemo-ebook/releases/tag/v2.0.0" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+          <span>下载包</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-shell" id="top">
+    <!-- 左侧无框导轨目录（桌面端跟随滚动定位） -->
+    <aside class="rail-toc" aria-label="文章目录">
+      <div class="rail-label">INDEX · 目录</div>
+      <ul class="rail-list" id="tocList">
+        <li><a href="#sec-overview" class="active"><span class="rail-roman">I</span>痛点与定位</a></li>
+        <li><a href="#sec-loop"><span class="rail-roman">II</span>五步任务闭环</a></li>
+        <li><a href="#sec-modules"><span class="rail-roman">III</span>核心升级模块</a></li>
+        <li><a href="#sec-gallery"><span class="rail-roman">IV</span>界面实景画廊</a></li>
+        <li><a href="#sec-tradeoffs"><span class="rail-roman">V</span>取舍与前后对照</a></li>
+        <li><a href="#sec-download"><span class="rail-roman">VI</span>获取与校验</a></li>
+      </ul>
+      <div class="rail-meta">
+        <div><span>版本</span><span>v2.0.0</span></div>
+        <div><span>构建戳</span><span>1123205248</span></div>
+        <div><span>发布日期</span><span>2026-11-23</span></div>
+        <div><span>压缩包</span><span>262.8 MiB</span></div>
+        <div><span>系统</span><span>Win 10/11 x64</span></div>
+      </div>
+    </aside>
+
+    <!-- 主内容区（纯粹汇报级极简文稿） -->
+    <main>
+      <nav class="mobile-toc" aria-label="快速跳转">
+        <a href="#sec-overview">I. 定位</a>
+        <a href="#sec-loop">II. 闭环</a>
+        <a href="#sec-modules">III. 升级模块</a>
+        <a href="#sec-gallery">IV. 界面实景</a>
+        <a href="#sec-tradeoffs">V. 对照与取舍</a>
+        <a href="#sec-download">VI. 获取与校验</a>
+      </nav>
+
+      <!-- Hero 卷首 -->
+      <section class="hero">
+        <div class="hero-eyebrow">PROJECT BRIEF · V2.0.0 · 2026-11-23</div>
+        <h1 class="hero-title">systemo ebook</h1>
+        <p class="hero-subtitle">Windows 本地电子书工作台：下载、制作、四通道传输与内置三主题阅读。</p>
+
+        <div class="hero-actions">
+          <a class="btn-primary" href="https://github.com/systemsssx/systemo-ebook/releases/tag/v2.0.0" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+            下载 v2.0.0 完整包（262.8 MiB）
+          </a>
+          <a class="btn-secondary" href="https://github.com/systemsssx/systemo-ebook" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M14 3h7v7m-1.5-5.5L10 14M20 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5"/></svg>
+            访问 GitHub 仓库与源码
+          </a>
+        </div>
+
+        <div class="metrics-strip" aria-label="核心规格">
+          <div class="metric-item">
+            <div class="metric-val">4<small>通道</small></div>
+            <div class="metric-label">含新增本地云盘同步</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-val">3<small>主题</small></div>
+            <div class="metric-label">羊皮 · 素笺 · 夜读阅读器</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-val">335<small>文件</small></div>
+            <div class="metric-label">解压即用免装运行环境</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-val">0<small>残留</small></div>
+            <div class="metric-label">零个人数据与私有订阅</div>
+          </div>
+        </div>
+
+        <!-- 交互式首屏实景预览舞台 -->
+        <div class="stage-box">
+          <div class="stage-frame" id="heroStage" role="button" tabindex="0" aria-label="点击放大查看实景界面">
+            <img id="heroStageImg" src="screenshots/05-split-folio.png" alt="Parchment V3 对开双页分屏实景" />
+            <span class="stage-zoom-hint">点击放大细看</span>
+          </div>
+          <div class="stage-bar">
+            <div class="stage-tabs" role="tablist" aria-label="切换实景视图">
+              <button class="stage-tab active" data-shot-idx="4" type="button">对开双页分屏</button>
+              <button class="stage-tab" data-shot-idx="2" type="button">四通道传输</button>
+              <button class="stage-tab" data-shot-idx="6" type="button">羊皮双栏阅读</button>
+              <button class="stage-tab" data-shot-idx="3" type="button">本地精装书库</button>
+            </div>
+            <span class="stage-caption" id="heroStageCaption">顶栏页签拖拽展开左右对开，边制作边传书</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- I. 使用痛点与项目定位 -->
+      <section class="report-section" id="sec-overview">
+        <div class="chapter-head">
+          <span class="chapter-roman">I</span>
+          <h2 class="chapter-title">使用痛点与项目定位</h2>
+        </div>
+        <p class="prose">
+          在电脑上整理长篇网文或本地 TXT 传到手机、Kindle 和平板阅读，通常要在好几个工具之间来回切换：找到的文本章节错乱、缺少封面，换软件排完版，又要分别找数据线、发邮件或登录网页网盘。遇到浏览器自动升级导致传书脚本报错，或者搜出的封面模糊发虚，还得停下来花半小时排查工具本身。
+        </p>
+        <p class="positioning">
+          <strong>项目定位：</strong>把网文与本地 TXT 整理成规范 EPUB 并送到常用阅读设备，全程在本地完成，尽量减少多端倒腾与排版返工的负担。
+        </p>
+      </section>
+
+      <!-- II. 产品形态与五步任务闭环 -->
+      <section class="report-section" id="sec-loop">
+        <div class="chapter-head">
+          <span class="chapter-roman">II</span>
+          <h2 class="chapter-title">产品形态与五步任务闭环</h2>
+        </div>
+        <p class="prose">
+          systemo ebook 是一个运行在 Windows 10/11 桌面端的免安装本地电子书工作台。它把过去分散在找书脚本、排版工具、传书网页与桌面阅读器里的步骤收拢到同一扇窗口内，可按需单步操作，也可勾选一键流水线连续跑完。
+        </p>
+
+        <!-- 单行箭头闭环横条（点击联动高亮下方对应步骤） -->
+        <div class="loop-strip" id="loopStrip" aria-label="五步任务闭环">
+          <button class="loop-node active" data-step="0" type="button"><span class="ln-num">01</span>搜索或导入</button>
+          <span class="loop-arrow" aria-hidden="true">→</span>
+          <button class="loop-node" data-step="1" type="button"><span class="ln-num">02</span>分章与高清封面</button>
+          <span class="loop-arrow" aria-hidden="true">→</span>
+          <button class="loop-node" data-step="2" type="button"><span class="ln-num">03</span>打包 EPUB</button>
+          <span class="loop-arrow" aria-hidden="true">→</span>
+          <button class="loop-node" data-step="3" type="button"><span class="ln-num">04</span>四通道送达</button>
+          <span class="loop-arrow" aria-hidden="true">→</span>
+          <button class="loop-node" data-step="4" type="button"><span class="ln-num">05</span>入库与直读</button>
+        </div>
+
+        <ol class="step-list" id="loopList">
+          <li class="step-item highlight" data-step="0">
+            <span class="step-stamp">01</span>
+            <div class="step-body">
+              <h3>搜索或导入</h3>
+              <p>从四大平台每批 14 本的综合推荐与轻小说 5 榜中按卷挑选，或直接拖入本地 TXT 文本。</p>
+            </div>
+          </li>
+          <li class="step-item" data-step="1">
+            <span class="step-stamp">02</span>
+            <div class="step-body">
+              <h3>分章与高清封面</h3>
+              <p>自动识别正文卷章目录，多源横向比对挑出更高分辨率原图，并在本地离线完成封面清晰度增强。</p>
+            </div>
+          </li>
+          <li class="step-item" data-step="2">
+            <span class="step-stamp">03</span>
+            <div class="step-body">
+              <h3>打包规范 EPUB</h3>
+              <p>将章节、目录与高清封面封装为标准 EPUB 文件，转码完成后自动清空中间临时下载目录。</p>
+            </div>
+          </li>
+          <li class="step-item" data-step="3">
+            <span class="step-stamp">04</span>
+            <div class="step-body">
+              <h3>四通道送达设备</h3>
+              <p>按手头设备任选苹果图书（百度网盘中转）、WiFi 局域网直传、Send to Kindle 或本地云盘同步。</p>
+            </div>
+          </li>
+          <li class="step-item" data-step="4">
+            <span class="step-stamp">05</span>
+            <div class="step-body">
+              <h3>入库与桌面直读</h3>
+              <p>成书记录跨导出目录持久保留，随时可用内置的羊皮、素笺、夜读三主题双栏阅读器打开。</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <!-- III. v2.0.0 三个核心升级模块 -->
+      <section class="report-section" id="sec-modules">
+        <div class="chapter-head">
+          <span class="chapter-roman">III</span>
+          <h2 class="chapter-title">v2.0.0 三个核心升级模块</h2>
+        </div>
+
+        <div class="module-block">
+          <h3 class="module-title">1. 界面与工作台交互（Parchment V3）</h3>
+          <ul class="module-points">
+            <li><strong>西洋羊皮卷与衬线排印：</strong>采用低饱和暖羊皮底、古铜细线与经典衬线字阶，长时间整理书库不刺眼。</li>
+            <li><strong>天头拖拽对开双页分屏：</strong>把顶栏任意页签拖向主区左右两侧即可并排展开，方便边制作成书边核对传输队列。</li>
+            <li><strong>纯纸模式与双语切换：</strong>偏好极简纸面时可一键切到纯纸视图，顶栏同步支持中英双语即时切换。</li>
+          </ul>
+        </div>
+
+        <div class="module-block">
+          <h3 class="module-title">2. 四通道传输与免驱授权</h3>
+          <ul class="module-points">
+            <li><strong>新增第 4 通道「云盘同步」：</strong>自动探测本机 iCloud Drive、OneDrive 或 Google Drive 同步文件夹，直接写入专属子目录完成跨端同步。</li>
+            <li><strong>原生浏览器独立会话授权：</strong>百度网盘登录改为直接唤起本机 Chrome 或 Edge 空白会话，避开内置窗口风控拦截，同时根治状态栏转圈卡死。</li>
+            <li><strong>浏览器驱动自动热更新：</strong>WiFi 局域网直传与封面兜底在后台自动匹配本机浏览器版本，日常浏览器升级后不再报错中断。</li>
+          </ul>
+        </div>
+
+        <div class="module-block">
+          <h3 class="module-title">3. 封面清晰度与书库细节</h3>
+          <ul class="module-points">
+            <li><strong>多源同图高清选优：</strong>检索封面时先横向比对同图分辨率，挑出清晰原图再做本地离线超分，避免拿模糊缩略图硬放大。</li>
+            <li><strong>轻小说原地展开选卷：</strong>浏览轻小说五个榜单时，点击卡片即可在当前位置展开分卷列表勾选下载，省去反复跳页。</li>
+            <li><strong>跨目录书库与内嵌封面：</strong>即使中途更换导出目录，历史成书记录依然完整保留；传输列队直接读取并展示 EPUB 内嵌封面。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- IV. 界面实景画廊 -->
+      <section class="report-section" id="sec-gallery">
+        <div class="chapter-head">
+          <span class="chapter-roman">IV</span>
+          <h2 class="chapter-title">界面实景画廊</h2>
+        </div>
+        <div class="gallery-head-row">
+          <p class="prose" style="font-size:14.5px;color:var(--ink-muted);">点击任意实景图可全屏放大检视，支持键盘左右方向键切换。</p>
+          <div class="filter-group" role="group" aria-label="界面分类筛选">
+            <button class="filter-btn active" data-filter="all" type="button">全部（8）</button>
+            <button class="filter-btn" data-filter="core" type="button">核心工作台</button>
+            <button class="filter-btn" data-filter="read" type="button">分屏与阅读</button>
+          </div>
+        </div>
+
+        <div class="gallery-grid" id="galleryGrid">
+          <figure class="shot-card" data-cat="core" data-idx="0" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/01-download.png" alt="下载与多源检索" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">下载与多源检索</span><span class="shot-tag">I · DOWNLOAD</span></figcaption>
+          </figure>
+          <figure class="shot-card" data-cat="core" data-idx="1" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/02-make.png" alt="制作与拱券封面槽" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">制作与拱券封面预览</span><span class="shot-tag">II · MAKE</span></figcaption>
+          </figure>
+          <figure class="shot-card" data-cat="core" data-idx="2" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/03-transfer-4ch.png" alt="四通道传输含本地云盘同步" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">四通道传输（含云盘同步）</span><span class="shot-tag">III · SEND</span></figcaption>
+          </figure>
+          <figure class="shot-card" data-cat="core" data-idx="3" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/04-library.png" alt="本地精装书库" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">本地烫金皮脊书库</span><span class="shot-tag">IV · LIBRARY</span></figcaption>
+          </figure>
+          <figure class="shot-card" data-cat="read" data-idx="4" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/05-split-folio.png" alt="对开双页分屏" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">天头拖拽对开双页分屏</span><span class="shot-tag">FOLIO SPLIT</span></figcaption>
+          </figure>
+          <figure class="shot-card" data-cat="core" data-idx="5" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/06-oneclick.png" alt="一键流水线" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">一键全流程成书</span><span class="shot-tag">V · ONE-CLICK</span></figcaption>
+          </figure>
+          <figure class="shot-card" data-cat="read" data-idx="6" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/07-reader.png" alt="内置阅读器羊皮双栏主题" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">内置阅读器 · 羊皮双栏</span><span class="shot-tag">READER · SEPIA</span></figcaption>
+          </figure>
+          <figure class="shot-card" data-cat="read" data-idx="7" tabindex="0">
+            <div class="shot-thumb"><img src="screenshots/08-reader-dark.png" alt="内置阅读器胡桃夜读主题" loading="lazy" /></div>
+            <figcaption class="shot-meta"><span class="shot-name">内置阅读器 · 胡桃夜读</span><span class="shot-tag">READER · NIGHT</span></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- V. 产品亮点、前后体验对照与四个省心细节 -->
+      <section class="report-section" id="sec-tradeoffs">
+        <div class="chapter-head">
+          <span class="chapter-roman">V</span>
+          <h2 class="chapter-title">设计取舍与真实体验对照</h2>
+        </div>
+
+        <ol class="step-list">
+          <li class="step-item">
+            <span class="step-stamp">01</span>
+            <div class="step-body">
+              <h3>不绑第三方网盘也有顺手方案</h3>
+              <p>苹果图书通道原本依赖百度网盘中转；v2.0.0 补齐本地云盘同步与局域网 WiFi 直传，常用 iCloud、OneDrive 或同网直连时不必再绑网盘。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <span class="step-stamp">02</span>
+            <div class="step-body">
+              <h3>离线封面超分，不依赖外部付费密钥</h3>
+              <p>清晰度增强模型直接打进本地完整包内，断网也可把模糊封面修得干净利落，不需要自己申请云端接口或担心额度耗尽。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <span class="step-stamp">03</span>
+            <div class="step-body">
+              <h3>代理内核默认静默，公开分发零私有节点</h3>
+              <p>内置代理内核默认关闭并自动避让本机已有代理软件；公开源码与公开包均不夹带任何私人订阅链接，需要时可自行通过环境变量接入。</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <span class="step-stamp">04</span>
+            <div class="step-body">
+              <h3>停止精简分支，单线打磨完整版</h3>
+              <p>不再维护功能残缺的精简版，统一发布 262.8 MiB 免安装完整包（解压 335 文件），开箱即可使用全部转码、超分与阅读能力。</p>
+            </div>
+          </li>
+        </ol>
+
+        <!-- 圆角外壳防错位对比表 -->
+        <div class="table-shell">
+          <table class="compare-table">
+            <colgroup>
+              <col style="width: 24%;" />
+              <col style="width: 38%;" />
+              <col style="width: 38%;" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>高频使用场景</th>
+                <th>v1.1 过去的表现</th>
+                <th>v2.0.0 现在的处理</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>往手机或平板传书</td>
+                <td>依赖百度网盘中转，内置授权页偶发拦截，状态栏日志有时持续转圈。</td>
+                <td>可唤起本机原生浏览器空白会话快速登录网盘，或直接用「云盘同步」写入本机 iCloud 目录。</td>
+              </tr>
+              <tr>
+                <td>本机浏览器自动升级后</td>
+                <td>固定驱动版本与新版浏览器脱节，WiFi 直传或封面兜底会报错中断。</td>
+                <td>后台自动检测并热更匹配的浏览器驱动，浏览器日常更新后无感继续传书。</td>
+              </tr>
+              <tr>
+                <td>整理网文与轻小说封面</td>
+                <td>默认取首张匹配图，遇到低清缩略图即便超分也容易发糊。</td>
+                <td>先在多源结果中横向比对挑出高分辨率原图再离线超分，并把封面直接内嵌显示在传输队列中。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout-note">
+          <strong>改动主线：</strong>v2.0.0 不只是换了套皮肤，而是把过去最容易打断阅读兴致的三个断点——授权卡死、驱动失配、封面发糊——逐一收口成无需手动干预的默认体验。
+        </div>
+
+        <h3 class="sub-heading">四个省心的日常细节</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <h4>通道状态克制收敛</h4>
+            <p>四个传输通道的状态统一收进主行胶囊标签里，未操作时不展开多余提示小字，出错后一旦授权通过即自动收起旧报错。</p>
+          </div>
+          <div class="detail-item">
+            <h4>转码完成自动清尾</h4>
+            <p>长篇或多卷作品生成 EPUB 后，程序自动清理中间临时下载目录，长期使用不会越积越占硬盘空间。</p>
+          </div>
+          <div class="detail-item">
+            <h4>出厂零个人数据</h4>
+            <p>公开安装包经过完整清理与核验，不含历史书目、账号残留或私人订阅，首次解压打开就是干净空白书案。</p>
+          </div>
+          <div class="detail-item">
+            <h4>单页与双页随时切换</h4>
+            <p>笔记本小屏保持单页专注，外接大屏一键或拖拽展开对开双页，左边整理排版、右边同步操作传输。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VI. 获取、校验与免责声明 -->
+      <section class="report-section" id="sec-download">
+        <div class="chapter-head">
+          <span class="chapter-roman">VI</span>
+          <h2 class="chapter-title">获取、校验与使用边界</h2>
+        </div>
+        <p class="prose">
+          从 GitHub Releases 下载完整压缩包，解压到任意可写目录（如 <span style="font-family:var(--font-italic);">D:\systemo-ebook</span>，避免放在系统受限目录），保留整个文件夹并双击 <span style="font-family:var(--font-italic);">EasyPub.exe</span> 即可开始使用，无需额外安装运行环境。
+        </p>
+
+        <div class="verify-panel">
+          <div class="verify-row">
+            <span class="verify-key">发行版本</span>
+            <span class="verify-val">v2.0.0（构建戳 1123205248 · 2026-11-23）</span>
+          </div>
+          <div class="verify-row">
+            <span class="verify-key">压缩包文件</span>
+            <span class="verify-val italic-term">systemo-ebook-v2.0.0-full.rar</span>
+            <a class="copy-btn" href="https://github.com/systemsssx/systemo-ebook/releases/tag/v2.0.0" target="_blank" rel="noopener">前往下载</a>
+          </div>
+          <div class="verify-row">
+            <span class="verify-key">精确体积</span>
+            <span class="verify-val">275,575,368 字节（262.8 MiB） · 解压后 335 文件 / 901.3 MB</span>
+          </div>
+          <div class="verify-row">
+            <span class="verify-key">SHA256 校验</span>
+            <span class="verify-val" id="shaValue">A687ECB5E659A6088B92398E33895B9CD0899F8E1666DF5A7E65D4AB9D69272A</span>
+            <button class="copy-btn" id="copyShaBtn" type="button" aria-label="复制 SHA256">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>复制校验值</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="disclaimer-box">
+          <h3>隐私边界与免责声明</h3>
+          <ul class="disclaimer-list">
+            <li><strong>用爱发电：</strong>这是一个纯粹为了“让自己看书更爽”而写出来的个人折腾项目，仅供编程学习与技术研究，完全无任何商业盈利行为（不卖课、不收费、无广告）。</li>
+            <li><strong>技术本质：</strong>项目中的网文/轻小说下载与封面搜刮功能，本质上是对公开网络信息的个人离线缓存与自动化重排（相当于用代码替你完成了“打开网页 ➔ 摘录文字 ➔ 加上封面排成EPUB”的机械劳动），旨在解决多设备阅读的排版与传输痛点，并非为了建立盗版分发平台。</li>
+            <li><strong>版权倡导：</strong>好故事值得被温柔对待，更值得被付费支持。本工具生成的电子书仅限个人离线自用与护眼设备转码，严禁用于任何形式的二次分发、传播或商业牟利。看书遇到喜欢的作品，请一定去正版平台订阅支持原作者！</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <span>systemo ebook · v2.0.0 · All rights reserved</span>
+        <div class="footer-links">
+          <a href="https://github.com/systemsssx/systemo-ebook" target="_blank" rel="noopener">GitHub 仓库</a>
+          <a href="https://github.com/systemsssx/systemo-ebook/releases/tag/v2.0.0" target="_blank" rel="noopener">Releases</a>
+          <a href="https://github.com/systemsssx/systemo-ebook/blob/main/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a>
+          <a href="https://github.com/systemsssx/systemo-ebook/blob/main/README_EN.md" target="_blank" rel="noopener">English README</a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- 全屏灯箱 Lightbox -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="界面大图预览">
+    <div class="lb-inner">
+      <div class="lb-top">
+        <span id="lbTitle">对开双页分屏</span>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <span class="lb-counter" id="lbCounter">01 / 08</span>
+          <button class="lb-close" id="lbClose" type="button">关闭 (Esc)</button>
+        </div>
+      </div>
+      <div class="lb-stage">
+        <button class="lb-nav lb-prev" id="lbPrev" type="button" aria-label="上一张">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <img id="lbImg" src="" alt="" />
+        <button class="lb-nav lb-next" id="lbNext" type="button" aria-label="下一张">
+          <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const SHOTS = [
+        { src: 'screenshots/01-download.png', title: 'I · 下载与多源检索', caption: '支持多源搜索、精校源分流与轻小说按卷挑选' },
+        { src: 'screenshots/02-make.png', title: 'II · 制作与拱券封面预览', caption: '拖入 TXT 自动识别卷章，多源优选高清封面并离线超分' },
+        { src: 'screenshots/03-transfer-4ch.png', title: 'III · 四通道传输（含云盘同步）', caption: '苹果图书、WiFi 直传、Send to Kindle 与本地云盘同步四通道独立可控' },
+        { src: 'screenshots/04-library.png', title: 'IV · 本地烫金皮脊书库', caption: '跨目录持久保留历史书库，双击即开内置阅读器' },
+        { src: 'screenshots/05-split-folio.png', title: '天头拖拽对开双页分屏', caption: '顶栏页签拖拽展开左右对开，边制作边核对传输队列' },
+        { src: 'screenshots/06-oneclick.png', title: 'V · 一键全流程成书', caption: '从书名检索到分章、高清封面与传书一次跑完' },
+        { src: 'screenshots/07-reader.png', title: '内置阅读器 · 羊皮双栏', caption: '基于 foliate-js 的无边框皮脊阅读器，支持羊皮、素笺、夜读三主题' },
+        { src: 'screenshots/08-reader-dark.png', title: '内置阅读器 · 胡桃夜读', caption: '深烘焙胡桃夜读暗场，字号、行距、边距与对齐可细调' }
+      ];
+
+      /* 1. 三套阅读皮肤切换 + 本地记忆 */
+      const root = document.documentElement;
+      const skinBtns = document.querySelectorAll('[data-skin-set]');
+      function applySkin(skin) {
+        const valid = ['paper', 'parchment', 'walnut'].includes(skin) ? skin : 'paper';
+        root.setAttribute('data-skin', valid);
+        skinBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.skinSet === valid)));
+        try { localStorage.setItem('systemo_blog_skin', valid); } catch (e) {}
+      }
+      try {
+        const saved = localStorage.getItem('systemo_blog_skin');
+        if (saved) applySkin(saved);
+      } catch (e) {}
+      skinBtns.forEach(btn => btn.addEventListener('click', () => applySkin(btn.dataset.skinSet)));
+
+      /* 2. 顶部阅读进度线 + 左侧无框导轨目录 ScrollSpy */
+      const progressBar = document.getElementById('readProgress');
+      const tocLinks = Array.from(document.querySelectorAll('#tocList a'));
+      const sections = tocLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+      function onScroll() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        progressBar.style.width = Math.min(100, (scrollTop / maxScroll) * 100).toFixed(2) + '%';
+
+        let currentId = sections[0]?.id || '';
+        for (const sec of sections) {
+          if (sec.getBoundingClientRect().top <= 130) currentId = sec.id;
+        }
+        tocLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + currentId);
+        });
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      /* 3. 首屏交互实景舞台切换 */
+      let heroIdx = 4;
+      const heroImg = document.getElementById('heroStageImg');
+      const heroCap = document.getElementById('heroStageCaption');
+      const heroTabs = document.querySelectorAll('.stage-tab');
+      heroTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          heroIdx = Number(tab.dataset.shotIdx);
+          const item = SHOTS[heroIdx];
+          heroImg.style.opacity = '0.35';
+          setTimeout(() => {
+            heroImg.src = item.src;
+            heroImg.alt = item.title;
+            heroCap.textContent = item.caption;
+            heroImg.style.opacity = '1';
+          }, 90);
+          heroTabs.forEach(t => t.classList.toggle('active', t === tab));
+        });
+      });
+
+      /* 4. 五步闭环横条与下方 01–05 条目联动 */
+      const loopNodes = document.querySelectorAll('.loop-node');
+      const loopItems = document.querySelectorAll('#loopList .step-item');
+      function selectLoopStep(idx) {
+        loopNodes.forEach(n => n.classList.toggle('active', Number(n.dataset.step) === idx));
+        loopItems.forEach(it => it.classList.toggle('highlight', Number(it.dataset.step) === idx));
+      }
+      loopNodes.forEach(node => {
+        node.addEventListener('click', () => selectLoopStep(Number(node.dataset.step)));
+      });
+      loopItems.forEach(item => {
+        item.addEventListener('mouseenter', () => selectLoopStep(Number(item.dataset.step)));
+      });
+
+      /* 5. 画廊分类筛选 */
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const shotCards = document.querySelectorAll('.shot-card');
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const f = btn.dataset.filter;
+          filterBtns.forEach(b => b.classList.toggle('active', b === btn));
+          shotCards.forEach(c => {
+            c.classList.toggle('hidden', f !== 'all' && c.dataset.cat !== f);
+          });
+        });
+      });
+
+      /* 6. 全屏 Lightbox 灯箱（支持键盘 ← / → / Esc） */
+      const lb = document.getElementById('lightbox');
+      const lbImg = document.getElementById('lbImg');
+      const lbTitle = document.getElementById('lbTitle');
+      const lbCounter = document.getElementById('lbCounter');
+      let lbIdx = 0;
+
+      function openLightbox(idx) {
+        lbIdx = (idx + SHOTS.length) % SHOTS.length;
+        const item = SHOTS[lbIdx];
+        lbImg.src = item.src;
+        lbImg.alt = item.title;
+        lbTitle.textContent = item.title + ' — ' + item.caption;
+        lbCounter.textContent = String(lbIdx + 1).padStart(2, '0') + ' / ' + String(SHOTS.length).padStart(2, '0');
+        lb.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeLightbox() {
+        lb.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      document.getElementById('heroStage').addEventListener('click', () => openLightbox(heroIdx));
+      document.getElementById('heroStage').addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(heroIdx); }
+      });
+      shotCards.forEach(card => {
+        card.addEventListener('click', () => openLightbox(Number(card.dataset.idx)));
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(Number(card.dataset.idx)); }
+        });
+      });
+      document.getElementById('lbClose').addEventListener('click', closeLightbox);
+      document.getElementById('lbPrev').addEventListener('click', () => openLightbox(lbIdx - 1));
+      document.getElementById('lbNext').addEventListener('click', () => openLightbox(lbIdx + 1));
+      lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
+      window.addEventListener('keydown', e => {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        else if (e.key === 'ArrowLeft') openLightbox(lbIdx - 1);
+        else if (e.key === 'ArrowRight') openLightbox(lbIdx + 1);
+      });
+
+      /* 7. 一键复制 SHA256 */
+      const copyBtn = document.getElementById('copyShaBtn');
+      const shaText = document.getElementById('shaValue').textContent.trim();
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(shaText);
+          copyBtn.classList.add('copied');
+          copyBtn.querySelector('span').textContent = '已复制';
+          setTimeout(() => {
+            copyBtn.classList.remove('copied');
+            copyBtn.querySelector('span').textContent = '复制校验值';
+          }, 1800);
+        } catch (e) {
+          const range = document.createRange();
+          range.selectNodeContents(document.getElementById('shaValue'));
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

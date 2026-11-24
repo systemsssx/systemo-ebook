@@ -1,0 +1,410 @@
+/* ==========================================================================
+   parchment-guide.css (V3) — 西洋古典羊皮卷图文指引共用水墨样式
+   适用于：applebooks-help.html / kindle-help.html
+   ========================================================================== */
+
+html, body {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: var(--vellum-page);
+    background-image:
+        radial-gradient(ellipse at center, transparent 56%, rgba(102, 76, 40, 0.16) 100%),
+        url('./assets/tex-vellum-seamless.webp');
+    background-size: 100% 100%, 420px 420px;
+    background-attachment: fixed, scroll;
+    color: var(--ink-primary);
+    padding: 0 0 42px;
+    line-height: 1.72;
+}
+
+/* ----- 深胡桃皮脊书眉横幅 ----- */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 28px;
+    margin-bottom: 24px;
+    background-color: var(--leather-bg);
+    background-image:
+        linear-gradient(180deg, rgba(29, 21, 14, 0.90) 0%, rgba(19, 13, 8, 0.96) 100%),
+        url('./assets/tex-leather-spine.webp');
+    background-size: auto, 360px 360px;
+    border-bottom: 1px solid rgba(189, 159, 112, 0.30);
+    box-shadow: 0 4px 16px rgba(20, 14, 9, 0.24);
+}
+
+.header .titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-kicker {
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    color: #BD9F70;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.header h1 {
+    font-family: var(--font-editorial);
+    font-size: 20px;
+    font-weight: 650;
+    color: #EAD8B5;
+    letter-spacing: 0.03em;
+    line-height: 1.35;
+}
+
+.header p {
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    color: #A69072;
+    margin-top: 3px;
+}
+
+/* 语言切换（胡桃嵌铜微圆角皮签） */
+.lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    background: rgba(16, 11, 7, 0.56);
+    border: 1px solid rgba(189, 159, 112, 0.32);
+    border-radius: var(--r-btn);
+    flex-shrink: 0;
+}
+
+.lang-switch > div {
+    font-family: var(--font-editorial);
+    font-size: 12px;
+    line-height: 1;
+    padding: 6px 11px;
+    border-radius: 4px;
+    color: #9D886B;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.lang-switch > div:hover {
+    color: #EAD8B5;
+}
+
+.lang-switch > div.on {
+    background: var(--seal-walnut);
+    border-color: rgba(197, 162, 103, 0.48);
+    color: #E5D5B8;
+    font-weight: 600;
+}
+
+/* ----- 居中卷册阅读流容器 ----- */
+.toc,
+.warn-banner,
+.section,
+.step,
+.step-tips.ok-standalone,
+.footer {
+    max-width: 860px;
+    width: calc(100% - 48px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ----- 目录索引匣 ----- */
+.toc {
+    background: rgba(198, 177, 141, 0.55);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+    padding: 13px 18px 15px;
+    margin-bottom: 18px;
+}
+
+.toc-title {
+    font-family: var(--font-editorial);
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--brass-deep);
+    letter-spacing: 0.04em;
+    margin-bottom: 9px;
+}
+
+.toc-item {
+    display: inline-block;
+    padding: 4px 12px;
+    margin: 3px 6px 3px 0;
+    background: rgba(219, 202, 176, 0.72);
+    color: var(--ink-primary);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-btn);
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 540;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.toc-item:hover {
+    background: var(--seal-walnut);
+    border-color: var(--seal-walnut);
+    color: #E5D5B8;
+}
+
+/* ----- 羊皮步骤卡片 ----- */
+.section,
+.step {
+    background: rgba(219, 202, 176, 0.56);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+    padding: 20px 24px 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(36, 25, 17, 0.06);
+}
+
+.section-title,
+.step-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 12px;
+}
+
+.section-title span,
+.step-title {
+    font-family: var(--font-editorial);
+    font-size: 16px;
+    font-weight: 650;
+    color: var(--ink-primary);
+}
+
+.section-num,
+.step-num {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    line-height: 26px;
+    text-align: center;
+    background: var(--seal-walnut);
+    color: #E5D5B8;
+    border: 1px solid var(--brass-bright);
+    box-shadow: 0 0 0 2px rgba(142, 110, 62, 0.16);
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ----- 凹槽步骤盒与提示签 ----- */
+.step-tips {
+    font-size: 13.5px;
+    color: var(--ink-secondary);
+    background: rgba(198, 177, 141, 0.45);
+    border: 1px solid var(--rule-subtle);
+    border-left: 3px solid var(--brass-gold);
+    padding: 11px 16px;
+    border-radius: var(--r-btn);
+    margin: 8px 0 12px;
+}
+
+.step-tips ol,
+.step-tips ul {
+    padding-left: 20px;
+    margin: 4px 0;
+}
+
+.step-tips li {
+    margin: 5px 0;
+}
+
+.step-tips b {
+    color: var(--ink-primary);
+    font-weight: 650;
+}
+
+.step-tips.ok,
+.step-tips.ok-standalone {
+    background: rgba(59, 75, 43, 0.10);
+    border-color: rgba(59, 75, 43, 0.28);
+    border-left: 3px solid var(--ok-olive);
+    color: var(--ink-primary);
+    padding: 14px 18px;
+    line-height: 1.85;
+}
+
+.step-tips.ok b,
+.step-tips.ok-standalone b {
+    color: var(--ok-olive);
+}
+
+.step-tips.warn-tip {
+    background: var(--warn-ochre-bg);
+    border-color: rgba(107, 75, 30, 0.30);
+    border-left: 3px solid var(--warn-ochre);
+}
+
+.step-tips.warn-tip b {
+    color: var(--warn-ochre);
+}
+
+.step-tips.danger {
+    background: var(--err-umber-bg);
+    border-color: rgba(94, 51, 32, 0.32);
+    border-left: 3px solid var(--err-umber);
+}
+
+.step-tips.danger b {
+    color: var(--err-umber);
+}
+
+.tip {
+    background: rgba(198, 177, 141, 0.46);
+    border: 1px solid var(--rule-subtle);
+    border-left: 3px solid var(--brass-gold);
+    padding: 10px 14px;
+    border-radius: var(--r-btn);
+    font-size: 12.5px;
+    color: var(--ink-secondary);
+    line-height: 1.7;
+    margin-top: 10px;
+}
+
+.tip b {
+    color: var(--ink-primary);
+    font-weight: 650;
+}
+
+.warn,
+.warn-banner {
+    background: rgba(142, 110, 62, 0.14);
+    border: 1px solid rgba(110, 82, 42, 0.35);
+    border-left: 3px solid var(--warn-ochre);
+    padding: 11px 16px;
+    border-radius: var(--r-btn);
+    font-size: 12.5px;
+    color: var(--ink-primary);
+    line-height: 1.72;
+}
+
+.warn {
+    margin-top: 10px;
+}
+
+.warn-banner {
+    margin-bottom: 18px;
+}
+
+.warn b,
+.warn-banner b {
+    color: var(--warn-ochre);
+    font-weight: 650;
+}
+
+/* ----- 路径与参数：古典斜体衬线徽章（严禁等宽字体） ----- */
+code {
+    font-family: var(--font-italic-mix);
+    background: rgba(142, 110, 62, 0.14);
+    border: 1px solid rgba(142, 110, 62, 0.32);
+    color: #3A2615;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    user-select: text;
+}
+
+/* ----- 实拍配图古典铜线托底框 ----- */
+.mobile-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 14px 0 6px;
+}
+
+.mobile-pair {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+}
+
+.mobile-pair .cap {
+    font-size: 12px;
+    color: var(--ink-muted);
+    text-align: center;
+}
+
+.mobile-img {
+    display: block;
+    width: 220px;
+    max-width: 100%;
+    border-radius: var(--r-box);
+    border: 1px solid var(--rule-strong);
+    padding: 4px;
+    background: var(--vellum-well);
+    box-shadow: 0 4px 14px rgba(36, 25, 17, 0.14);
+}
+
+.step-img {
+    display: block;
+    max-width: 100%;
+    margin: 10px auto 2px;
+    border-radius: var(--r-box);
+    border: 1px solid var(--rule-strong);
+    padding: 4px;
+    background: var(--vellum-well);
+    box-shadow: 0 4px 14px rgba(36, 25, 17, 0.14);
+}
+
+.branch {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.branch-card {
+    background: rgba(198, 177, 141, 0.42);
+    border: 1px solid var(--rule-outer);
+    border-radius: var(--r-box);
+    padding: 14px 16px;
+}
+
+.branch-tag {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: rgba(142, 110, 62, 0.16);
+    color: var(--brass-deep);
+    border: 1px solid rgba(110, 82, 42, 0.36);
+    margin-bottom: 8px;
+}
+
+.branch-body {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-secondary);
+}
+
+.branch-body b {
+    color: var(--ink-primary);
+    font-weight: 650;
+}
+
+.dim {
+    color: var(--ink-muted);
+}
+
+.footer {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    padding: 16px 12px 4px;
+    border-top: 1px dashed var(--rule-dashed);
+    margin-top: 12px;
+}

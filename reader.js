@@ -19,28 +19,23 @@ function T(s, fb) {
     return (fb != null) ? fb : s;
 }
 
-/* ---------- 设计令牌：正文配色（三套，存 localStorage） ---------- */
+/* ---------- 设计令牌：正文配色（V3 西洋羊皮卷三套，存 localStorage） ---------- */
 var THEMES = {
-    dark:  { bg: '#0B0D10', panel: '#11151A', tx: '#C9CFD8', tx2: '#8D97A6', tx3: '#5A6472',
-             line: '#232A33', acc: '#4FD1C5', sel: 'rgba(79,209,197,.22)', link: '#4FD1C5',
-             // 标题金：深色底上要提亮才看得清（原书 Title 用的是 rgb(184,149,106)，太暗）
-             title: '#E3C078', rule: 'rgba(227,192,120,.34)' },
-    light: { bg: '#FFFFFF', panel: '#FFFFFF', tx: '#1F242B', tx2: '#5A6472', tx3: '#8D97A6',
-             line: '#E3E7ED', acc: '#2AA79C', sel: 'rgba(42,167,156,.20)', link: '#0E7C72',
-             title: '#9A6B1F', rule: 'rgba(154,107,31,.28)' },
-    sepia: { bg: '#F4ECD8', panel: '#F4ECD8', tx: '#43382A', tx2: '#6E5F49', tx3: '#93836B',
-             line: '#DFD3B8', acc: '#9A6B34', sel: 'rgba(154,107,52,.20)', link: '#8A5A22',
-             title: '#8A5A22', rule: 'rgba(138,90,34,.30)' }
+    sepia: { bg: '#D5C3A3', panel: '#D5C3A3', tx: '#241911', tx2: '#5A4531', tx3: '#7A634A',
+             line: '#B6A07B', acc: '#8E6E3E', sel: 'rgba(142,110,62,.24)', link: '#6B481F',
+             title: '#5E3D16', rule: 'rgba(110,82,46,.34)' },
+    light: { bg: '#EAE0CC', panel: '#EAE0CC', tx: '#231911', tx2: '#594633', tx3: '#7C6851',
+             line: '#CFC0A4', acc: '#7D5E32', sel: 'rgba(125,94,50,.20)', link: '#63431B',
+             title: '#5C3C15', rule: 'rgba(125,94,50,.28)' },
+    dark:  { bg: '#1C150F', panel: '#1C150F', tx: '#D6C5A9', tx2: '#A69173', tx3: '#7A674E',
+             line: '#3A2C1F', acc: '#C5A267', sel: 'rgba(197,162,103,.24)', link: '#D2AF73',
+             title: '#DEC089', rule: 'rgba(197,162,103,.34)' }
 };
 
-/* ---------- 中文字体：项目自带 Noto（统一放在 fonts/ 子目录） ---------- */
-// ★ 路径必须带 fonts/ 前缀：下面的 fetch() 是相对 reader.html 所在目录解析的，
-//   写成裸文件名就会去应用根目录找 → 404 → 静默回退成系统字体
-//   （黑体选项曾经就是这样失效的）。theme.css / help.html 用的是
-//   url('fonts/...')，两边现在一致了。
+/* ---------- 中文字体：项目自带 Noto + Cormorant Garamond（统一放在 fonts/ / typefaces/） ---------- */
 var FONTS = [
-    { id: 'serif', name: '宋体 / 思源宋体', file: 'fonts/NotoSerifSC-VF.ttf', family: '"Noto Serif SC", "Songti SC", "SimSun", serif' },
-    { id: 'sans',  name: '黑体 / 思源黑体', file: 'fonts/NotoSansSC-VF.ttf',  family: '"Noto Sans SC", "Microsoft YaHei UI", "Heiti SC", sans-serif' }
+    { id: 'serif', name: '宋体 / 思源宋体', file: 'fonts/NotoSerifSC-VF.ttf', family: '"Cormorant Garamond", "Noto Serif SC", "Songti SC", "SimSun", serif' },
+    { id: 'sans',  name: '黑体 / 思源黑体', file: 'fonts/NotoSansSC-VF.ttf',  family: '"Noto Sans SC", "Heiti SC", sans-serif' }
 ];
 var fontCache = {};                 // id -> Blob，25MB 的字体只读一次
 
@@ -49,7 +44,7 @@ var STORE_POS = 'reader.pos.';     // 每本书的阅读位置（CFI）
 var STORE_BM  = 'reader.bm.';      // 每本书的书签
 
 var ui = {
-    theme: 'dark', font: 'serif', size: 20, lh: 1.9, flow: 'paginated', align: 'start', margins: 'normal'
+    theme: 'sepia', font: 'serif', size: 20, lh: 1.9, flow: 'paginated', align: 'start', margins: 'normal'
 };
 var view = null;                   // <foliate-view>
 var book = null;
@@ -238,7 +233,7 @@ function buildCSS() {
         'a, a:visited { color: ' + t.link + ' !important; }',
         'img, svg, video { max-width: 100% !important; height: auto !important; }',
         '::selection { background: ' + t.sel + ' !important; }',
-        'code, pre, kbd, samp { font-family: "Cascadia Mono", Consolas, monospace !important; background: ' + t.sel + '; }',
+        'code, pre, kbd, samp { font-family: "Cormorant Garamond", "Noto Serif SC", Georgia, serif !important; font-style: italic; background: ' + t.sel + '; }',
         // 书内常见的黑白反色/浅色背景（EasyPub 生成的书用了 light-dark()）
         '[style*="background"] { background: transparent !important; }'
     ].join('\n');
@@ -490,7 +485,7 @@ function renderBookmarks() {
     var list = getBookmarks();
     var box = $('rdBmList');
     if (!list.length) {
-        box.innerHTML = '<div class="rd-empty">' + T('还没有书签。读到想记住的地方，点顶部 ⭐ 添加。') + '</div>';
+        box.innerHTML = '<div class="rd-empty">' + T('还没有书签。读到想记住的地方，点顶部「添加书签」即可。') + '</div>';
         return;
     }
     box.innerHTML = list.map(function (b, i) {

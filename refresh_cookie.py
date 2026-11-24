@@ -397,6 +397,13 @@ def refresh(cookie_file: str = DEFAULT_COOKIE_FILE, *, headless: bool = False,
     #   `eager` = 只等 DOMContentLoaded（文档解析完、链接可点）→ 立即返回，
     #   于是**页面还在加载时就能读到 URL**（正是用户要的「到网页就弹窗」）。
     opt.page_load_strategy = "eager"
+    px = (os.environ.get("EASYPUB_PROXY") or "").strip()
+    if px and px.upper() != "DIRECT":
+        if "://" not in px:
+            px = "http://" + px
+        opt.add_argument(f"--proxy-server={px}")
+    else:
+        opt.add_argument("--no-proxy-server")
     if headless:
         opt.add_argument("--headless=new")
     try:

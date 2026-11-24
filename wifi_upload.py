@@ -21,6 +21,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, WebDriverException, InvalidSessionIdException
 
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+import chromedriver_helper
+
 # ★ 兜底方案依赖（仿 main.py 的 handle_folder_dialog）
 try:
     import pyautogui
@@ -185,17 +190,8 @@ def find_chrome_binary():
 # =========================================
 
 def create_driver():
-    """创建 ChromeDriver 实例（参考 main.py 和 open_auth_page.py）"""
+    """创建弹性浏览器驱动（主版本自动匹配/热更 + Edge 兜底）"""
     chrome_options = Options()
-
-    # ★ 关键修复：手动指定 Chrome 二进制路径
-    chrome_paths = find_chrome_binary()
-    if chrome_paths:
-        chrome_options.binary_location = chrome_paths[0]
-        print(f"📁 Chrome 二进制: {chrome_paths[0]}")
-    else:
-        print("⚠️ 没找到 Chrome 二进制路径，尝试用默认设置")
-
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--window-size=1280,900')
@@ -208,18 +204,24 @@ def create_driver():
     chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36')
     chrome_options.page_load_strategy = 'eager'
 
-    # ★ 关键修复：显式指定 chromedriver 路径 + CREATE_NO_WINDOW 标志
-    service = Service(CHROMEDRIVER_PATH)
-    service.creation_flags = 0x08000000
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver, browser_kind, drv_src = chromedriver_helper.create_resilient_chrome_or_edge(
+        chrome_options,
+        preferred_driver=CHROMEDRIVER_PATH,
+        log_fn=print,
+        edge_fallback=True,
+    )
+    print(f"🌐 浏览器就绪: {browser_kind} (驱动来源={drv_src})")
 
     # 隐藏自动化特征
-    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
-        'source': '''
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            window.chrome = { runtime: {} };
-        '''
-    })
+    try:
+        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            'source': '''
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                window.chrome = { runtime: {} };
+            '''
+        })
+    except Exception:
+        pass
     return driver
 
 def find_upload_element(driver):

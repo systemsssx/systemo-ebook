@@ -3,7 +3,23 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');   // ★ 2026-09-27：书库内容去重（sha256 指纹）
-const { exec, execSync, execFile } = require('child_process');
+const { exec, execSync, execFile, execFileSync, spawn } = require('child_process');
+const http = require('http');
+const tls = require('tls');
+const { createProxyManager } = require('./proxy_manager');
+
+const proxyManager = createProxyManager({
+    app,
+    baseDir: __dirname,
+    userDataDir: app.getPath('userData'),
+    onStateChange: (st) => {
+        try {
+            if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+                mainWindow.webContents.send('proxy-state-changed', st);
+            }
+        } catch (e) {}
+    }
+});
 
 // ================================================================
 // ★★★ 最优先：让所有日志写不出去也不能把主进程搞崩 ★★★
@@ -472,7 +488,10 @@ const SETTINGS_DEFAULTS = {
     //   ★ 注意：这两个值**只是给"下载小说"那条兜底路径**用的（novel_dl.py → linovelib.py）；
     //     【轻小说】弹窗那条路走的是 linovelibGet，开关由弹窗里的勾选框当场给（见 index.html）。
     linovelibAutoCookie: true,           // cf_clearance 过期自动续期（弹一次 Edge，约 10 秒）
-    linovelibBase: ''                    // 站点域名；空 = 脚本默认 https://www.linovelib.com
+    linovelibBase: '',                   // 站点域名；空 = 脚本默认 https://www.linovelib.com
+    cloudDriveProvider: 'auto',          // auto | icloud | onedrive | googledrive | custom
+    cloudDriveDir: '',                   // 手动选择的同步根目录；空 = 自动探测
+    cloudDriveSubdir: 'EasyPub'          // 云盘根目录下的子目录名
     // ★ 2026-09-29：apiKey 字段已删除（DeepSeek 全套下线，改由 novelmeta 直连）
 };
 
@@ -534,12 +553,80 @@ function isPathInside(parent, child) {
     }
 }
 
+const LIBRARY_HISTORY_FILE = path.join(app.getPath('userData'), 'library-history.json');
+
+function loadLibraryHistory() {
+    try {
+        if (!fs.existsSync(LIBRARY_HISTORY_FILE)) return [];
+        const arr = JSON.parse(fs.readFileSync(LIBRARY_HISTORY_FILE, 'utf-8'));
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveLibraryHistory(list) {
+    try {
+        fs.mkdirSync(path.dirname(LIBRARY_HISTORY_FILE), { recursive: true });
+        const tmp = LIBRARY_HISTORY_FILE + '.tmp';
+        fs.writeFileSync(tmp, JSON.stringify(list, null, 2), 'utf-8');
+        fs.renameSync(tmp, LIBRARY_HISTORY_FILE);
+    } catch (e) {}
+}
+
+function recordLibraryBook(filePath) {
+    if (!filePath || !fs.existsSync(filePath)) return;
+    const abs = path.resolve(filePath);
+    if (!/\.(epub|mobi|azw3|azw|fb2|fbz|cbz|pdf)$/i.test(abs)) return;
+    const list = loadLibraryHistory();
+    const key = abs.toLowerCase();
+    const next = list.filter((it) => it && it.path && path.resolve(it.path).toLowerCase() !== key);
+    next.unshift({ path: abs, addedAt: Date.now() });
+    saveLibraryHistory(next.slice(0, 500));
+}
+
+function removeLibraryHistoryPaths(paths) {
+    const rmSet = new Set((Array.isArray(paths) ? paths : [paths])
+        .filter(Boolean)
+        .map((p) => path.resolve(p).toLowerCase()));
+    if (!rmSet.size) return;
+    const next = loadLibraryHistory().filter((it) => it && it.path && !rmSet.has(path.resolve(it.path).toLowerCase()));
+    saveLibraryHistory(next);
+}
+
+function getRecordedLibraryPaths() {
+    return loadLibraryHistory()
+        .map((it) => it && it.path ? path.resolve(it.path) : '')
+        .filter((p) => p && fs.existsSync(p));
+}
+
 function assertPathAllowed(target, what) {
     const p = String(target || '').trim();
     if (!p) throw new Error(`${what}：路径为空`);
-    const allowed = [getExportDir(), DOWNLOAD_DIR];
+    const allowed = [getExportDir(), EXPORT_DIR, DOWNLOAD_DIR];
     if (allowed.some(dir => isPathInside(dir, p))) return p;
+    const absLow = path.resolve(p).toLowerCase();
+    if (getRecordedLibraryPaths().some((hp) => hp.toLowerCase() === absLow)) return p;
     throw new Error(`${what}：拒绝访问书库与下载目录之外的路径 —— ${p}`);
+}
+
+function purgeDownloadDir(reason = '') {
+    let removed = 0;
+    try {
+        if (!fs.existsSync(DOWNLOAD_DIR)) return 0;
+        const entries = fs.readdirSync(DOWNLOAD_DIR);
+        for (const entry of entries) {
+            const fp = path.join(DOWNLOAD_DIR, entry);
+            try {
+                fs.rmSync(fp, { recursive: true, force: true });
+                removed++;
+            } catch (e) {}
+        }
+        console.log(`🧹 清理 download/${reason ? `（${reason}）` : ''}：已清除 ${removed} 项`);
+    } catch (e) {
+        console.warn('⚠️ 清理 download/ 失败:', e.message);
+    }
+    return removed;
 }
 
 loadSettings();
@@ -590,8 +677,32 @@ try { pruneDuplicateExports(); } catch (e) { console.warn('⚠️ 书库去重�
 // ★ 不许恢复：不要重新引入 key 输入框、授权弹窗或 key 注入。
 // ================================================================
 function buildPythonEnv(extra) {
-    return Object.assign({}, process.env, extra || {});
+    const base = Object.assign({}, process.env);
+    delete base.HTTP_PROXY;
+    delete base.HTTPS_PROXY;
+    delete base.http_proxy;
+    delete base.https_proxy;
+    delete base.ALL_PROXY;
+    delete base.all_proxy;
+    const pUrl = proxyManager ? proxyManager.getProxyUrl() : null;
+    base.EASYPUB_PROXY = pUrl || 'DIRECT';
+    if (proxyManager) {
+        const ctl = proxyManager.getControlBridgeUrl();
+        if (ctl) base.EASYPUB_PROXY_CTL = ctl;
+        const tok = proxyManager.getBridgeToken();
+        if (tok) base.EASYPUB_PROXY_TOKEN = tok;
+    }
+    try { base.EASYPUB_DRIVER_CACHE_DIR = path.join(app.getPath('userData'), 'drivers'); } catch (e) {}
+    return Object.assign(base, extra || {});
 }
+
+ipcMain.handle('proxy-get-status', async () => proxyManager.getStatus());
+ipcMain.handle('proxy-toggle', async (event, enabled, reason) => proxyManager.setEnabled(!!enabled, reason || 'manual'));
+ipcMain.handle('proxy-select-node', async (event, name) => proxyManager.selectNode(name));
+ipcMain.handle('proxy-ensure-mode', async (event, mode, reason) => proxyManager.ensureModeNode(mode || 'general', reason || 'mode'));
+ipcMain.handle('proxy-rotate', async (event, opts) => proxyManager.rotateNode(opts || {}));
+ipcMain.handle('proxy-retest', async () => proxyManager.retestNodes());
+ipcMain.handle('clear-download-dir', async () => ({ success: true, removed: purgeDownloadDir('ui-request') }));
 
 
 /**
@@ -824,7 +935,7 @@ function createWindow() {
         minHeight: Math.min(620, winH),
         frame: false,
         transparent: false,
-        backgroundColor: '#0B0D10',
+        backgroundColor: '#1B130C',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -860,9 +971,16 @@ function createWindow() {
 
 app.whenReady().then(() => {
     createWindow();
+    proxyManager.init().catch((e) => console.warn('⚠️ proxyManager.init:', e && e.message));
+});
+
+app.on('before-quit', () => {
+    try { proxyManager.stop(); } catch (e) {}
+    purgeDownloadDir('before-quit');
 });
 
 app.on('window-all-closed', () => {
+    try { proxyManager.stop(); } catch (e) {}
     // ★ 2026-09-23：先把正在跑的上传子进程带走（bypy 是 python 的子进程，
     //   _killTree 用 taskkill /T 整棵杀），否则窗口关掉后它继续在后台传，
     //   日志也没有结论（以前日志末尾停在 START 就是这么来的）。
@@ -874,29 +992,9 @@ app.on('window-all-closed', () => {
         } catch (_) {}
         activeUploadChild = null;
     }
-    // ★ 退出程序前清空 download 目录
-    try {
-        const downloadDir = DOWNLOAD_DIR;
-        if (fs.existsSync(downloadDir)) {
-            const files = fs.readdirSync(downloadDir);
-            let count = 0;
-            for (const f of files) {
-                const fp = path.join(downloadDir, f);
-                try {
-                    if (fs.statSync(fp).isFile()) {
-                        fs.unlinkSync(fp);
-                        count++;
-                    }
-                } catch (e) {}
-            }
-            console.log(`🧹 退出前清理 download/：已删除 ${count} 个文件`);
-            // ★ 2026-09-23：退出也记一笔。上传没返回就退出（用户提前关窗/进程被杀）时，
-            //   日志末尾停在哪一步一眼就能看出来。
-            logUpload('QUIT', `窗口全部关闭 → 退出应用（清理 download/ 删除 ${count} 个文件）`);
-        }
-    } catch (e) {
-        console.log('⚠️ 退出清理失败：', e.message);
-    }
+    // ★ 退出程序前清空 download 目录（含子目录）
+    const count = purgeDownloadDir('退出程序');
+    logUpload('QUIT', `窗口全部关闭 → 退出应用（清理 download/ 删除 ${count} 项）`);
     if (process.platform !== 'darwin') {
         app.quit();
     }
@@ -914,7 +1012,12 @@ app.on('window-all-closed', () => {
 let _manualMax = false;
 let _restoreBounds = null;
 
-ipcMain.on('window-minimize', () => {
+ipcMain.on('window-minimize', (event) => {
+    const senderWin = (event && event.sender && BrowserWindow.fromWebContents(event.sender)) || mainWindow;
+    if (senderWin && senderWin !== mainWindow && !senderWin.isDestroyed()) {
+        senderWin.minimize();
+        return;
+    }
     if (!mainWindow) { logUpload('WIN-CTRL', JSON.stringify({ action: 'minimize', hasWindow: false })); return; }
     mainWindow.minimize();
     // 记**动作之后**的真实状态，日志自证（minimized:true = 系统确实最小化了）
@@ -928,7 +1031,31 @@ ipcMain.on('window-minimize', () => {
     }, 250);
 });
 
-ipcMain.on('window-maximize', () => {
+ipcMain.on('window-maximize', (event) => {
+    const senderWin = (event && event.sender && BrowserWindow.fromWebContents(event.sender)) || mainWindow;
+    if (senderWin && senderWin !== mainWindow && !senderWin.isDestroyed()) {
+        const wasChildMax = senderWin.isMaximized() || senderWin.__manualMax;
+        if (wasChildMax) {
+            if (senderWin.isMaximized()) senderWin.unmaximize();
+            if (senderWin.__manualMax) {
+                try { if (senderWin.__restoreBounds) senderWin.setBounds(senderWin.__restoreBounds); } catch (e) {}
+                senderWin.__manualMax = false;
+            }
+            return;
+        }
+        try { senderWin.__restoreBounds = senderWin.getBounds(); } catch (e) { senderWin.__restoreBounds = null; }
+        senderWin.maximize();
+        setTimeout(() => {
+            try {
+                if (!senderWin.isDestroyed() && !senderWin.isMaximized()) {
+                    const wa = screen.getPrimaryDisplay().workArea;
+                    senderWin.setBounds({ x: wa.x, y: wa.y, width: wa.width, height: wa.height });
+                    senderWin.__manualMax = true;
+                }
+            } catch (e) {}
+        }, 180);
+        return;
+    }
     if (!mainWindow) { logUpload('WIN-CTRL', JSON.stringify({ action: 'maximize', hasWindow: false })); return; }
     const wasMax = mainWindow.isMaximized() || _manualMax;
     if (wasMax) {
@@ -965,15 +1092,21 @@ ipcMain.on('window-maximize', () => {
 // ★★★ 2026-09-30 新增：**真正的全屏**（原来只有"最大化"，压根没有全屏 —— 用户要的 F11 那种）。
 //   `setFullScreen(true)` 会盖住任务栏；`maximize()` 不会。两者互不干扰：
 //   进全屏前先记下是否已最大化，退出全屏时恢复原状。
-ipcMain.on('window-fullscreen', () => {
+ipcMain.on('window-fullscreen', (event) => {
+    const senderWin = (event && event.sender && BrowserWindow.fromWebContents(event.sender)) || mainWindow;
+    if (senderWin && senderWin !== mainWindow && !senderWin.isDestroyed()) {
+        senderWin.setFullScreen(!senderWin.isFullScreen());
+        return;
+    }
     if (!mainWindow) return;
     const to = !mainWindow.isFullScreen();
     logUpload('WIN-CTRL', JSON.stringify({ action: 'fullscreen', to, wasMaximized: mainWindow.isMaximized() }));
     mainWindow.setFullScreen(to);
 });
 
-ipcMain.on('window-close', () => {
-    if (mainWindow) mainWindow.close();
+ipcMain.on('window-close', (event) => {
+    const senderWin = (event && event.sender && BrowserWindow.fromWebContents(event.sender)) || mainWindow;
+    if (senderWin && !senderWin.isDestroyed()) senderWin.close();
 });
 
 // ================================================================
@@ -1335,6 +1468,7 @@ async function runRecommendList(payload = {}) {
                 encoding: 'utf-8',
                 windowsHide: true,
                 timeout: 180000,
+                env: buildPythonEnv(),
             }, (err, out, errOut) => {
                 if (err && !out) { reject(err); return; }
                 resolve(String(out || '') + String(errOut || ''));
@@ -1406,6 +1540,70 @@ function _coverPump() {
             .then(() => { _coverActive -= 1; _coverPump(); });
     }
 }
+function _coverFetchViaProxy(urlStr, file, host, proxyUrl) {
+    return new Promise((resolve) => {
+        if (!proxyUrl) { resolve(null); return; }
+        let done = false;
+        const fin = (v) => { if (!done) { done = true; resolve(v); } };
+        try {
+            const u = new URL(urlStr);
+            const p = new URL(proxyUrl);
+            const targetPort = Number(u.port) || (u.protocol === 'https:' ? 443 : 80);
+            const req = http.request({
+                host: p.hostname,
+                port: Number(p.port),
+                method: 'CONNECT',
+                path: `${u.hostname}:${targetPort}`,
+                timeout: 15000
+            });
+            req.on('connect', (res, sock) => {
+                if (res.statusCode !== 200) { try { sock.destroy(); } catch (e) {} fin(null); return; }
+                const s = (u.protocol === 'https:')
+                    ? tls.connect({ socket: sock, servername: u.hostname, timeout: 15000 })
+                    : sock;
+                const reqPath = (u.pathname || '/') + (u.search || '');
+                const raw = `GET ${reqPath} HTTP/1.1\r\nHost: ${u.host}\r\nReferer: ${host}/\r\nUser-Agent: Mozilla/5.0 Chrome/125.0.0.0\r\nAccept-Encoding: identity\r\nConnection: close\r\n\r\n`;
+                const chunks = [];
+                s.setTimeout(15000, () => { try { s.destroy(); } catch (e) {} fin(null); });
+                s.on('error', () => fin(null));
+                s.on('data', (c) => chunks.push(c));
+                s.on('end', () => {
+                    const buf = Buffer.concat(chunks);
+                    const sep = buf.indexOf('\r\n\r\n');
+                    if (sep < 0) { fin(null); return; }
+                    const head = buf.slice(0, sep).toString('latin1');
+                    if (!/^HTTP\/\d\.\d\s+200/i.test(head)) { fin(null); return; }
+                    let body = buf.slice(sep + 4);
+                    if (/transfer-encoding:\s*chunked/i.test(head)) {
+                        const out = [];
+                        let pos = 0;
+                        while (pos < body.length) {
+                            const rn = body.indexOf('\r\n', pos);
+                            if (rn < 0) break;
+                            const sz = parseInt(body.slice(pos, rn).toString('ascii').split(';')[0].trim(), 16);
+                            if (!sz || isNaN(sz)) break;
+                            pos = rn + 2;
+                            out.push(body.slice(pos, pos + sz));
+                            pos += sz + 2;
+                        }
+                        body = Buffer.concat(out);
+                    }
+                    if (body.length < 512) { fin(null); return; }
+                    try { fs.writeFileSync(file, body); fin(file); } catch (e) { fin(null); }
+                });
+                const startSend = () => { try { s.write(raw); } catch (e) { fin(null); } };
+                if (u.protocol === 'https:') s.once('secureConnect', startSend);
+                else startSend();
+            });
+            req.on('timeout', () => { try { req.destroy(); } catch (e) {} fin(null); });
+            req.on('error', () => fin(null));
+            req.end();
+        } catch (e) {
+            fin(null);
+        }
+    });
+}
+
 function _coverFetch(job) {
     return new Promise((resolve) => {
         let host = '';
@@ -1416,6 +1614,10 @@ function _coverFetch(job) {
             if (done) { return; }
             done = true;
             if (timer) { clearTimeout(timer); }
+            if (!v && proxyManager && proxyManager.getProxyUrl()) {
+                _coverFetchViaProxy(job.url, job.file, host, proxyManager.getProxyUrl()).then(resolve, () => resolve(null));
+                return;
+            }
             resolve(v);
         };
         let req;
@@ -1447,18 +1649,49 @@ function _coverFetch(job) {
     });
 }
 
-function coverCached(url) {
-    try { fs.mkdirSync(COVER_DIR, { recursive: true }); } catch (e) {}
-    const ext = (url.split('?')[0].match(/\.[a-z0-9]{3,4}$/i) || ['.jpg'])[0];
-    const file = path.join(COVER_DIR, crypto.createHash('sha1').update(url).digest('hex') + ext);
-    if (fs.existsSync(file) && fs.statSync(file).size > 512) {
-        return Promise.resolve(file);
+function upgradeCoverUrlCandidates(url) {
+    const raw = String(url || '').trim();
+    if (!raw) return [];
+    const out = [];
+    const ym = raw.match(/^(https?:\/\/bookcover\.yuewen\.com\/qdbimg\/\d+\/\d+)\/(\d+)(\?.*)?$/i);
+    if (ym) {
+        const pre = ym[1], qs = ym[3] || '';
+        out.push(`${pre}/0${qs}`, `${pre}/600${qs}`, `${pre}/300${qs}`, raw);
+    } else {
+        const wm = raw.match(/^(.+\/)(?:s_|m_|b_|t6_|t7_|t8_|t9_)([^/?#]+)(\?.*)?$/i);
+        if (wm && (/myqcloud\.com|weread\.qq\.com/i.test(raw))) {
+            const qs = wm[3] || '';
+            out.push(`${wm[1]}t9_${wm[2]}${qs}`, `${wm[1]}t7_${wm[2]}${qs}`, `${wm[1]}b_${wm[2]}${qs}`, raw);
+        } else {
+            out.push(raw);
+        }
     }
-    if (_coverJobs.has(file)) { return _coverJobs.get(file); }
-    const p = new Promise((resolve) => { _coverWait.push({ job: { url, file }, resolve }); _coverPump(); });
-    _coverJobs.set(file, p);
-    p.then(() => _coverJobs.delete(file));
-    return p;
+    return [...new Set(out)];
+}
+
+async function coverCached(url) {
+    try { fs.mkdirSync(COVER_DIR, { recursive: true }); } catch (e) {}
+    const cands = upgradeCoverUrlCandidates(url);
+    for (const candUrl of cands) {
+        const ext = (candUrl.split('?')[0].match(/\.[a-z0-9]{3,4}$/i) || ['.jpg'])[0];
+        const file = path.join(COVER_DIR, crypto.createHash('sha1').update(candUrl).digest('hex') + ext);
+        if (fs.existsSync(file) && fs.statSync(file).size > 512) {
+            if (/yuewen\.com/i.test(candUrl) && candUrl !== url && fs.statSync(file).size < 8000) continue;
+            return file;
+        }
+        let p = _coverJobs.get(file);
+        if (!p) {
+            p = new Promise((resolve) => { _coverWait.push({ job: { url: candUrl, file }, resolve }); _coverPump(); });
+            _coverJobs.set(file, p);
+            p.then(() => _coverJobs.delete(file));
+        }
+        const got = await p;
+        if (got && fs.existsSync(got)) {
+            if (/yuewen\.com/i.test(candUrl) && candUrl !== url && fs.statSync(got).size < 8000) continue;
+            return got;
+        }
+    }
+    return null;
 }
 
 ipcMain.handle('cover-cache', async (event, payload) => {
@@ -1612,6 +1845,7 @@ async function runLinovelib(payload = {}, event = null) {
     logUpload('LN-ARGS', JSON.stringify({ argv: args }));
     const t0 = Date.now();
     try {
+        await proxyManager.ensureModeNode('lightnovel', `linovelib-${mode}`);
         const stdout = await new Promise((resolve, reject) => {
             const child = execFile(pythonPath, args, {
                 maxBuffer: 1024 * 1024 * 64, encoding: 'utf-8', windowsHide: true, timeout: 30 * 60 * 1000,
@@ -1695,6 +1929,8 @@ async function runLinovelib(payload = {}, event = null) {
             const exported = exportFileToExportDir(res.file, { label: 'EPUB' });
             res.exported = exported ? destPath : null;
             res.fileName = path.basename(destPath);
+            if (exported) { recordLibraryBook(destPath); }
+            purgeDownloadDir('linovelib-done');
             logUpload('LN-EXPORT', JSON.stringify({ from: res.file, to: res.exported, ok: !!exported }));
             console.log(exported
                 ? `📚 轻小说已进书库：${destPath}`
@@ -1806,9 +2042,10 @@ async function runLoginWindow(payload = {}, event = null) {
     };
     if (_lnLoginWin && !_lnLoginWin.isDestroyed()) {
         try { _lnLoginWin.focus(); } catch (e) {}
-        return { ok: false, error: '登录窗口已经开着了 —— 请在那个窗口里点到正文页' };
+        return { ok: false, error: '登录窗口已经开着了 —— 请在那个窗口里点到re0正传的正文页' };
     }
     migrateLegacyLinovelibCookie();
+    try { await proxyManager.ensureModeNode('lightnovel', 'linovelib-cookie'); } catch (e) {}
     logUpload('LOGINWIN-OPEN', JSON.stringify({ partition: PART, timeout }));
     // ★★★ 2026-10-02（用户报「你那个生成的浏览器窗口会挡住提示」）★★★
     //   默认居中会**正好压在主页面的提示弹窗上**，用户看不到"请点到正文页"。
@@ -1832,18 +2069,64 @@ async function runLoginWindow(payload = {}, event = null) {
     } catch (e) { wx = undefined; wy = undefined; }        // 算不出来就让 Electron 居中
     const win = new BrowserWindow({
         width: WW, height: WH, ...(wx === undefined ? {} : { x: wx, y: wy }),
-        title: '点到《正文页》—— 脚本会自动取 Cookie（不用关这个窗口）',
+        title: '【操作指引】请打开《Re:从零开始的异世界生活》（re0正传）任意正文章节 → 看到正文自动完成',
         autoHideMenuBar: true,
         webPreferences: { partition: PART, contextIsolation: true, nodeIntegration: false }
     });
     _lnLoginWin = win;
-    // ★ 2026-10-02：**UA 对齐已撤回**（用户实测「其实没问题」）。
-    //   原本这里给窗口设成 linovelib.py 那串纯 Chrome UA（想解决 cf_clearance 的 UA 绑定），
-    //   但实测默认 UA 就能正常取到证并下载，所以**恢复 Electron 默认 UA**，不再改。
-    //   （留个记号：如果哪天出现「证明明是新的、下两页就变 ~530 字截断版」，
-    //     第一个要怀疑的就是这里的 UA 与 linovelib.py 不一致。）
+    const _injectRe0GuideBanner = () => {
+        if (win.isDestroyed()) return;
+        const bannerScript = `(function(){
+            try {
+                if (document.getElementById('easypub-re0-guide-banner')) return;
+                var bar = document.createElement('div');
+                bar.id = 'easypub-re0-guide-banner';
+                bar.setAttribute('style', [
+                    'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:2147483647',
+                    'background:#241911', 'color:#EFE3CE',
+                    'border-bottom:2px solid #C5A267',
+                    'padding:10px 44px 10px 16px',
+                    'font-family:"Noto Serif SC","Songti SC",serif',
+                    'font-size:14px', 'line-height:1.55',
+                    'box-shadow:0 4px 14px rgba(20,14,9,0.45)'
+                ].join(';'));
+                bar.innerHTML = '<strong style="color:#E9C77B;margin-right:8px;">操作指引</strong>'
+                    + '请搜索并点进 <strong style="color:#F5E6C8;text-decoration:underline;">《Re：从零开始的异世界生活》（re0 正传）</strong> 的<strong style="color:#E9C77B;">任意正文章节阅读页</strong>（有验证码请勾选）；看到正文后程序会自动提取 Cookie 并自动关闭本窗口。';
+                var closeBtn = document.createElement('button');
+                closeBtn.type = 'button';
+                closeBtn.textContent = '×';
+                closeBtn.title = '收起提示条';
+                closeBtn.setAttribute('style', 'position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:1px solid rgba(197,162,103,0.45);color:#E9C77B;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:16px;line-height:1;');
+                closeBtn.onclick = function(){ try{ bar.remove(); }catch(e){} };
+                bar.appendChild(closeBtn);
+                (document.body || document.documentElement).appendChild(bar);
+            } catch (e) {}
+        })();`;
+        try { win.webContents.executeJavaScript(bannerScript).catch(() => {}); } catch (e) {}
+    };
+    win.webContents.on('did-finish-load', _injectRe0GuideBanner);
+    let loginRotCount = 0;
+    const loginTriedNodes = [];
+    win.webContents.on('did-fail-load', async (_ev, errorCode, errorDescription, validatedURL, isMainFrame) => {
+        if (isMainFrame === false || errorCode === -3 || win.isDestroyed() || loginRotCount >= 5) return;
+        loginRotCount += 1;
+        try {
+            const r = await proxyManager.rotateNode({
+                mode: 'lightnovel',
+                exclude: loginTriedNodes,
+                reason: 'cookie-win-' + errorCode
+            });
+            if (r && r.prevNode && !loginTriedNodes.includes(r.prevNode)) loginTriedNodes.push(r.prevNode);
+            if (r && r.activeNode && !loginTriedNodes.includes(r.activeNode)) loginTriedNodes.push(r.activeNode);
+            if (r && r.rotated && !win.isDestroyed()) {
+                try { await win.webContents.session.closeAllConnections(); } catch (e) {}
+                _send({ stage: 'note', text: `当前节点加载受阻（${errorDescription || errorCode}），已自动切换至「${r.activeNode}」重试…` });
+                win.loadURL(validatedURL || 'https://www.bilinovel.com/');
+            }
+        } catch (e) {}
+    });
     win.loadURL('https://www.bilinovel.com/');
-    _send({ stage: 'note', text: '🌐 已打开登录窗口 —— 请在里面点到**正文页**（看得见正文那一页）' });
+    _send({ stage: 'note', text: '已打开登录窗口（已连接节点）—— 请在里面点到re0正传的正文页' });
 
     const t0 = Date.now();
     try {
@@ -1852,8 +2135,8 @@ async function runLoginWindow(payload = {}, event = null) {
             const finish = (r) => { if (!done) { done = true; resolve(r); } };
             // ★ 每 2 秒看一次 cookie（Chromium 自己解密，不需要任何外部库）
             const timer = setInterval(async () => {
-                if (win.isDestroyed()) { clearInterval(timer); finish({ ok: false, error: '登录窗口被关掉了（关之前请先点到正文页）' }); return; }
-                if (Date.now() - t0 > timeout * 1000) { clearInterval(timer); finish({ ok: false, error: `等了 ${timeout} 秒还没拿到 cf_clearance —— 请在窗口里点到正文页` }); return; }
+                if (win.isDestroyed()) { clearInterval(timer); finish({ ok: false, error: '登录窗口被关掉了（关之前请先点到re0正传的正文页）' }); return; }
+                if (Date.now() - t0 > timeout * 1000) { clearInterval(timer); finish({ ok: false, error: `等了 ${timeout} 秒还没拿到 cf_clearance —— 请在窗口里点到re0正传的正文页` }); return; }
                 try {
                     const sess = win.webContents.session;
                     const all = await sess.cookies.get({});
@@ -1861,7 +2144,7 @@ async function runLoginWindow(payload = {}, event = null) {
                     if (!mine.length) { return; }
                     const cf = mine.find(c => c.name === 'cf_clearance');
                     if (!cf) {
-                        _send({ stage: 'note', text: `⏳ 已看到 ${mine.length} 项 cookie，但还没有 cf_clearance —— 继续点到正文页…` });
+                        _send({ stage: 'note', text: `已看到 ${mine.length} 项 cookie，但还没有 cf_clearance —— 请继续点到re0正传的正文页…` });
                         return;
                     }
                     // ★ 判据：有 cf_clearance + 当前页是章节页（正文页）—— 证明这张证能读正文
@@ -1869,7 +2152,7 @@ async function runLoginWindow(payload = {}, event = null) {
                     try { url = win.webContents.getURL() || ''; } catch (e) {}
                     const isChapter = /\/novel\/\d+\/\d+\.html/.test(url);
                     if (!isChapter) {
-                        _send({ stage: 'note', text: `⏳ 拿到 cf_clearance 了，但当前页还不是正文页（${url.slice(0, 70)}）—— 请点进正文页` });
+                        _send({ stage: 'note', text: `已拿到 cf_clearance，但当前还不是正文页（${url.slice(0, 70)}）—— 请点进re0正传的正文页` });
                         return;
                     }
                     const line = mine.map(c => `${c.name}=${c.value}`).join('; ');
@@ -1881,9 +2164,9 @@ async function runLoginWindow(payload = {}, event = null) {
                     finish({ ok: true, count: mine.length, cookieFile: LN_COOKIE_FILE, url, ms: Date.now() - t0 });
                 } catch (e) { /* 下一轮再试 */ }
             }, 2000);
-            win.on('closed', () => { clearInterval(timer); finish({ ok: false, error: '登录窗口被关掉了（关之前请先点到正文页）' }); });
+            win.on('closed', () => { clearInterval(timer); finish({ ok: false, error: '登录窗口被关掉了（关之前请先点到re0正传的正文页）' }); });
         });
-        if (res.ok) { _send({ stage: 'note', text: `✅ 已取到 cookie（${res.count} 项，含 cf_clearance）` }); }
+        if (res.ok) { _send({ stage: 'note', text: `已取到 cookie（${res.count} 项，含 cf_clearance）` }); }
         return res;
     } finally {
         try { if (!win.isDestroyed()) { win.close(); } } catch (e) {}
@@ -2458,6 +2741,65 @@ async function enhanceCoverImage(imagePath) {
 // 转换 EPUB（含封面超分）
 // ================================================================
 
+async function resolveCoverToTempFile(coverImage, tempDir) {
+    if (!coverImage || typeof coverImage !== 'string') return null;
+    fs.mkdirSync(tempDir, { recursive: true });
+    const raw = coverImage.trim();
+    if (!raw) return null;
+
+    const ALLOWED_COVER_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
+    // 1. data:image/...;base64,... (support optional params like ;charset=utf-8)
+    if (raw.startsWith('data:image/')) {
+        const matches = raw.match(/^data:image\/([a-zA-Z0-9.+-]+)(?:;[^,]*)?;base64,(.+)$/s);
+        if (matches) {
+            let ext = String(matches[1]).toLowerCase().replace(/\+.*$/, '');
+            if (ext === 'jpeg') ext = 'jpg';
+            if (!ALLOWED_COVER_EXT.includes(ext)) return null;
+            const out = path.join(tempDir, `cover_${Date.now()}.${ext}`);
+            fs.writeFileSync(out, Buffer.from(matches[2], 'base64'));
+            return out;
+        }
+        return null;
+    }
+
+    // 2. file:///... URL
+    if (/^file:\/\//i.test(raw)) {
+        try {
+            let fp = decodeURIComponent(raw.replace(/^file:\/+/i, ''));
+            if (/^\/[A-Za-z]:/.test(fp)) fp = fp.slice(1);
+            fp = fp.replace(/\//g, path.sep);
+            if (fs.existsSync(fp) && fs.statSync(fp).isFile()) {
+                const ext = path.extname(fp).toLowerCase() || '.jpg';
+                const out = path.join(tempDir, `cover_${Date.now()}${ext}`);
+                fs.copyFileSync(fp, out);
+                return out;
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    // 3. http(s)://... URL -> use coverCached
+    if (/^https?:\/\//i.test(raw)) {
+        const cached = await coverCached(raw);
+        if (cached && fs.existsSync(cached)) {
+            const ext = path.extname(cached).toLowerCase() || '.jpg';
+            const out = path.join(tempDir, `cover_${Date.now()}${ext}`);
+            fs.copyFileSync(cached, out);
+            return out;
+        }
+        return null;
+    }
+
+    // 4. Local file path
+    if (fs.existsSync(raw) && fs.statSync(raw).isFile()) {
+        const ext = path.extname(raw).toLowerCase() || '.jpg';
+        const out = path.join(tempDir, `cover_${Date.now()}${ext}`);
+        fs.copyFileSync(raw, out);
+        return out;
+    }
+    return null;
+}
+
 ipcMain.handle('convert-txt-to-epub', async (event, txtPath, options) => {
     console.log('========================================');
     console.log('📄 转换请求');
@@ -2465,7 +2807,6 @@ ipcMain.handle('convert-txt-to-epub', async (event, txtPath, options) => {
     console.log('📄 章节标记数:', options && options.chapter_markers ? options.chapter_markers.length : 0);
     console.log('📄 最大标题长度:', (options && options.maxTitleLength) || 40);
     console.log('📄 封面:', (options && options.coverImage) ? '有' : '无');
-    console.log('📄 AI 过滤(已废弃):', (options && options.use_ai_filter !== undefined) ? options.use_ai_filter : true, '→ 现在统一用纯正则');
     console.log('========================================');
 
     if (!txtPath || typeof txtPath !== 'string') {
@@ -2479,108 +2820,122 @@ ipcMain.handle('convert-txt-to-epub', async (event, txtPath, options) => {
         throw new Error(`路径不是文件: ${txtPath}`);
     }
 
-    let actualTxtPath = txtPath;
+    const workTempDir = path.join(os.tmpdir(), 'easypub-convert-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex'));
+    fs.mkdirSync(workTempDir, { recursive: true });
+
     try {
-        const convertResult = await callEncodingConverter(txtPath);
-        if (convertResult.success && convertResult.output_path) {
-            actualTxtPath = convertResult.output_path;
-            console.log('✅ 编码转换完成');
-        }
-    } catch (err) {
-        console.warn('⚠️ 编码转换失败，使用原文件:', err);
-    }
+        const origTxtPath = path.resolve(txtPath);
+        const origDir = path.dirname(origTxtPath);
+        const exportDir = path.resolve(getExportDir());
+        fs.mkdirSync(exportDir, { recursive: true });
+        const isFromDownload = isPathInside(DOWNLOAD_DIR, origTxtPath);
 
-    const outputFileName = `${((options && options.title) || '未命名').replace(/[\\/:*?"<>|]/g, '_')}.epub`;
-    // 输出目录：设置里指定了就写那儿，否则跟源文件放一起
-    const outputDir = (SETTINGS.outputDir || '').trim() || path.dirname(actualTxtPath);
-    try { if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true }); } catch (e) {}
-    const outputPath = path.join(outputDir, outputFileName);
-
-    // 处理封面
-    let coverFilePath = null;
-    const coverImage = options && options.coverImage;
-    if (coverImage) {
+        // 编码转 UTF-8：写到临时工作文件，既能喂给 Pandoc，又不在原目录留下 .bak
+        let actualTxtPath = origTxtPath;
+        const tempUtf8Txt = path.join(workTempDir, path.basename(origTxtPath));
         try {
-            if (typeof coverImage === 'string' && coverImage.startsWith('data:image')) {
-                const matches = coverImage.match(/^data:image\/(\w+);base64,(.+)$/);
-                if (matches) {
-                    // ★ 安全修复：扩展名原来直接取 (\w+)，可写出 .exe/.bat 等任意扩展名到输出目录。
-                    //   配合 library-reveal 的 shell.openPath 就是一条「写入 + 执行」链。
-                    const ALLOWED_COVER_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'];
-                    let ext = String(matches[1]).toLowerCase();
-                    if (ext === 'jpeg') ext = 'jpg';
-                    if (!ALLOWED_COVER_EXT.includes(ext)) {
-                        console.warn(`⚠️ 封面格式不被允许（${matches[1]}），跳过封面`);
-                        ext = null;
-                    }
-                    if (!ext) throw new Error('封面扩展名不在白名单内');
-                    const base64Data = matches[2];
-                    const tempCoverPath = path.join(outputDir, `_temp_cover_${Date.now()}.${ext}`);
-                    fs.writeFileSync(tempCoverPath, Buffer.from(base64Data, 'base64'));
-                    coverFilePath = tempCoverPath;
-                    console.log('✅ 封面已保存为临时文件:', coverFilePath);
-                }
-            } else if (typeof coverImage === 'string' && fs.existsSync(coverImage)) {
-                coverFilePath = coverImage;
-                console.log('✅ 使用封面文件:', coverFilePath);
-            } else {
-                console.log('⚠️ 封面数据格式未知，跳过');
+            const convertResult = await callEncodingConverter(origTxtPath, tempUtf8Txt);
+            if (convertResult.success && convertResult.output_path && fs.existsSync(convertResult.output_path)) {
+                actualTxtPath = convertResult.output_path;
+                console.log('✅ 编码转换完成');
             }
         } catch (err) {
-            console.warn('⚠️ 保存封面失败:', err);
+            console.warn('⚠️ 编码转换失败，使用原文件:', err);
         }
+
+        const safeOptions = options || {};
+        const safeTitle = (safeOptions.title || '未命名').replace(/[\\/:*?"<>|]/g, '_');
+        const outputFileName = `${safeTitle}.epub`;
+        const exportTxtPath = path.join(exportDir, path.basename(origTxtPath));
+        const exportEpubPath = path.join(exportDir, outputFileName);
+        const origEpubPath = path.join(origDir, outputFileName);
+
+        // 解析并超分封面（全部放临时工作目录，绝不污染 export/）
+        let coverFilePath = null;
+        if (safeOptions.coverImage) {
+            try {
+                coverFilePath = await resolveCoverToTempFile(safeOptions.coverImage, workTempDir);
+                console.log(coverFilePath ? `✅ 封面就绪: ${coverFilePath}` : '⚠️ 封面解析失败，跳过');
+            } catch (err) {
+                console.warn('⚠️ 封面处理失败:', err.message);
+            }
+        }
+
+        if (coverFilePath && fs.existsSync(coverFilePath)) {
+            const enhancedPath = await enhanceCoverImage(coverFilePath);
+            if (enhancedPath && fs.existsSync(enhancedPath)) {
+                coverFilePath = enhancedPath;
+            }
+        }
+
+        const chapterMarkers = safeOptions.chapter_markers || [];
+        const maxTitleLength = safeOptions.maxTitleLength || 25;
+        const useAIFilter = safeOptions.use_ai_filter !== undefined ? safeOptions.use_ai_filter : false;
+        const customPattern = safeOptions.customPattern || null;
+
+        // 决定首次生成目标路径：
+        // - 本地导入 TXT 且原目录 ≠ 导出目录 → 先在原目录生成 EPUB，再导出一份到导出目录（共 2 TXT + 2 EPUB）
+        // - 在线下载 TXT 或原目录 === 导出目录 → 直接生成到导出目录
+        const sameDirAsExport = origDir.toLowerCase() === exportDir.toLowerCase();
+        const primaryEpubTarget = (!isFromDownload && !sameDirAsExport) ? origEpubPath : exportEpubPath;
+
+        console.log('📤 调用 Python 生成 EPUB ->', primaryEpubTarget);
+        const result = await callPythonEpubGenerator(
+            safeOptions.title || '未命名',
+            safeOptions.author || '未知作者',
+            actualTxtPath,
+            primaryEpubTarget,
+            coverFilePath,
+            {
+                customPattern: customPattern,
+                chapter_markers: chapterMarkers,
+                maxTitleLength: maxTitleLength,
+                use_ai_filter: useAIFilter
+            }
+        );
+
+        const generatedEpub = result.output_path || primaryEpubTarget;
+        let finalExportEpub = generatedEpub;
+
+        if (generatedEpub && fs.existsSync(generatedEpub)) {
+            if (path.resolve(generatedEpub).toLowerCase() !== exportEpubPath.toLowerCase()) {
+                const okEpub = exportFileToExportDir(generatedEpub, { label: 'EPUB' });
+                if (okEpub && fs.existsSync(exportEpubPath)) finalExportEpub = exportEpubPath;
+            }
+        }
+
+        // TXT 也确保一份在导出目录（若原文件来自 download/ 或外目录）
+        const txtToExport = (actualTxtPath !== origTxtPath && fs.existsSync(actualTxtPath)) ? actualTxtPath : origTxtPath;
+        if (txtToExport && fs.existsSync(txtToExport)) {
+            if (path.resolve(origTxtPath).toLowerCase() !== exportTxtPath.toLowerCase()) {
+                try {
+                    const tmpTxt = exportTxtPath + '.tmp';
+                    fs.copyFileSync(txtToExport, tmpTxt);
+                    fs.renameSync(tmpTxt, exportTxtPath);
+                    console.log(`📦 TXT已导出：${exportTxtPath}`);
+                } catch (e) {
+                    console.warn('⚠️ TXT导出失败:', e.message);
+                }
+            }
+        }
+
+        if (fs.existsSync(finalExportEpub)) {
+            recordLibraryBook(finalExportEpub);
+        }
+
+        // 转换完成后立即清空 download/ 临时区
+        purgeDownloadDir('convert-txt-done');
+
+        console.log('✅ 转换完成，输出:', finalExportEpub);
+        return {
+            success: true,
+            outputPath: finalExportEpub,
+            originalOutputPath: !isFromDownload ? generatedEpub : null,
+            chapterCount: result.chapter_count || 0
+        };
+    } finally {
+        try { fs.rmSync(workTempDir, { recursive: true, force: true }); } catch (e) {}
     }
-
-    // ★★★ 调用超分处理封面 ★★★
-    // 超分后可能换了文件（PNG → <原名>_sr.jpg），必须接收新路径
-    if (coverFilePath && fs.existsSync(coverFilePath)) {
-        const enhancedPath = await enhanceCoverImage(coverFilePath);
-        if (enhancedPath && fs.existsSync(enhancedPath)) {
-            coverFilePath = enhancedPath;
-        }
-    }
-
-    const safeOptions = options || {};
-    const chapterMarkers = safeOptions.chapter_markers || [];
-    const maxTitleLength = safeOptions.maxTitleLength || 25;
-    const useAIFilter = safeOptions.use_ai_filter !== undefined ? safeOptions.use_ai_filter : true;
-    const customPattern = safeOptions.customPattern || null;
-
-    console.log('📤 调用 Python 生成 EPUB...');
-    const result = await callPythonEpubGenerator(
-        safeOptions.title || '未命名',
-        safeOptions.author || '未知作者',
-        actualTxtPath,
-        outputPath,
-        coverFilePath,
-        {
-            customPattern: customPattern,
-            chapter_markers: chapterMarkers,
-            maxTitleLength: maxTitleLength,
-            use_ai_filter: useAIFilter
-        }
-    );
-
-    if (coverFilePath && coverFilePath.includes('_temp_cover_')) {
-        try {
-            fs.unlinkSync(coverFilePath);
-            console.log('✅ 临时封面已清理');
-        } catch (err) {
-            console.warn('⚠️ 清理临时封面失败:', err);
-        }
-    }
-
-    console.log('✅ 转换完成，输出:', outputPath);
-
-    // ★★★ 自动导出：txt + epub 副本到 EXPORT_DIR（永不清空，不影响软件运行）★★★
-    const finalEpubPath = result.output_path || outputPath;
-    exportDownloadedFiles(actualTxtPath, finalEpubPath);
-
-    return {
-        success: true,
-        outputPath: result.output_path || outputPath,
-        chapterCount: result.chapter_count || 0
-    };
 });
 
 // ================================================================
@@ -2629,25 +2984,8 @@ function callNovelDownloader(bookName, opts = {}) {
         //   （下面还会清空 download/，但扫描口径必须独立成立，不能依赖清空成功）
         const downloadStartedAt = Date.now();
 
-        // ★ 下载前清空 download/（避免上次下载残留干扰）
-        try {
-            if (fs.existsSync(downloadDir)) {
-                const oldFiles = fs.readdirSync(downloadDir);
-                let cleared = 0;
-                for (const f of oldFiles) {
-                    const fp = path.join(downloadDir, f);
-                    try {
-                        if (fs.statSync(fp).isFile()) {
-                            fs.unlinkSync(fp);
-                            cleared++;
-                        }
-                    } catch (e) {}
-                }
-                console.log(`🧹 下载前清理 download/：已删除 ${cleared} 个文件`);
-            }
-        } catch (e) {
-            console.log('⚠️ 下载前清理失败：', e.message);
-        }
+        // ★ 下载前清空 download/（含子目录，避免上次下载残留干扰）
+        purgeDownloadDir('before-download');
 
         if (!fs.existsSync(pythonScript)) {
             resolve({ success: false, error: 'novel_dl.py 不存在' });
@@ -2843,24 +3181,28 @@ function callNovelDownloader(bookName, opts = {}) {
                 const exitOk = !error || error.code === 0;
                 if (exitOk && downloadedFile) {
                     console.log('✅ 下载流程完成:', downloadedFile.name);
-                    // ★★★ 自动导出：刚下载的产物副本到 EXPORT_DIR（永不清空）★★★
-                    //   ★ 2026-09-30：轻小说源产出的是**带封面的 EPUB**（不走 TXT 那条路），
-                    //     所以这里按扩展名决定 label，并把 kind='epub' 透传给渲染层 ——
-                    //     渲染层据此**跳过 TXT→EPUB 转换**，只刷新书库 + 把书加进传输框。
                     const isEpub = String(downloadedFile.name).toLowerCase().endsWith('.epub');
-                    exportFileToExportDir(downloadedFile.path, { label: isEpub ? 'EPUB' : 'TXT' });
+                    const exportedPath = path.join(getExportDir(), downloadedFile.name);
+                    if (isEpub) {
+                        const ok = exportFileToExportDir(downloadedFile.path, { label: 'EPUB' });
+                        if (ok && fs.existsSync(exportedPath)) recordLibraryBook(exportedPath);
+                        purgeDownloadDir('after-ln-download');
+                    } else {
+                        exportFileToExportDir(downloadedFile.path, { label: 'TXT' });
+                    }
                     resolve({
                         success: true,
                         kind: isEpub ? 'epub' : 'txt',
                         // EPUB 已经进书库了 → 直接把书库里的路径给渲染层（传输框要用它）
                         filePath: isEpub
-                            ? path.join(getExportDir(), downloadedFile.name)
+                            ? exportedPath
                             : downloadedFile.path,
                         fileName: downloadedFile.name,
                         failedChapters: pyFailedChapters,   // ★ 轻小说限流导致没抓到的章数
                         output: stdout
                     });
                 } else if (exitOk && !downloadedFile) {
+                    purgeDownloadDir('download-empty');
                     resolve({
                         success: false,
                         error: '本次下载未产出新的 txt 文件（已忽略 download 目录里的旧文件）。'
@@ -2869,6 +3211,7 @@ function callNovelDownloader(bookName, opts = {}) {
                         fileName: null
                     });
                 } else {
+                    purgeDownloadDir('download-failed');
                     console.error('❌ 下载执行错误:', error);
                     // ★ 优先用 Python 通过 _emit_error 输出的简洁 JSON 错误消息
                     //   而不是 Node execFile 的 "Command failed: ..." 长串
@@ -2931,8 +3274,81 @@ ipcMain.handle('download-novel', async (event, bookName, opts) => {
 
 const APPLEBOOKS_DOWNLOAD_DIR = DOWNLOAD_DIR;
 
-// 授权进程句柄
+// 授权进程与临时空白配置目录句柄（原生 Chrome/Edge 授权方案）
 let currentAuthProcess = null;
+let currentAuthProfileDir = null;
+
+function _cleanupAuthProfileDir(dir) {
+    if (!dir) return;
+    const removeOnce = () => {
+        try {
+            if (fs.existsSync(dir)) {
+                fs.rmSync(dir, { recursive: true, force: true });
+            }
+        } catch (e) {}
+    };
+    removeOnce();
+    setTimeout(removeOnce, 600);
+    setTimeout(removeOnce, 2200);
+}
+
+function findNativeBrowserForAuth() {
+    const candidates = [];
+    const pushIf = (bin, kind) => {
+        if (bin && typeof bin === 'string' && fs.existsSync(bin)) {
+            const key = bin.toLowerCase();
+            if (!candidates.some((c) => c.bin.toLowerCase() === key)) {
+                candidates.push({ bin, kind });
+            }
+        }
+    };
+    const queryAppPath = (exeName) => {
+        const regPaths = [
+            `HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${exeName}`,
+            `HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${exeName}`,
+            `HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\App Paths\\${exeName}`
+        ];
+        for (const rp of regPaths) {
+            try {
+                const out = execFileSync('reg', ['query', rp, '/ve'], {
+                    encoding: 'utf-8',
+                    windowsHide: true,
+                    timeout: 2500,
+                    stdio: ['ignore', 'pipe', 'ignore']
+                });
+                const m = String(out || '').match(/REG_(?:SZ|EXPAND_SZ)\s+(.+)/i);
+                if (m && m[1]) {
+                    const p = m[1].trim().replace(/^"+|"+$/g, '');
+                    if (p && fs.existsSync(p)) return p;
+                }
+            } catch (e) {}
+        }
+        return '';
+    };
+
+    // 1. 优先本机真实 Google Chrome
+    pushIf(queryAppPath('chrome.exe'), 'Chrome');
+    const localAppData = process.env.LOCALAPPDATA || '';
+    const progFiles = process.env.PROGRAMFILES || 'C:\\Program Files';
+    const progFiles86 = process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)';
+    [
+        path.join(progFiles, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+        path.join(progFiles86, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+        localAppData ? path.join(localAppData, 'Google', 'Chrome', 'Application', 'chrome.exe') : '',
+        'D:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'D:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+    ].forEach((p) => pushIf(p, 'Chrome'));
+
+    // 2. 次选本机真实 Microsoft Edge
+    pushIf(queryAppPath('msedge.exe'), 'Edge');
+    [
+        path.join(progFiles86, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+        path.join(progFiles, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+        localAppData ? path.join(localAppData, 'Microsoft', 'Edge', 'Application', 'msedge.exe') : ''
+    ].forEach((p) => pushIf(p, 'Edge'));
+
+    return candidates.length ? candidates[0] : null;
+}
 // WiFi 传书进程句柄（★ 2026-09-23 新增：以前这里没有句柄，关 WiFi 窗口时
 // 只能 `taskkill /f /im chromedriver.exe` 全局杀 —— 会把「授权流程」正在用的
 // chromedriver 一起杀掉，连带毁掉正在抓授权码的浏览器。改成按进程树杀。）
@@ -3433,6 +3849,29 @@ ipcMain.handle('tx-channel-status', async (event, channel) => {
             error: ok ? null : '未授权：点「Kindle 授权」登录 Amazon 一次',
         };
     }
+
+    if (ch === 'cloud') {
+        const { active } = resolveCloudSyncTarget();
+        if (active && active.available) {
+            return {
+                success: true, channel: 'cloud',
+                state: 'ok',
+                name: '云盘同步',
+                detail: active.targetDir,
+                extra: [],
+                tip: active.name,
+            };
+        }
+        return {
+            success: true, channel: 'cloud',
+            state: 'off',
+            name: '云盘同步',
+            detail: '',
+            extra: [],
+            tip: '未配置目录',
+            error: (active && active.reason) || '未检测到本机云盘，请先选择同步目录',
+        };
+    }
     return { success: false, error: '未知通道：' + ch };
 });
 
@@ -3448,12 +3887,18 @@ ipcMain.handle('applebooks-open-help', async () => {
         const helpWin = new BrowserWindow({
             width: 1180,
             height: 780,
-        minWidth: 900,
-        minHeight: 600,
+            minWidth: 900,
+            minHeight: 600,
             parent: mainWindow,
             modal: false,
             title: 'EasyPub 操作说明',
-            backgroundColor: '#0B0D10',
+            backgroundColor: '#1B130C',
+            autoHideMenuBar: true,
+            webPreferences: {
+                preload: path.join(__dirname, 'applebooks-help-preload.js'),
+                contextIsolation: true,
+                nodeIntegration: false
+            },
             icon: path.join(__dirname, 'icon.ico')
         });
         helpWin.loadFile('help.html');
@@ -3478,7 +3923,8 @@ ipcMain.handle('applebooks-open-guide', async () => {
             parent: mainWindow,
             modal: false,
             title: '苹果图书 · 完整操作指引',
-            backgroundColor: '#0B0D10',
+            backgroundColor: '#1B130C',
+            autoHideMenuBar: true,
             webPreferences: {
                 // 指引页要跟随主界面的中英切换（window.pageLang 语言桥）
                 preload: path.join(__dirname, 'applebooks-help-preload.js'),
@@ -3494,12 +3940,9 @@ ipcMain.handle('applebooks-open-guide', async () => {
     }
 });
 
-// 5. 启动 open_auth_page.py
+// 5. 启动百度 OAuth 授权页面（方案 A：直接拉起本机真实原生 Chrome / Edge 空白会话，不依赖 Selenium / ChromeDriver，也非内置浏览器）
 ipcMain.handle('applebooks-start-auth', async (event) => {
     const senderWebContents = event.sender;
-    // 渲染进程/窗口可能已经被关掉：子进程回调里直接 send 会抛
-    // "TypeError: Object has been destroyed"（未捕获 → 弹错误框 → 打断用户操作）。
-    // 日志发不出去可以接受，但绝不能反过来把主进程搞崩。
     const safeSend = (ch, payload) => {
         try { if (senderWebContents && !senderWebContents.isDestroyed()) senderWebContents.send(ch, payload); } catch (e) {}
     };
@@ -3508,76 +3951,79 @@ ipcMain.handle('applebooks-start-auth', async (event) => {
             _killTree(currentAuthProcess);
             currentAuthProcess = null;
         }
-        const script = getPythonScript('open_auth_page.py');
-        if (!fs.existsSync(script)) {
-            safeSend('applebooks-auth-log', '❌ open_auth_page.py 不存在\n');
-            return { success: false, error: 'open_auth_page.py 不存在' };
+        if (currentAuthProfileDir) {
+            const oldDir = currentAuthProfileDir;
+            currentAuthProfileDir = null;
+            _cleanupAuthProfileDir(oldDir);
         }
-        // ★ 修复空格路径 bug：用 execFile + 独立 argv，不用环境变量
-        // ★★ 修复（P0）：原来无条件用 process.resourcesPath。
-        //    打包后它 = ...\<app>\resources\  —— 正确；
-        //    但开发模式它 = node_modules\electron\dist\resources\ —— 那里只有 default_app.asar，
-        //    根本没有 chromedriver.exe，于是 open_auth_page.py 一进来就「❌ chromedriver.exe 不存在」
-        //    直接 return，浏览器永远打不开（用户看到的正是这个）。
-        //    chromedriver.exe 在开发模式下就躺在项目根目录（与 main.js 同级）。
-        //    与 kindle 那处（见 kd-* handler）保持同一套判定逻辑。
-        let chromedriverPath = app.isPackaged
-            ? path.join(process.resourcesPath, 'chromedriver.exe')
-            : path.join(__dirname, 'chromedriver.exe');
-        // 兜底：万一两个位置判断反了（例如 asar 布局变化），再找一遍另一个位置
-        if (!fs.existsSync(chromedriverPath)) {
-            const alt = app.isPackaged
-                ? path.join(__dirname, 'chromedriver.exe')
-                : path.join(process.resourcesPath, 'chromedriver.exe');
-            if (fs.existsSync(alt)) chromedriverPath = alt;
-        }
-        console.log('[auth] chromedriver →', chromedriverPath, fs.existsSync(chromedriverPath) ? '(存在)' : '(不存在!)');
-        if (!fs.existsSync(chromedriverPath)) {
-            const msg = `❌ 找不到 chromedriver.exe：${chromedriverPath}\n   请确认安装包完整，或把 chromedriver.exe 放到程序目录下。\n`;
-            safeSend('applebooks-auth-log', msg);
-            return { success: false, error: '找不到 chromedriver.exe' };
-        }
-        const args = [
-            '-X', 'utf8', '-u',
-            script,
-            '--chromedriver-path', chromedriverPath
-        ];
-        // ★ 自动抓码已整个关闭（2026-09-23，用户要求）：不再生成/读取 auth_code.txt。
-        //   这里只负责把历史上残留下来的旧文件清掉，避免任何东西再去读它。
+        // 清理历史上自动抓码留下的旧文件
         try {
             const stale = path.join(__dirname, 'auth_code.txt');
             if (fs.existsSync(stale)) fs.unlinkSync(stale);
         } catch (e) {}
-        const authBrowser = execFile(PYTHON_PATH, args,
-            {
-                maxBuffer: 1024 * 1024 * 50,
-                encoding: 'utf-8',
-                env: {
-                    ...process.env,
-                    PYTHONIOENCODING: 'utf-8'
-                }
-            },
-            (error, stdout, stderr) => {
-                if (currentAuthProcess !== authBrowser) return;
-                if (stdout) safeSend('applebooks-auth-log', stdout);
-                if (stderr) safeSend('applebooks-auth-log', '[stderr] ' + stderr);
-                safeSend('applebooks-auth-done', {
-                    browserClosed: true,
-                    error: error ? '浏览器启动或运行失败，请检查 Chrome 与 ChromeDriver 版本。' : null
-                });
-                if (currentAuthProcess === authBrowser) currentAuthProcess = null;
-            }
-        );
-        currentAuthProcess = authBrowser;
-        logUpload('AUTH-BROWSER', '启动百度授权浏览器');
-        authBrowser.stdout.on('data', (data) => {
-            safeSend('applebooks-auth-log', data.toString('utf-8'));
-            logUpload('AUTH-BROWSER-LOG', data.toString('utf-8').slice(0, 500));
+
+        const authUrl = 'https://openapi.baidu.com/oauth/2.0/authorize?client_id=q8WE4EpCsau1oS0MplgMKNBn&response_type=code&redirect_uri=oob&scope=basic+netdisk';
+        const browser = findNativeBrowserForAuth();
+
+        if (!browser) {
+            await shell.openExternal(authUrl);
+            logUpload('AUTH-BROWSER', '兜底调用系统默认浏览器打开百度授权页');
+            safeSend('applebooks-auth-log', '已用系统默认浏览器打开百度授权页，请登录并复制授权码粘贴到下方输入框后点「保存」。\n');
+            return { success: true, message: '已用系统默认浏览器打开授权页，请复制授权码粘贴提交' };
+        }
+
+        let profileDir = '';
+        try {
+            profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'easypub_baidu_auth_'));
+        } catch (e) {
+            profileDir = '';
+        }
+
+        const launchArgs = [
+            '--no-first-run',
+            '--no-default-browser-check',
+            '--new-window'
+        ];
+        if (profileDir) {
+            launchArgs.unshift(`--user-data-dir=${profileDir}`);
+        }
+        launchArgs.push(authUrl);
+
+        const child = spawn(browser.bin, launchArgs, {
+            detached: false,
+            stdio: 'ignore',
+            windowsHide: false
         });
-        authBrowser.stderr.on('data', (data) => {
-            safeSend('applebooks-auth-log', '[stderr] ' + data.toString('utf-8'));
+        currentAuthProcess = child;
+        currentAuthProfileDir = profileDir || null;
+
+        let settled = false;
+        const finishAuthBrowser = (errMsg) => {
+            if (settled) return;
+            settled = true;
+            if (currentAuthProcess === child) currentAuthProcess = null;
+            if (currentAuthProfileDir === profileDir) currentAuthProfileDir = null;
+            if (profileDir) _cleanupAuthProfileDir(profileDir);
+            safeSend('applebooks-auth-done', {
+                browserClosed: true,
+                error: errMsg || null
+            });
+        };
+
+        child.on('exit', () => {
+            finishAuthBrowser(null);
         });
-        return { success: true, message: '授权流程已启动，请在浏览器中完成登录并复制授权码' };
+        child.on('error', (err) => {
+            const msg = `启动本机 ${browser.kind} 失败：${(err && err.message) || err}`;
+            safeSend('applebooks-auth-log', msg + '\n');
+            finishAuthBrowser(msg);
+        });
+
+        logUpload('AUTH-BROWSER', `直接启动本机原生 ${browser.kind} 空白会话 (${browser.bin})`);
+        safeSend('applebooks-auth-log',
+            `已打开本机原生 ${browser.kind} 空白窗口（不依赖 ChromeDriver，也不记忆上次账号）。\n` +
+            '请完成百度登录并复制页面上的授权码，粘贴回下方输入框后点「保存」。\n');
+        return { success: true, message: `已打开本机 ${browser.kind}，请完成登录并复制授权码` };
     } catch (e) {
         return { success: false, error: e.message };
     }
@@ -3690,11 +4136,13 @@ ipcMain.handle('applebooks-submit-auth-code', async (event, authCode) => {
 ipcMain.handle('applebooks-stop-auth', async () => {
     try {
         if (currentAuthProcess && !currentAuthProcess.killed) {
-            // ★ 2026-09-23：原来是 child.kill()（只杀 python 本身，chromedriver
-            //   和 Chrome 会留下），后面还用全局 taskkill 兜底 —— 又会误杀别的
-            //   流程的 chromedriver。改成按进程树杀，干净且不越界。
             _killTree(currentAuthProcess);
             currentAuthProcess = null;
+        }
+        if (currentAuthProfileDir) {
+            const oldDir = currentAuthProfileDir;
+            currentAuthProfileDir = null;
+            _cleanupAuthProfileDir(oldDir);
         }
         return { success: true };
     } catch (e) {
@@ -3797,11 +4245,10 @@ ipcMain.handle('wifi-upload', async (event, url, files) => {
         const chromedriverPath = app.isPackaged
             ? path.join(process.resourcesPath, 'chromedriver.exe')
             : path.join(__dirname, 'chromedriver.exe');
-        const env = {
-            ...process.env,
+        const env = buildPythonEnv({
             PYTHONIOENCODING: 'utf-8',
             CHROMEDRIVER_PATH: chromedriverPath
-        };
+        });
         // ★ 安全修复：execFile + argv 数组。
         //   原来把 SETTINGS.wifiDelay（经 settings-set 无校验落盘）拼进命令串，
         //   形如 1" & <cmd> & " 即可二次触发命令注入。
@@ -4019,7 +4466,7 @@ async function stkUploadFile(fileInput, opts = {}) {
     const w = new BrowserWindow({
         width: 900, height: 720, show: opts.show === true,   // ★ 默认隐藏（后台传）
         title: 'Send to Kindle 上传中…',
-        backgroundColor: '#0B0D10',
+        backgroundColor: '#1B130C',
         webPreferences: { partition: 'persist:amazon', contextIsolation: true, nodeIntegration: false },
     });
     const probe = () => w.webContents.executeJavaScript(
@@ -4296,11 +4743,11 @@ async function stkLoginAutomation(email, password, say) {
     const showWin = (why) => {
         if (interactive) { return; }
         interactive = true;
-        try { w.show(); w.setTitle('需要你操作：' + why); } catch (e) {}
-        say('NEED', why + '：已弹出登录窗口，请在那里完成，完成后我会自动继续');
+        try { w.show(); w.setTitle('需要你操作：' + why + '（若弹出 Windows 安全/通行密钥窗口可直接叉掉）'); } catch (e) {}
+        say('NEED', why + '：已弹出登录窗口，请在那里完成（如系统弹出 Windows 安全/通行密钥弹窗，直接关闭或点取消即可）');
     };
     try {
-        say('INFO', '打开 Amazon 登录页…');
+        say('INFO', '打开 Amazon 登录页…（提示：如系统弹出 Windows 安全 / 通行密钥弹窗，直接点右上角关闭或取消即可）');
         await w.loadURL('https://www.amazon.com/sendtokindle');
         await _stkSleep(4000);
         let st = await _stkProbe(w);
@@ -4413,7 +4860,8 @@ ipcMain.handle('kindle-open-help', async () => {
             width: 920,
             height: 720,
             title: 'Kindle 传书 · 完整操作指引',
-            backgroundColor: '#0B0D10',
+            backgroundColor: '#1B130C',
+            autoHideMenuBar: true,
             webPreferences: {
                 // 指引页要跟随主界面的中英切换（window.pageLang 语言桥）
                 preload: path.join(__dirname, 'kindle-help-preload.js'),
@@ -4510,13 +4958,32 @@ function callLibraryBackend(payload) {
     });
 }
 
-// 扫描书库
+// 扫描书库（当前导出目录 + 默认 export + 历史转换记录）
 ipcMain.handle('library-scan', async () => {
-    console.log('📚 扫描书库:', getExportDir());
-    const r = await callLibraryBackend({ action: 'scan', dir: getExportDir() });
-    if (r && r.success) console.log(`📚 找到 ${r.books.length} 项`);
-    else console.warn('⚠️ 扫描失败:', r && r.error);
+    const dirs = Array.from(new Set([path.resolve(getExportDir()), path.resolve(EXPORT_DIR)]));
+    const extraFiles = getRecordedLibraryPaths();
+    console.log('📚 扫描书库:', dirs.join(' ; '), extraFiles.length ? `(+${extraFiles.length} 历史记录)` : '');
+    const r = await callLibraryBackend({ action: 'scan', dir: getExportDir(), dirs, extra_files: extraFiles });
+    if (r && r.success) {
+        console.log(`📚 找到 ${r.books.length} 项`);
+        (r.books || []).forEach((b) => { if (b && b.path) recordLibraryBook(b.path); });
+    } else {
+        console.warn('⚠️ 扫描失败:', r && r.error);
+    }
     return r;
+});
+
+ipcMain.handle('epub-cover', async (event, filePath) => {
+    try {
+        const safePath = assertPathAllowed(filePath, '读取封面');
+        return await callLibraryBackend({
+            action: 'cover',
+            path: safePath,
+            cache_dir: path.join(getExportDir(), '.covers')
+        });
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
 });
 
 // 修改书名 / 作者 / 简介
@@ -4555,7 +5022,9 @@ ipcMain.handle('library-delete', async (event, paths) => {
         return { success: false, error: e.message, deleted: [], failed: [] };
     }
     console.log('📚 删除:', safeList.length, '项');
-    return await callLibraryBackend({ action: 'delete', paths: safeList });
+    const r = await callLibraryBackend({ action: 'delete', paths: safeList });
+    if (r && Array.isArray(r.deleted)) removeLibraryHistoryPaths(r.deleted);
+    return r;
 });
 
 // 在资源管理器中显示（不传参就打开 export 目录）
@@ -4660,6 +5129,7 @@ ipcMain.handle('library-import', async (event, injectedPaths) => {
             if (path.resolve(target) === path.resolve(src)) throw new Error('这本已经在书库里了');
 
             fs.copyFileSync(src, target);
+            recordLibraryBook(target);
             console.log('📥 已导入:', base, '→', path.basename(target));
             imported.push({ file: path.basename(target), path: target, kind });
         } catch (e) {
@@ -4849,8 +5319,9 @@ ipcMain.handle('reader-open', async (event, filePath) => {
             height: 820,
             minWidth: 760,
             minHeight: 520,
+            frame: false,
             title: 'EasyPub 阅读',
-            backgroundColor: '#0B0D10',
+            backgroundColor: '#1B130C',
             autoHideMenuBar: true,
             webPreferences: {
                 preload: path.join(__dirname, 'reader-preload.js'),
@@ -4866,5 +5337,283 @@ ipcMain.handle('reader-open', async (event, filePath) => {
     } catch (e) {
         console.error('❌ 打开阅读窗口失败:', e.message);
         return { success: false, error: e.message };
+    }
+});
+
+// ================================================================
+// ★★★ 云盘本地同步（iCloud Drive / OneDrive / Google Drive / 自定义）★★★
+// ================================================================
+function _queryRegValue(hivePath, valueName) {
+    try {
+        const args = ['query', hivePath];
+        if (valueName) args.push('/v', valueName);
+        else args.push('/ve');
+        const out = execFileSync('reg', args, { encoding: 'utf8', timeout: 1500, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+        const lines = String(out || '').split(/\r?\n/);
+        for (const ln of lines) {
+            const m = ln.match(/REG_(?:SZ|EXPAND_SZ)\s+(.+)$/i);
+            if (m && m[1]) {
+                return m[1].trim().replace(/%([^%]+)%/g, (_, n) => process.env[n] || ('%' + n + '%'));
+            }
+        }
+    } catch (e) {}
+    return '';
+}
+
+function detectCloudDrives() {
+    const drives = [];
+    const seen = new Set();
+    const home = os.homedir();
+    const pushDrive = (id, name, dirPath) => {
+        if (!dirPath) return;
+        const resolved = path.resolve(String(dirPath).trim());
+        const key = id + '|' + resolved.toLowerCase();
+        if (seen.has(key)) return;
+        try {
+            if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()) {
+                seen.add(key);
+                drives.push({ id, name, path: resolved });
+            }
+        } catch (e) {}
+    };
+
+    // 1. iCloud Drive (Windows Store / Apple iCloud for Windows)
+    const icReg = _queryRegValue('HKCU\\Software\\Apple Inc.\\Internet Services\\Shell\\iCloudDrive', 'Path');
+    if (icReg) pushDrive('icloud', 'iCloud Drive', icReg);
+    pushDrive('icloud', 'iCloud Drive', path.join(home, 'iCloudDrive'));
+    pushDrive('icloud', 'iCloud Drive', path.join(home, 'iCloud Drive'));
+
+    // 2. OneDrive (Personal / Commercial)
+    for (const k of ['OneDrive', 'OneDriveConsumer', 'OneDriveCommercial']) {
+        if (process.env[k]) pushDrive('onedrive', 'OneDrive', process.env[k]);
+    }
+    pushDrive('onedrive', 'OneDrive', path.join(home, 'OneDrive'));
+
+    // 3. Google Drive (Drive for Desktop virtual drive letters D:-Z: + legacy home dirs)
+    for (let code = 68; code <= 90; code++) {
+        const letter = String.fromCharCode(code) + ':';
+        for (const sub of ['My Drive', '我的云端硬盘']) {
+            const cand = letter + path.sep + sub;
+            try {
+                if (fs.existsSync(cand) && fs.statSync(cand).isDirectory()) {
+                    pushDrive('googledrive', 'Google Drive', cand);
+                }
+            } catch (e) {}
+        }
+    }
+    pushDrive('googledrive', 'Google Drive', path.join(home, 'Google Drive'));
+    pushDrive('googledrive', 'Google Drive', path.join(home, 'Google 云端硬盘'));
+
+    return drives;
+}
+
+function resolveCloudSyncTarget() {
+    const drives = detectCloudDrives();
+    const provider = String(SETTINGS.cloudDriveProvider || 'auto').toLowerCase();
+    const customDir = String(SETTINGS.cloudDriveDir || '').trim();
+    const subdir = String(SETTINGS.cloudDriveSubdir == null ? 'EasyPub' : SETTINGS.cloudDriveSubdir)
+        .replace(/[\\/:*?"<>|]/g, '').trim();
+
+    let id = provider;
+    let name = '未配置目录';
+    let rootDir = '';
+    let available = false;
+    let reason = '';
+
+    const hasCustomDir = !!(customDir && fs.existsSync(customDir) && (() => {
+        try { return fs.statSync(customDir).isDirectory(); } catch (e) { return false; }
+    })());
+
+    if (provider === 'custom') {
+        id = 'custom';
+        name = '自定义云盘目录';
+        if (hasCustomDir) {
+            rootDir = path.resolve(customDir);
+            available = true;
+        } else {
+            reason = customDir ? ('同步目录不存在：' + customDir) : '请先选择本地云盘同步文件夹';
+        }
+    } else if (provider === 'icloud' || provider === 'onedrive' || provider === 'googledrive') {
+        const hit = drives.find((d) => d.id === provider);
+        const labelMap = { icloud: 'iCloud Drive', onedrive: 'OneDrive', googledrive: 'Google Drive' };
+        name = labelMap[provider];
+        if (hit) {
+            rootDir = hit.path;
+            available = true;
+        } else {
+            reason = `未检测到本机 ${labelMap[provider]} 客户端目录，可改选其它云盘或手动指定目录`;
+        }
+    } else {
+        // auto: 若有有效的自定义目录则优先使用；否则按 iCloud → OneDrive → Google Drive 自动挑选
+        if (hasCustomDir) {
+            id = 'custom';
+            name = path.basename(path.resolve(customDir)) || '自定义云盘目录';
+            rootDir = path.resolve(customDir);
+            available = true;
+        } else {
+            const prefOrder = ['icloud', 'onedrive', 'googledrive'];
+            let picked = null;
+            for (const p of prefOrder) {
+                picked = drives.find((d) => d.id === p);
+                if (picked) break;
+            }
+            if (picked) {
+                id = picked.id;
+                name = picked.name;
+                rootDir = picked.path;
+                available = true;
+            } else {
+                id = 'auto';
+                name = '云盘同步';
+                reason = '未自动检测到 iCloud / OneDrive / Google Drive 目录，请点「选择目录」指定同步文件夹';
+            }
+        }
+    }
+
+    const targetDir = (available && rootDir) ? (subdir ? path.join(rootDir, subdir) : rootDir) : '';
+    return {
+        drives,
+        active: { id, name, rootDir, targetDir, subdir, available, reason }
+    };
+}
+
+ipcMain.handle('cloud-detect', async () => {
+    const info = resolveCloudSyncTarget();
+    return {
+        success: true,
+        ...info,
+        settings: {
+            provider: SETTINGS.cloudDriveProvider || 'auto',
+            dir: SETTINGS.cloudDriveDir || '',
+            subdir: SETTINGS.cloudDriveSubdir != null ? SETTINGS.cloudDriveSubdir : 'EasyPub'
+        }
+    };
+});
+
+ipcMain.handle('cloud-set-provider', async (event, provider) => {
+    const p = String(provider || 'auto').toLowerCase();
+    const allowed = ['auto', 'icloud', 'onedrive', 'googledrive', 'custom'];
+    const valid = allowed.includes(p) ? p : 'auto';
+    saveSettings({ cloudDriveProvider: valid });
+    const info = resolveCloudSyncTarget();
+    return {
+        success: true,
+        ...info,
+        settings: {
+            provider: SETTINGS.cloudDriveProvider,
+            dir: SETTINGS.cloudDriveDir || '',
+            subdir: SETTINGS.cloudDriveSubdir != null ? SETTINGS.cloudDriveSubdir : 'EasyPub'
+        }
+    };
+});
+
+ipcMain.handle('cloud-select-dir', async () => {
+    try {
+        const res = await dialog.showOpenDialog(mainWindow, {
+            title: '选择云盘本地同步文件夹（iCloud / OneDrive / Google Drive 等）',
+            properties: ['openDirectory', 'createDirectory']
+        });
+        if (!res || res.canceled || !res.filePaths || !res.filePaths.length) {
+            return { success: false, canceled: true };
+        }
+        const chosen = path.resolve(res.filePaths[0]);
+        saveSettings({ cloudDriveProvider: 'custom', cloudDriveDir: chosen });
+        const info = resolveCloudSyncTarget();
+        return {
+            success: true,
+            dir: chosen,
+            ...info,
+            settings: {
+                provider: SETTINGS.cloudDriveProvider,
+                dir: SETTINGS.cloudDriveDir || '',
+                subdir: SETTINGS.cloudDriveSubdir != null ? SETTINGS.cloudDriveSubdir : 'EasyPub'
+            }
+        };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});
+
+ipcMain.handle('cloud-open-dir', async () => {
+    try {
+        const { active } = resolveCloudSyncTarget();
+        if (!active || !active.available || !active.targetDir) {
+            return { success: false, needConfig: true, error: (active && active.reason) || '尚未配置云盘同步目录' };
+        }
+        fs.mkdirSync(active.targetDir, { recursive: true });
+        await shell.openPath(active.targetDir);
+        return { success: true, dir: active.targetDir };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});
+
+ipcMain.handle('cloud-sync', async (event, options = {}) => {
+    const senderWebContents = event.sender;
+    const safeSend = (ch, payload) => {
+        try { if (senderWebContents && !senderWebContents.isDestroyed()) senderWebContents.send(ch, payload); } catch (e) {}
+    };
+    const emitDone = (payload) => {
+        safeSend('cloud-sync-done', payload);
+        return payload;
+    };
+
+    try {
+        const { active } = resolveCloudSyncTarget();
+        if (!active || !active.available || !active.targetDir) {
+            const msg = (active && active.reason) || '未配置云盘同步目录，请先选择同步文件夹';
+            return emitDone({ success: false, needConfig: true, error: msg, synced: 0, skipped: 0, failed: 0, total: 0 });
+        }
+
+        let files = Array.isArray(options.paths) && options.paths.length
+            ? options.paths
+            : (pendingBatch && pendingBatch.target === 'cloud' ? pendingBatch.files : []);
+        files = (files || []).map((p) => String(p || '').trim()).filter((p) => p && fs.existsSync(p));
+        if (!files.length) {
+            return emitDone({ success: false, error: '待传列表为空，请先选择或转换书籍', synced: 0, skipped: 0, failed: 0, total: 0 });
+        }
+
+        fs.mkdirSync(active.targetDir, { recursive: true });
+
+        let synced = 0;
+        let skipped = 0;
+        let failed = 0;
+        const errors = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const src = files[i];
+            const name = path.basename(src);
+            const dst = path.join(active.targetDir, name);
+            safeSend('cloud-sync-log', `正在同步 (${i + 1}/${files.length}) · ${name}`);
+            try {
+                if (fs.existsSync(dst) && sameFileContent(src, dst)) {
+                    skipped++;
+                    continue;
+                }
+                const tmp = dst + '.tmp';
+                fs.copyFileSync(src, tmp);
+                fs.renameSync(tmp, dst);
+                synced++;
+            } catch (err) {
+                failed++;
+                errors.push(`${name}: ${err.message}`);
+            }
+        }
+
+        const ok = failed === 0 && (synced + skipped) > 0;
+        logUpload('CLOUD-SYNC', JSON.stringify({ provider: active.id, name: active.name, targetDir: active.targetDir, synced, skipped, failed }));
+        return emitDone({
+            success: ok,
+            synced,
+            skipped,
+            failed,
+            total: files.length,
+            targetDir: active.targetDir,
+            providerId: active.id,
+            providerName: active.name,
+            error: errors.length ? errors.join('; ') : null
+        });
+    } catch (e) {
+        return emitDone({ success: false, error: e.message, synced: 0, skipped: 0, failed: 0, total: 0 });
     }
 });

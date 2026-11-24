@@ -217,6 +217,11 @@ def _new_driver():
     opt.add_argument("--window-size=1400,1000")
     opt.add_argument("--disable-blink-features=AutomationControlled")
     opt.add_argument("--blink-settings=imagesEnabled=false")   # 不加载图片，省时间
+    px = (os.environ.get("EASYPUB_PROXY") or "").strip()
+    if px and px.upper() != "DIRECT":
+        opt.add_argument(f"--proxy-server={px}")
+    else:
+        opt.add_argument("--no-proxy-server")
     opt.add_experimental_option("excludeSwitches", ["enable-automation"])
     opt.add_experimental_option("useAutomationExtension", False)
     d = webdriver.Edge(options=opt)

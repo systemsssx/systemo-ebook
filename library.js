@@ -44,9 +44,12 @@
         return (d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
     }
 
-    // 缺封面时复用制作页的内置插画，保持风格一致。
-    function placeholder(title) {
-        return "linear-gradient(180deg,#08142311,#081423b8),url('assets/moonlit-cover-v2.png') center/cover";
+    // 缺封面时生成 18 世纪西洋烫金皮脊精装书封，保持视觉风格一致。
+    function placeholder(title, author) {
+        if (window.__makeClothCoverDataUri) {
+            return 'url("' + window.__makeClothCoverDataUri(title, author || 'EPUB') + '") center/cover no-repeat';
+        }
+        return 'linear-gradient(160deg,#473321,#19110A)';
     }
 
     function esc(s) {
@@ -161,18 +164,41 @@
         }
         $('libEmpty').style.display = 'none';
 
+        if (!grid.__folioDragBound) {
+            grid.__folioDragBound = true;
+            grid.addEventListener('dragstart', function (e) {
+                var card = e.target && e.target.closest ? e.target.closest('.lib-card[data-path]') : null;
+                if (!card || !e.dataTransfer) return;
+                var p = card.getAttribute('data-path') || '';
+                var book = null;
+                for (var i = 0; i < (S.books || []).length; i++) {
+                    if (S.books[i] && S.books[i].path === p) { book = S.books[i]; break; }
+                }
+                if (!book) book = { path: p };
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('application/x-easypub-book', JSON.stringify({
+                    path: book.path || p,
+                    file: book.file || '',
+                    title: book.title || '',
+                    author: book.author || '',
+                    size: book.size || 0,
+                    cover: book.cover || ''
+                }));
+            });
+        }
         grid.innerHTML = list.map(function (b) {
             var cover = b.cover
                 ? 'background-image:url(\'' + fileUrl(b.cover) + '\')'
-                : 'background:' + placeholder(b.title);
+                : 'background:' + placeholder(b.title, b.author);
             var selCls = S.sel[b.path] ? ' sel' : '';
+            var fallbackCaption = (b.cover || window.__makeClothCoverDataUri)
+                ? ''
+                : ('<div class="ct">' + esc(b.title) + '</div><div class="ca">' + esc(b.author || '') + '</div>');
             return '' +
-                '<div class="lib-card' + selCls + '" role="button" tabindex="0" aria-label="' + esc(b.title || b.file || '') + '" data-path="' + esc(b.path) + '">' +
+                '<div class="lib-card' + selCls + '" draggable="true" role="button" tabindex="0" aria-label="' + esc(b.title || b.file || '') + '" data-path="' + esc(b.path) + '">' +
                   '<div class="lib-cover' + (b.cover ? '' : ' is-placeholder') + '" style="' + esc(cover) + '">' +
-                    '<div class="lib-chk">✓</div>' +
-
-                    (b.cover ? '' : '<div class="ct">' + esc(b.title) + '</div>' +
-                                    '<div class="ca">' + esc(b.author || '') + '</div>') +
+                    '<div class="lib-chk"><svg class="ep-flat-ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' +
+                    fallbackCaption +
                   '</div>' +
                   '<div class="lib-meta">' +
                     '<div class="n" title="' + esc(b.title) + '">' + esc(b.title) + '</div>' +
@@ -252,10 +278,11 @@
 
         var cov = $('lmCover');
         if (b.cover) {
+            cov.style.background = '';
             cov.innerHTML = '<img src="' + fileUrl(b.cover) + '" alt="">';
         } else {
-            cov.innerHTML = T('无封面');
-            cov.style.background = placeholder(b.title);
+            cov.innerHTML = '';
+            cov.style.background = placeholder(b.title, b.author);
             cov.style.color = 'transparent';
         }
 
@@ -295,11 +322,11 @@
                 S.cur.title = payload.title;
                 S.cur.author = payload.author;
                 S.cur.description = payload.description;
-                $('lmNote').textContent = T('✅ 已保存');
+                $('lmNote').textContent = T('已保存');
                 render();
                 setTimeout(closeDetail, 550);
             } else {
-                $('lmNote').textContent = '❌ ' + ((r && r.error) || T('保存失败'));
+                $('lmNote').textContent = (r && r.error) || T('保存失败');
             }
         });
     }
@@ -358,10 +385,14 @@
                         E.wifi.openPage(paths);
                     }
                 } else {
-                    // ② Kindle / 苹果图书：跳到对应的现有页面，页面自己读清单
-                    var pageId = (mode === 'kindle') ? 'page-kindle' : 'page-applebooks';
-                    var nav = document.querySelector('.sidebar .nav-item[data-page="' + pageId + '"]');
-                    if (nav) nav.click();
+                    // ② Kindle / 苹果图书：切到对应通道并展开 V3 统一传输页
+                    if (window.__activateChannel) { window.__activateChannel(mode); }
+                    if (window.__folioSwitchPage) {
+                        window.__folioSwitchPage('page-applebooks');
+                    } else {
+                        var nav = document.querySelector('.sidebar .nav-item[data-page="page-applebooks"]');
+                        if (nav) nav.click();
+                    }
                 }
             });
         });
@@ -502,8 +533,16 @@
         // ★ 原来的 Escape 关弹窗已删（用户要求只能点关闭按钮）。
         //   上面两个遮罩的点击关闭同样已删。
 
-        // 进入书库页时加载
+        // 进入书库页时加载 + EPUB 生成 / 导出目录变更时后台刷新历史书库
         document.addEventListener('languagechange', render);
+        window.addEventListener('epub-generated', function () {
+            S.loaded = false;
+            load(true);
+        });
+        window.addEventListener('output-dir-changed', function () {
+            S.loaded = false;
+            load(true);
+        });
         var page = $('page-library');
         if (page) {
             new MutationObserver(function () {

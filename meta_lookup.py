@@ -163,8 +163,13 @@ def _strip_volume_tail(title: str) -> str:
     return q or str(title or "").strip()
 
 
-def _cover_data_uri(url: str, variants: list[str], referer: str) -> tuple[str | None, str]:
-    """下载封面并转 data URI；返回 (data_uri|None, note)。"""
+def _cover_data_uri(
+    url: str,
+    variants: list[str],
+    referer: str,
+    extra_urls: list[str] | None = None,
+) -> tuple[str | None, str, str, tuple[int, int]]:
+    """下载封面（同图最高清优选）并转 data URI；返回 (data_uri|None, note, chosen_url, (w, h))。"""
     import tempfile
     import shutil
 
@@ -173,16 +178,18 @@ def _cover_data_uri(url: str, variants: list[str], referer: str) -> tuple[str | 
 
     tmp = tempfile.mkdtemp(prefix="easypub_cover_")
     try:
-        got = download_cover(url, tmp, stem="cover", variants=variants or None,
-                             referer=referer or None)
+        got = download_cover(
+            url,
+            tmp,
+            stem="cover",
+            variants=variants or None,
+            referer=referer or None,
+            extra_urls=extra_urls or None,
+        )
         if got.bytes > MAX_COVER_BYTES:
-            return None, f"封面过大（{got.bytes} B），跳过 data URI"
+            return None, f"封面过大（{got.bytes} B），跳过 data URI", got.url, (got.width, got.height)
         with open(got.path, "rb") as fh:
             raw = fh.read()
-        # ★ 2026-09-29：mime **按落盘文件后缀**决定，而不是信 HTTP 头。
-        #   novelmeta 的 download_cover 已经用魔数校验过内容、并按真实类型命名文件
-        #   （cover.py 的 _sniff_ext）；CDN 的 Content-Type 有时与实际字节不符，
-        #   而浏览器对 data: URI 不做嗅探 —— mime 写错整张图就不渲染。
         _EXT_MIME = {
             ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
             ".webp": "image/webp", ".gif": "image/gif", ".bmp": "image/bmp",
@@ -190,16 +197,63 @@ def _cover_data_uri(url: str, variants: list[str], referer: str) -> tuple[str | 
         }
         ctype = _EXT_MIME.get(os.path.splitext(got.path)[1].lower())
         if not ctype:
-            return None, (f"未知图片类型（后缀 {os.path.splitext(got.path)[1]!r}，"
-                          f"Content-Type {got.content_type!r}），跳过 data URI")
-        return (f"data:{ctype};base64," + base64.b64encode(raw).decode("ascii"),
-                f"{got.width}x{got.height} {got.bytes}B {ctype}")
+            return (
+                None,
+                f"未知图片类型（后缀 {os.path.splitext(got.path)[1]!r}，Content-Type {got.content_type!r}），跳过 data URI",
+                got.url,
+                (got.width, got.height),
+            )
+        return (
+            f"data:{ctype};base64," + base64.b64encode(raw).decode("ascii"),
+            f"{got.width}x{got.height} {got.bytes}B {ctype}",
+            got.url,
+            (got.width, got.height),
+        )
     except CoverError as exc:
-        return None, f"封面下载失败: {exc}"
+        return None, f"封面下载失败: {exc}", url, (0, 0)
     except Exception as exc:  # noqa: BLE001 - 封面是加分项，绝不因此失败
-        return None, f"封面处理异常: {type(exc).__name__}: {exc}"
+        return None, f"封面处理异常: {type(exc).__name__}: {exc}", url, (0, 0)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _search_web_same_cover_urls(title: str, author: str = "", limit: int = 8) -> list[str]:
+    """全网搜图补充高清同图候选（仅当首发源分辨率 < 580px 时触发，由 dHash 严格把关同一张图）。"""
+    import urllib.parse
+    from novelmeta.net import fetch
+
+    q_parts = [str(title or "").strip(), str(author or "").strip(), "小说封面"]
+    kw = " ".join(p for p in q_parts if p)
+    urls: list[str] = []
+    try:
+        baidu_url = (
+            "https://image.baidu.com/search/acjson?tn=resultjson_com&ipn=rj"
+            "&ct=201326592&fp=result&ie=utf-8&oe=utf-8&pn=0&rn=12&word="
+            + urllib.parse.quote(kw)
+        )
+        resp = fetch(
+            baidu_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0 Safari/537.36",
+                "Referer": "https://image.baidu.com/",
+                "Accept": "application/json, text/plain, */*",
+            },
+            timeout=3.5,
+            tries=1,
+        )
+        if resp.status == 200 and resp.body:
+            data = json.loads(resp.text, strict=False)
+            for item in (data.get("data") or []):
+                if not isinstance(item, dict):
+                    continue
+                for k in ("objURL", "hoverURL", "middleURL", "thumbURL"):
+                    u = (item.get(k) or "").strip()
+                    if u.startswith("http") and ".gif" not in u.lower():
+                        urls.append(u)
+                        break
+    except Exception:  # noqa: BLE001
+        pass
+    return list(dict.fromkeys(urls))[:limit]
 
 
 # --------------------------------------------------------------------------
@@ -374,6 +428,9 @@ def main(argv: list[str] | None = None) -> int:
     best = res.best
 
     # --- 候选（给多作者选择弹窗用）---------------------------------------
+    from novelmeta.model import norm_title as _nm_title
+    from novelmeta.sources import cover_variants as _cover_variants
+
     seen: set[tuple[str, str]] = set()
     candidates: list[dict] = []
     for cand in ([best] + list(getattr(res, "same_title", [])) + list(getattr(res, "alternatives", []))):
@@ -381,8 +438,13 @@ def main(argv: list[str] | None = None) -> int:
         if key in seen:
             continue
         seen.add(key)
+        _c_cov = cand.cover or ""
+        if _c_cov:
+            _c_vars = _cover_variants(_c_cov)
+            if _c_vars:
+                _c_cov = _c_vars[0]
         candidates.append({
-            "title": cand.title, "author": cand.author or "", "cover": cand.cover or "",
+            "title": cand.title, "author": cand.author or "", "cover": _c_cov,
             "source": cand.source, "score": round(cand.title_score, 4),
             "url": cand.url or "", "position": cand.position,
         })
@@ -428,20 +490,53 @@ def main(argv: list[str] | None = None) -> int:
     cover_url = (_vol_cover or (best.cover or "")) if confident else ""
     cover_data = None
     cover_note = ""
+    cover_dims = (0, 0)
     if cover_url and not args.no_cover_data:
-        cover_data, cover_note = _cover_data_uri(
+        _same_book_extras: list[str] = []
+        if not _vol_cover:
+            _nb_title = _nm_title(best.title)
+            _pool = ([best] + list(getattr(res, "same_title", [])) + list(getattr(res, "alternatives", [])))
+            for _c in _pool:
+                if _c is None:
+                    continue
+                if _nm_title(getattr(_c, "title", "")) != _nb_title:
+                    continue
+                if best.author and getattr(_c, "author", "") and not _author_matches(_c.author, best.author):
+                    continue
+                _cu = (getattr(_c, "cover", "") or "").strip()
+                if _cu and _cu != cover_url:
+                    _same_book_extras.append(_cu)
+                _cex = getattr(_c, "extra", None) or {}
+                for _vu in list(_cex.get("coverVariants") or []) + (_cover_variants(_cu) if _cu else []):
+                    if _vu and _vu != cover_url:
+                        _same_book_extras.append(_vu)
+            _same_book_extras = list(dict.fromkeys(_same_book_extras))
+
+        cover_data, cover_note, chosen_url, cover_dims = _cover_data_uri(
             cover_url,
             [] if _vol_cover else list(best.extra.get("coverVariants") or []),
             _vol_cover_ref or best.extra.get("coverReferer") or "",
+            extra_urls=_same_book_extras,
         )
+        if chosen_url and cover_data:
+            cover_url = chosen_url
         if cover_note:
-            _stderr(f"[meta_lookup] 封面: {cover_note}")
+            _stderr(f"[meta_lookup] 封面同图优选: {cover_note} <- {cover_url}")
 
-    # ★★★ 2026-09-30（用户连续实测到的小图问题）：**小图自动升级**。
-    #   微读/晋江的搜索接口常只给缩略图（实测《岛》70x102、《GOTH 断掌事件》70x97，7~12KB），
-    #   当 EPUB 封面会糊。若长边 < MIN_COVER_PX，就把候选里**其它封面**也抓一遍
-    #   （最多 3 张），挑长边最大的那张；都不够大就沿用原来的，不折腾。
-    #   ★ 分卷封面（从站点取的那一卷，通常 400x582）比什么都准，不参与升级。
+        # 若已拿到的同图分辨率仍 < 580px（如微读 t9_ 为 428x570 且不在起点图床），补充全网搜图找更大同图
+        if cover_data and not _vol_cover and max(cover_dims) < 580:
+            _web_urls = _search_web_same_cover_urls(best.title, best.author or "")
+            if _web_urls:
+                _w_data, _w_note, _w_url, _w_dims = _cover_data_uri(
+                    cover_url,
+                    list(best.extra.get("coverVariants") or []),
+                    best.extra.get("coverReferer") or "",
+                    extra_urls=_same_book_extras + _web_urls,
+                )
+                if _w_data and (_w_dims[0] * _w_dims[1]) > (cover_dims[0] * cover_dims[1]):
+                    cover_data, cover_note, cover_url, cover_dims = _w_data, _w_note, _w_url, _w_dims
+                    _stderr(f"[meta_lookup] 全网同图高清升级: {cover_note} <- {cover_url}")
+
     MIN_COVER_PX = 200
 
     def _px(note: str) -> int:
@@ -455,19 +550,9 @@ def main(argv: list[str] | None = None) -> int:
         for _c in _pool:
             if _tries >= 3 or _best_px >= MIN_COVER_PX:
                 break
-            # ★★★ 2026-10-01（用户：「这个准确才是最重要的」）★★★
-            #   **小图升级只能在同一本书内部挑封面**，绝不能用另一本书的。
-            #   原来的 `_pool` 里 `same_title` / `alternatives` **包含同名但不同作者**的书，
-            #   于是"因为这张封面太小"就把**别人那本同名书的封面**换上来 ——
-            #   正好违反"封面必须与书名+作者强匹配"这条规矩
-            #   （meta_lookup 里的 `_author_matches` 硬校验防的就是这个，这里却从后门放进来了）。
-            #   实测查《岛》时池子里有四个不同作者的《岛》：
-            #     维多利亚·希斯洛普 / 牧之野 / 阿道司·赫胥黎 / 李焕才
-            #   → 用户选了维多利亚那本，却可能被换上牧之野那本的封面。
-            #   判据：书名必须一致；两边作者都已知时，作者也必须一致。
             if (getattr(_c, "title", "") or "") != (best.title or ""):
                 continue
-            if best.author and getattr(_c, "author", "") and _c.author != best.author:
+            if best.author and getattr(_c, "author", "") and not _author_matches(_c.author, best.author):
                 _stderr(f"[meta_lookup] 小图升级跳过一个同名异作者候选："
                         f"《{_c.title}》{_c.author}（选中这本是 {best.author}）")
                 continue
@@ -476,10 +561,10 @@ def main(argv: list[str] | None = None) -> int:
             if not _u or _u == cover_url:
                 continue
             _tries += 1
-            _d2, _n2 = _cover_data_uri(_u, list(_cex.get("coverVariants") or []),
-                                       _cex.get("coverReferer") or "")
+            _d2, _n2, _u2, _ = _cover_data_uri(_u, list(_cex.get("coverVariants") or []),
+                                               _cex.get("coverReferer") or "")
             if _d2 and _px(_n2) > _best_px:
-                cover_url, cover_data, cover_note = _u, _d2, _n2
+                cover_url, cover_data, cover_note = _u2, _d2, _n2
                 _best_px = _px(_n2)
                 _stderr(f"[meta_lookup] 小图升级 → {getattr(_c, 'source', '?')} 的封面 {_best_px}px")
 
